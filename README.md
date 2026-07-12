@@ -13,10 +13,27 @@
 
 ## 安装
 
-1. 安装 [VS Code](https://code.visualstudio.com/) 1.80+
-2. 在扩展商店搜索「笔搭」安装，或从 VSIX 安装
-3. 安装 Kilo Code 或其他 AI 插件
-4. `Ctrl+Shift+P` → `笔搭: 安装 AI 技能文件` → 安装技能到 Kilo Code
+### 方式一：从 GitHub Release 安装（推荐）
+
+1. 前往 [Releases 页面](https://github.com/nex-coding2/novel-companion-bida/releases)
+2. 下载最新版本的 `novel-companion-0.1.0.vsix` 文件
+3. 打开 VS Code，按 `Ctrl+Shift+P`，输入 `Install from VSIX`
+4. 选择下载的 `.vsix` 文件，安装后重载窗口
+
+### 方式二：从源码构建
+
+```bash
+git clone https://github.com/nex-coding2/novel-companion-bida.git
+cd novel-companion-bida
+npm install
+npm run build
+```
+然后用 F5 调试运行，或 `npx @vscode/vsce package` 自行打包。
+
+### 安装后配置
+
+1. 安装 Kilo Code 或其他 AI 插件
+2. `Ctrl+Shift+P` → `笔搭: 安装 AI 技能文件` → 安装技能到 Kilo Code
 
 ## 快速开始
 
