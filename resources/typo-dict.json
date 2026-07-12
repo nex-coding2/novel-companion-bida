@@ -1,0 +1,12 @@
+[
+  { "wrong": "的的", "right": "的" },
+  { "wrong": "了了", "right": "了" },
+  { "wrong": "是是", "right": "是" },
+  { "wrong": "在在", "right": "在" },
+  { "wrong": "和和", "right": "和" },
+  { "wrong": "就就", "right": "就" },
+  { "wrong": "都都", "right": "都" },
+  { "wrong": "也也", "right": "也" },
+  { "wrong": "还还", "right": "还" },
+  { "wrong": "不不", "right": "不" }
+]
