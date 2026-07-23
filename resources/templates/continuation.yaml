@@ -1,0 +1,10 @@
+type: continuation
+scope:
+  - chapter_meta
+  - chapter_outline
+  - related_characters
+  - related_settings
+  - premise
+  - style_guide
+  - foreshadowing
+  - timeline

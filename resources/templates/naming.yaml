@@ -1,0 +1,6 @@
+type: naming
+scope:
+  - character_meta
+  - chapter_outline
+  - premise
+  - style_guide

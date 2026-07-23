@@ -2,138 +2,962 @@
   "name": "novel-companion",
   "displayName": "笔搭",
   "description": "VS Code 小说创作工作流助手，配合 Kilo Code 等 AI 插件辅助写作",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "novel-companion",
   "license": "MIT",
-  "engines": { "vscode": "^1.80.0" },
-  "categories": ["Other"],
-  "keywords": ["novel", "writing", "ai", "creative", "fiction", "小说"],
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "novel",
+    "writing",
+    "ai",
+    "creative",
+    "fiction",
+    "小说"
+  ],
   "main": "./dist/extension.js",
-  "activationEvents": ["onStartupFinished"],
-  "repository": { "type": "git", "url": "https://github.com/nex-coding2/novel-companion-bida" },
-  "bugs": { "url": "https://github.com/nex-coding2/novel-companion-bida/issues" },
-  "homepage": "https://github.com/nex-coding2/novel-companion-bida",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
     "viewsContainers": {
       "activitybar": [
-        { "id": "novel-companion", "title": "笔搭", "icon": "resources/icons/novel.svg" }
+        {
+          "id": "novel-companion",
+          "title": "笔搭",
+          "icon": "resources/icons/novel.svg"
+        }
       ],
       "panel": [
-        { "id": "novel-companion-panel", "title": "创作工作流", "icon": "resources/icons/novel.svg" }
+        {
+          "id": "novel-companion-panel",
+          "title": "创作工作流",
+          "icon": "resources/icons/novel.svg"
+        }
       ]
     },
     "views": {
       "novel-companion": [
-        { "id": "novel-companion.novel-info", "name": "小说信息" },
-        { "id": "novel-companion.outlines", "name": "章节大纲" },
-        { "id": "novel-companion.drafts",   "name": "正文" },
-        { "id": "novel-companion.characters", "name": "人物" },
-        { "id": "novel-companion.settings",  "name": "设定" },
-        { "id": "novel-companion.foreshadowing", "name": "伏笔" },
-        { "id": "novel-companion.timeline", "name": "时间线" }
+        {
+          "id": "novel-companion.bookshelf",
+          "name": "作品架"
+        },
+        {
+          "id": "novel-companion.novel-info",
+          "name": "小说信息"
+        },
+        {
+          "id": "novel-companion.outlines",
+          "name": "章节大纲"
+        },
+        {
+          "id": "novel-companion.drafts",
+          "name": "正文"
+        },
+        {
+          "id": "novel-companion.characters",
+          "name": "人物"
+        },
+        {
+          "id": "novel-companion.settings",
+          "name": "设定"
+        },
+        {
+          "id": "novel-companion.foreshadowing",
+          "name": "伏笔"
+        },
+        {
+          "id": "novel-companion.timeline",
+          "name": "时间线"
+        },
+        {
+          "id": "novel-companion.snippets",
+          "name": "语料片段"
+        },
+        {
+          "id": "novel-companion.trash",
+          "name": "回收站"
+        }
       ],
       "novel-companion-panel": [
-        { "id": "novel-companion.workflow", "name": "创作工作流", "type": "webview" }
+        {
+          "id": "novel-companion.workflow",
+          "name": "创作工作流",
+          "type": "webview"
+        }
       ]
     },
     "commands": [
-      { "command": "novelCompanion.project.create", "title": "新建小说项目", "category": "笔搭" },
-      { "command": "novelCompanion.project.detect", "title": "检测当前项目", "category": "笔搭" },
-      { "command": "novelCompanion.novel.openPremise", "title": "打开故事前提", "category": "笔搭" },
-      { "command": "novelCompanion.novel.openStyleGuide", "title": "打开风格指南", "category": "笔搭" },
-      { "command": "novelCompanion.novel.openMainOutline", "title": "打开总大纲", "category": "笔搭" },
-      { "command": "novelCompanion.novel.editInfo", "title": "编辑小说信息", "category": "笔搭" },
-      { "command": "novelCompanion.novel.editSynopsis", "title": "编辑故事梗概", "category": "笔搭" },
-      { "command": "novelCompanion.chapter.create", "title": "新建章节", "category": "笔搭", "icon": "$(add)" },
-      { "command": "novelCompanion.chapter.openDraft", "title": "打开正文", "category": "笔搭" },
-      { "command": "novelCompanion.chapter.openOutline", "title": "打开大纲", "category": "笔搭" },
-      { "command": "novelCompanion.chapter.archive", "title": "归档章节", "category": "笔搭" },
-      { "command": "novelCompanion.chapter.rename", "title": "重命名章节", "category": "笔搭" },
-      { "command": "novelCompanion.chapter.delete", "title": "删除章节", "category": "笔搭" },
-      { "command": "novelCompanion.character.create", "title": "新建人物卡", "category": "笔搭", "icon": "$(add)" },
-      { "command": "novelCompanion.character.open", "title": "打开人物卡", "category": "笔搭" },
-      { "command": "novelCompanion.setting.create", "title": "新建设定卡", "category": "笔搭", "icon": "$(add)" },
-      { "command": "novelCompanion.setting.open", "title": "打开设定卡", "category": "笔搭" },
-      { "command": "novelCompanion.foreshadowing.create", "title": "新建伏笔", "category": "笔搭", "icon": "$(add)" },
-      { "command": "novelCompanion.foreshadowing.openFile", "title": "打开伏笔文件", "category": "笔搭" },
-      { "command": "novelCompanion.foreshadowing.resolve", "title": "回收伏笔", "category": "笔搭" },
-      { "command": "novelCompanion.timeline.create", "title": "新建时间线", "category": "笔搭", "icon": "$(add)" },
-      { "command": "novelCompanion.timeline.openFile", "title": "打开时间线目录", "category": "笔搭", "icon": "$(folder-opened)" },
-      { "command": "novelCompanion.ai.generateTask", "title": "生成 AI 审稿任务", "category": "笔搭" },
-      { "command": "novelCompanion.ai.copyTaskPath", "title": "复制任务路径", "category": "笔搭" },
-      { "command": "novelCompanion.ai.openTask", "title": "打开任务文件", "category": "笔搭" },
-      { "command": "novelCompanion.ai.importResult", "title": "导入 AI 审稿结果", "category": "笔搭" },
-      { "command": "novelCompanion.ai.installSkills", "title": "安装 AI 技能文件", "category": "笔搭" },
-      { "command": "novelCompanion.ai.selectTemplate", "title": "选择任务模板", "category": "笔搭" },
-      { "command": "novelCompanion.review.openPanel", "title": "打开审阅面板", "category": "笔搭" },
-      { "command": "novelCompanion.review.accept", "title": "接受建议", "category": "笔搭" },
-      { "command": "novelCompanion.review.reject", "title": "拒绝建议", "category": "笔搭" },
-      { "command": "novelCompanion.review.merge", "title": "合并编辑建议", "category": "笔搭" },
-      { "command": "novelCompanion.review.acceptAll", "title": "接受所有可自动应用", "category": "笔搭" },
-      { "command": "novelCompanion.review.rejectAll", "title": "拒绝所有建议", "category": "笔搭" },
-      { "command": "novelCompanion.stats.refresh", "title": "刷新统计", "category": "笔搭" },
-      { "command": "novelCompanion.openSettings", "title": "打开设置", "category": "笔搭" },
-      { "command": "novelCompanion.showOutput", "title": "查看日志", "category": "笔搭" }
+      {
+        "command": "novelCompanion.project.create",
+        "title": "新建小说项目",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.project.detect",
+        "title": "检测当前项目",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.novel.openPremise",
+        "title": "打开故事前提",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.novel.openStyleGuide",
+        "title": "打开风格指南",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.novel.openMainOutline",
+        "title": "打开总大纲",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.novel.editInfo",
+        "title": "编辑小说信息",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.novel.editSynopsis",
+        "title": "编辑故事梗概",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.chapter.create",
+        "title": "新建章节",
+        "category": "笔搭",
+        "icon": "$(add)"
+      },
+      {
+        "command": "novelCompanion.chapter.openDraft",
+        "title": "打开正文",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.chapter.openOutline",
+        "title": "打开大纲",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.chapter.archive",
+        "title": "归档章节",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.chapter.rename",
+        "title": "重命名章节",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.chapter.delete",
+        "title": "删除章节",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.chapter.moveUp",
+        "title": "上移章节",
+        "category": "笔搭",
+        "icon": "$(arrow-up)"
+      },
+      {
+        "command": "novelCompanion.chapter.moveDown",
+        "title": "下移章节",
+        "category": "笔搭",
+        "icon": "$(arrow-down)"
+      },
+      {
+        "command": "novelCompanion.character.create",
+        "title": "新建人物卡",
+        "category": "笔搭",
+        "icon": "$(add)"
+      },
+      {
+        "command": "novelCompanion.character.open",
+        "title": "打开人物卡",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.setting.create",
+        "title": "新建设定卡",
+        "category": "笔搭",
+        "icon": "$(add)"
+      },
+      {
+        "command": "novelCompanion.setting.open",
+        "title": "打开设定卡",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.foreshadowing.create",
+        "title": "新建伏笔",
+        "category": "笔搭",
+        "icon": "$(add)"
+      },
+      {
+        "command": "novelCompanion.foreshadowing.openFile",
+        "title": "打开伏笔文件",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.foreshadowing.resolve",
+        "title": "回收伏笔",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.foreshadowing.openChapterForeshadowings",
+        "title": "查看本章伏笔",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.foreshadowing.showReferences",
+        "title": "伏笔引用反查",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.timeline.create",
+        "title": "新建时间线",
+        "category": "笔搭",
+        "icon": "$(add)"
+      },
+      {
+        "command": "novelCompanion.timeline.openFile",
+        "title": "打开时间线目录",
+        "category": "笔搭",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "novelCompanion.timeline.regenerate",
+        "title": "重新汇总故事时间线",
+        "category": "笔搭",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "novelCompanion.ai.generateTask",
+        "title": "生成 AI 审稿任务",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.ai.copyTaskPath",
+        "title": "复制任务路径",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.ai.openTask",
+        "title": "打开任务文件",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.ai.importResult",
+        "title": "导入 AI 审稿结果",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.ai.installSkills",
+        "title": "安装 AI 技能文件",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.ai.selectTemplate",
+        "title": "选择任务模板",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.review.openPanel",
+        "title": "打开审阅面板",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.review.accept",
+        "title": "接受建议",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.review.reject",
+        "title": "拒绝建议",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.review.merge",
+        "title": "合并编辑建议",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.review.acceptAll",
+        "title": "接受所有可自动应用",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.review.rejectAll",
+        "title": "拒绝所有建议",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.stats.refresh",
+        "title": "刷新统计",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.bookshelf.open",
+        "title": "切换书籍",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.bookshelf.refresh",
+        "title": "刷新作品架",
+        "category": "笔搭",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "novelCompanion.volume.create",
+        "title": "新建卷",
+        "category": "笔搭",
+        "icon": "$(folder-library)"
+      },
+      {
+        "command": "novelCompanion.volume.rename",
+        "title": "重命名卷",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.volume.delete",
+        "title": "删除卷",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.novel.export",
+        "title": "导出全书",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.novel.searchReplace",
+        "title": "全书查找替换",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.naming.openPanel",
+        "title": "起名器",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.snippet.create",
+        "title": "新建语料片段",
+        "category": "笔搭",
+        "icon": "$(add)"
+      },
+      {
+        "command": "novelCompanion.snippet.search",
+        "title": "搜索语料片段",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.snippet.insert",
+        "title": "插入片段到光标",
+        "category": "笔搭",
+        "icon": "$(insert)"
+      },
+      {
+        "command": "novelCompanion.continuation.generate",
+        "title": "生成 AI 续写任务",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.continuation.openPanel",
+        "title": "续写草稿面板",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.continuation.adoptAll",
+        "title": "采纳续写到正文",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.snapshot.openPanel",
+        "title": "快照历史",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.snapshot.create",
+        "title": "立即创建快照",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.trash.restore",
+        "title": "恢复",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.trash.purge",
+        "title": "彻底删除",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.trash.purgeAll",
+        "title": "清空回收站",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.trash.cleanup",
+        "title": "清理过期回收站",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.git.wizard",
+        "title": "Git 工作流向导",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.calendar.open",
+        "title": "写作日历",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.consistency.run",
+        "title": "一致性检查",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.consistency.openReport",
+        "title": "查看一致性报告",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.readthrough.open",
+        "title": "通读视图",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.relationGraph.open",
+        "title": "人物关系图",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.timelineViz.open",
+        "title": "时间线可视化",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.immersive.open",
+        "title": "沉浸写作",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.mcp.install",
+        "title": "安装 MCP Server",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.vault.lock",
+        "title": "加密入箱",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.vault.unlock",
+        "title": "解密还原",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.vault.list",
+        "title": "查看保险箱清单",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.aiDirect.proofread",
+        "title": "AI 直连校对章节",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.aiDirect.setApiKey",
+        "title": "设置 AI 直连 API Key",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.openSettings",
+        "title": "打开设置",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.showOutput",
+        "title": "查看日志",
+        "category": "笔搭"
+      },
+      {
+        "command": "novelCompanion.novel.openHelp",
+        "title": "查看使用说明",
+        "category": "笔搭"
+      }
     ],
     "menus": {
       "view/title": [
-        { "command": "novelCompanion.chapter.create", "when": "view == novel-companion.outlines", "group": "navigation" },
-        { "command": "novelCompanion.character.create", "when": "view == novel-companion.characters", "group": "navigation" },
-        { "command": "novelCompanion.setting.create", "when": "view == novel-companion.settings", "group": "navigation" },
-        { "command": "novelCompanion.foreshadowing.create", "when": "view == novel-companion.foreshadowing", "group": "navigation" },
-        { "command": "novelCompanion.foreshadowing.openFile", "when": "view == novel-companion.foreshadowing", "group": "navigation" },
-        { "command": "novelCompanion.timeline.create", "when": "view == novel-companion.timeline", "group": "navigation" },
-        { "command": "novelCompanion.timeline.openFile", "when": "view == novel-companion.timeline", "group": "navigation" }
+        {
+          "command": "novelCompanion.bookshelf.refresh",
+          "when": "view == novel-companion.bookshelf",
+          "group": "navigation"
+        },
+        {
+          "command": "novelCompanion.chapter.create",
+          "when": "view == novel-companion.outlines",
+          "group": "navigation"
+        },
+        {
+          "command": "novelCompanion.volume.create",
+          "when": "view == novel-companion.outlines",
+          "group": "navigation"
+        },
+        {
+          "command": "novelCompanion.novel.export",
+          "when": "view == novel-companion.outlines",
+          "group": "overflow"
+        },
+        {
+          "command": "novelCompanion.novel.searchReplace",
+          "when": "view == novel-companion.outlines",
+          "group": "overflow"
+        },
+        {
+          "command": "novelCompanion.character.create",
+          "when": "view == novel-companion.characters",
+          "group": "navigation"
+        },
+        {
+          "command": "novelCompanion.setting.create",
+          "when": "view == novel-companion.settings",
+          "group": "navigation"
+        },
+        {
+          "command": "novelCompanion.foreshadowing.create",
+          "when": "view == novel-companion.foreshadowing",
+          "group": "navigation"
+        },
+        {
+          "command": "novelCompanion.foreshadowing.openFile",
+          "when": "view == novel-companion.foreshadowing",
+          "group": "navigation"
+        },
+        {
+          "command": "novelCompanion.timeline.create",
+          "when": "view == novel-companion.timeline",
+          "group": "navigation"
+        },
+        {
+          "command": "novelCompanion.timeline.regenerate",
+          "when": "view == novel-companion.timeline",
+          "group": "navigation"
+        },
+        {
+          "command": "novelCompanion.timeline.openFile",
+          "when": "view == novel-companion.timeline",
+          "group": "overflow"
+        },
+        {
+          "command": "novelCompanion.snippet.create",
+          "when": "view == novel-companion.snippets",
+          "group": "navigation"
+        },
+        {
+          "command": "novelCompanion.snippet.search",
+          "when": "view == novel-companion.snippets",
+          "group": "navigation"
+        },
+        {
+          "command": "novelCompanion.trash.purgeAll",
+          "when": "view == novel-companion.trash",
+          "group": "overflow"
+        },
+        {
+          "command": "novelCompanion.trash.cleanup",
+          "when": "view == novel-companion.trash",
+          "group": "overflow"
+        },
+        {
+          "command": "novelCompanion.consistency.run",
+          "when": "view == novel-companion.outlines",
+          "group": "overflow"
+        },
+        {
+          "command": "novelCompanion.readthrough.open",
+          "when": "view == novel-companion.outlines",
+          "group": "overflow"
+        },
+        {
+          "command": "novelCompanion.immersive.open",
+          "when": "view == novel-companion.outlines",
+          "group": "overflow"
+        },
+        {
+          "command": "novelCompanion.relationGraph.open",
+          "when": "view == novel-companion.characters",
+          "group": "overflow"
+        },
+        {
+          "command": "novelCompanion.timelineViz.open",
+          "when": "view == novel-companion.timeline",
+          "group": "overflow"
+        }
       ],
       "view/item/context": [
-        { "command": "novelCompanion.novel.editInfo", "when": "view == novel-companion.novel-info && viewItem == info", "group": "1@1" },
-        { "command": "novelCompanion.chapter.openOutline", "when": "view == novel-companion.outlines", "group": "1@1" },
-        { "command": "novelCompanion.chapter.openDraft", "when": "view == novel-companion.outlines", "group": "1@2" },
-        { "command": "novelCompanion.chapter.archive", "when": "view == novel-companion.outlines && viewItem == revising", "group": "2@1" },
-        { "command": "novelCompanion.chapter.rename", "when": "view == novel-companion.outlines", "group": "3@1" },
-        { "command": "novelCompanion.chapter.delete", "when": "view == novel-companion.outlines", "group": "3@2" },
-        { "command": "novelCompanion.character.open", "when": "view == novel-companion.characters", "group": "1@1" },
-        { "command": "novelCompanion.setting.open", "when": "view == novel-companion.settings", "group": "1@1" },
-        { "command": "novelCompanion.foreshadowing.openFile", "when": "view == novel-companion.foreshadowing && viewItem == foreshadowPending", "group": "1@1" },
-        { "command": "novelCompanion.foreshadowing.resolve", "when": "view == novel-companion.foreshadowing && viewItem == foreshadowPending", "group": "2@1" },
-        { "command": "novelCompanion.foreshadowing.openFile", "when": "view == novel-companion.foreshadowing && viewItem == foreshadowResolved", "group": "1@1" }
+        {
+          "command": "novelCompanion.bookshelf.open",
+          "when": "view == novel-companion.bookshelf && viewItem == book",
+          "group": "1@1"
+        },
+        {
+          "command": "novelCompanion.novel.editInfo",
+          "when": "view == novel-companion.novel-info && viewItem == info",
+          "group": "1@1"
+        },
+        {
+          "command": "novelCompanion.chapter.openOutline",
+          "when": "view == novel-companion.outlines",
+          "group": "1@1"
+        },
+        {
+          "command": "novelCompanion.chapter.openDraft",
+          "when": "view == novel-companion.outlines",
+          "group": "1@2"
+        },
+        {
+          "command": "novelCompanion.chapter.archive",
+          "when": "view == novel-companion.outlines && viewItem == revising",
+          "group": "2@1"
+        },
+        {
+          "command": "novelCompanion.chapter.moveUp",
+          "when": "view == novel-companion.outlines",
+          "group": "2@2"
+        },
+        {
+          "command": "novelCompanion.chapter.moveDown",
+          "when": "view == novel-companion.outlines",
+          "group": "2@3"
+        },
+        {
+          "command": "novelCompanion.chapter.rename",
+          "when": "view == novel-companion.outlines",
+          "group": "3@1"
+        },
+        {
+          "command": "novelCompanion.chapter.delete",
+          "when": "view == novel-companion.outlines",
+          "group": "3@2"
+        },
+        {
+          "command": "novelCompanion.volume.rename",
+          "when": "view == novel-companion.outlines && viewItem == volumeGroup",
+          "group": "3@1"
+        },
+        {
+          "command": "novelCompanion.volume.delete",
+          "when": "view == novel-companion.outlines && viewItem == volumeGroup",
+          "group": "3@2"
+        },
+        {
+          "command": "novelCompanion.character.open",
+          "when": "view == novel-companion.characters",
+          "group": "1@1"
+        },
+        {
+          "command": "novelCompanion.setting.open",
+          "when": "view == novel-companion.settings",
+          "group": "1@1"
+        },
+        {
+          "command": "novelCompanion.foreshadowing.openFile",
+          "when": "view == novel-companion.foreshadowing && viewItem == foreshadowPending",
+          "group": "1@1"
+        },
+        {
+          "command": "novelCompanion.foreshadowing.showReferences",
+          "when": "view == novel-companion.foreshadowing && viewItem == foreshadowPending",
+          "group": "1@2"
+        },
+        {
+          "command": "novelCompanion.foreshadowing.resolve",
+          "when": "view == novel-companion.foreshadowing && viewItem == foreshadowPending",
+          "group": "2@1"
+        },
+        {
+          "command": "novelCompanion.foreshadowing.openFile",
+          "when": "view == novel-companion.foreshadowing && viewItem == foreshadowResolved",
+          "group": "1@1"
+        },
+        {
+          "command": "novelCompanion.foreshadowing.showReferences",
+          "when": "view == novel-companion.foreshadowing && viewItem == foreshadowResolved",
+          "group": "1@2"
+        },
+        {
+          "command": "novelCompanion.snippet.open",
+          "when": "view == novel-companion.snippets && viewItem == snippet",
+          "group": "1@1"
+        },
+        {
+          "command": "novelCompanion.snippet.insert",
+          "when": "view == novel-companion.snippets && viewItem == snippet",
+          "group": "1@2"
+        },
+        {
+          "command": "novelCompanion.snippet.delete",
+          "when": "view == novel-companion.snippets && viewItem == snippet",
+          "group": "2@1"
+        },
+        {
+          "command": "novelCompanion.trash.restore",
+          "when": "view == novel-companion.trash && viewItem == trash",
+          "group": "1@1"
+        },
+        {
+          "command": "novelCompanion.trash.purge",
+          "when": "view == novel-companion.trash && viewItem == trash",
+          "group": "1@2"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "novelCompanion.vault.lock",
+          "when": "novelCompanion.projectLoaded && resourceLangId == markdown",
+          "group": "1_novel@1"
+        }
       ]
     },
     "keybindings": [
-      { "key": "ctrl+alt+n c", "command": "novelCompanion.chapter.create", "when": "novelCompanion.projectLoaded" },
-      { "key": "ctrl+alt+n h", "command": "novelCompanion.character.create", "when": "novelCompanion.projectLoaded" },
-      { "key": "ctrl+alt+n s", "command": "novelCompanion.setting.create", "when": "novelCompanion.projectLoaded" },
-      { "key": "ctrl+alt+r", "command": "novelCompanion.ai.generateTask", "when": "novelCompanion.projectLoaded && editorLangId == markdown" },
-      { "key": "ctrl+alt+shift+r", "command": "novelCompanion.review.openPanel", "when": "novelCompanion.hasPendingReview" }
+      {
+        "key": "ctrl+alt+n c",
+        "command": "novelCompanion.chapter.create",
+        "when": "novelCompanion.projectLoaded"
+      },
+      {
+        "key": "ctrl+alt+n h",
+        "command": "novelCompanion.character.create",
+        "when": "novelCompanion.projectLoaded"
+      },
+      {
+        "key": "ctrl+alt+n s",
+        "command": "novelCompanion.setting.create",
+        "when": "novelCompanion.projectLoaded"
+      },
+      {
+        "key": "ctrl+alt+r",
+        "command": "novelCompanion.ai.generateTask",
+        "when": "novelCompanion.projectLoaded && editorLangId == markdown"
+      },
+      {
+        "key": "ctrl+alt+shift+r",
+        "command": "novelCompanion.review.openPanel",
+        "when": "novelCompanion.hasPendingReview"
+      }
     ],
     "configuration": {
       "title": "笔搭",
       "properties": {
-        "novelCompanion.stats.countPunctuation": { "type": "boolean", "default": true, "description": "字数统计是否计入标点符号" },
-        "novelCompanion.stats.countSpaces": { "type": "boolean", "default": false, "description": "字数统计是否计入空格" },
-        "novelCompanion.stats.englishWordAsOne": { "type": "boolean", "default": true, "description": "英文单词是否算1个字" },
-        "novelCompanion.review.interval": { "type": "number", "default": 30, "minimum": 5, "maximum": 180, "description": "AI 审稿提醒间隔（分钟）" },
-        "novelCompanion.review.wordCount": { "type": "number", "default": 1000, "description": "AI 审稿定量提醒字数（0=禁用）" },
-        "novelCompanion.review.reminderEnabled": { "type": "boolean", "default": true, "description": "是否启用 AI 审稿提醒" },
-        "novelCompanion.review.reminderMode": { "type": "string", "enum": ["statusbar", "notification"], "enumDescriptions": ["状态栏", "通知弹窗"], "default": "statusbar", "description": "提醒方式" },
-        "novelCompanion.review.snoozeMinutes": { "type": "number", "default": 10, "description": "稍后提醒间隔（分钟）" },
-        "novelCompanion.ai.plugin": { "type": "string", "enum": ["kilo-code", "cline", "roo-code", "continue", "other"], "enumDescriptions": ["Kilo Code", "Cline", "Roo Code", "Continue", "其他"], "default": "kilo-code", "description": "目标 AI 插件" },
-        "novelCompanion.ai.defaultPermission": { "type": "string", "enum": ["review_only", "suggest_revision", "rewrite_selected", "brainstorm"], "enumDescriptions": ["只审阅", "建议修订", "重写选中", "头脑风暴"], "default": "suggest_revision", "description": "AI 任务默认权限级别" },
-        "novelCompanion.localCheck.enabled": { "type": "boolean", "default": true, "description": "是否启用本地规则检查" },
-        "novelCompanion.localCheck.repeatedWord": { "type": "boolean", "default": true, "description": "检测连续重复词" },
-        "novelCompanion.localCheck.punctuation": { "type": "boolean", "default": true, "description": "检测标点异常" },
-        "novelCompanion.localCheck.typoDict": { "type": "boolean", "default": true, "description": "使用常见错别字字典检测" },
-        "novelCompanion.localCheck.longSentence": { "type": "boolean", "default": true, "description": "检测过长句子" },
-        "novelCompanion.localCheck.longSentenceThreshold": { "type": "number", "default": 80, "description": "长句阈值（字数）" },
-        "novelCompanion.localCheck.highFrequency": { "type": "boolean", "default": true, "description": "检测高频词（仅保存时运行）" },
-        "novelCompanion.localCheck.highFrequencyThreshold": { "type": "number", "default": 20, "description": "高频词阈值（次数）" },
-        "novelCompanion.localCheck.extraSpace": { "type": "boolean", "default": true, "description": "检测中文间多余空格" },
-        "novelCompanion.ui.mode": { "type": "string", "enum": ["beginner", "expert"], "enumDescriptions": ["新手（表单引导）", "专家（直接编辑文件）"], "default": "beginner", "description": "界面模式" },
-        "novelCompanion.statusBar.simpleMode": { "type": "boolean", "default": false, "description": "状态栏简化模式" }
+        "novelCompanion.stats.countPunctuation": {
+          "type": "boolean",
+          "default": true,
+          "description": "字数统计是否计入标点符号"
+        },
+        "novelCompanion.stats.countSpaces": {
+          "type": "boolean",
+          "default": false,
+          "description": "字数统计是否计入空格"
+        },
+        "novelCompanion.stats.englishWordAsOne": {
+          "type": "boolean",
+          "default": true,
+          "description": "英文单词是否算1个字"
+        },
+        "novelCompanion.review.interval": {
+          "type": "number",
+          "default": 30,
+          "minimum": 5,
+          "maximum": 180,
+          "description": "AI 审稿提醒间隔（分钟）"
+        },
+        "novelCompanion.review.wordCount": {
+          "type": "number",
+          "default": 1000,
+          "description": "AI 审稿定量提醒字数（0=禁用）"
+        },
+        "novelCompanion.review.reminderEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "是否启用 AI 审稿提醒"
+        },
+        "novelCompanion.review.reminderMode": {
+          "type": "string",
+          "enum": [
+            "statusbar",
+            "notification"
+          ],
+          "enumDescriptions": [
+            "状态栏",
+            "通知弹窗"
+          ],
+          "default": "statusbar",
+          "description": "提醒方式"
+        },
+        "novelCompanion.review.snoozeMinutes": {
+          "type": "number",
+          "default": 10,
+          "description": "稍后提醒间隔（分钟）"
+        },
+        "novelCompanion.ai.plugin": {
+          "type": "string",
+          "enum": [
+            "kilo-code",
+            "cline",
+            "roo-code",
+            "continue",
+            "other"
+          ],
+          "enumDescriptions": [
+            "Kilo Code",
+            "Cline",
+            "Roo Code",
+            "Continue",
+            "其他"
+          ],
+          "default": "kilo-code",
+          "description": "目标 AI 插件"
+        },
+        "novelCompanion.ai.defaultPermission": {
+          "type": "string",
+          "enum": [
+            "review_only",
+            "suggest_revision",
+            "rewrite_selected",
+            "brainstorm"
+          ],
+          "enumDescriptions": [
+            "只审阅",
+            "建议修订",
+            "重写选中",
+            "头脑风暴"
+          ],
+          "default": "suggest_revision",
+          "description": "AI 任务默认权限级别"
+        },
+        "novelCompanion.localCheck.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "是否启用本地规则检查"
+        },
+        "novelCompanion.localCheck.repeatedWord": {
+          "type": "boolean",
+          "default": true,
+          "description": "检测连续重复词"
+        },
+        "novelCompanion.localCheck.punctuation": {
+          "type": "boolean",
+          "default": true,
+          "description": "检测标点异常"
+        },
+        "novelCompanion.localCheck.typoDict": {
+          "type": "boolean",
+          "default": true,
+          "description": "使用常见错别字字典检测"
+        },
+        "novelCompanion.localCheck.longSentence": {
+          "type": "boolean",
+          "default": true,
+          "description": "检测过长句子"
+        },
+        "novelCompanion.localCheck.longSentenceThreshold": {
+          "type": "number",
+          "default": 80,
+          "description": "长句阈值（字数）"
+        },
+        "novelCompanion.localCheck.highFrequency": {
+          "type": "boolean",
+          "default": true,
+          "description": "检测高频词（仅保存时运行）"
+        },
+        "novelCompanion.localCheck.highFrequencyThreshold": {
+          "type": "number",
+          "default": 20,
+          "description": "高频词阈值（次数）"
+        },
+        "novelCompanion.localCheck.extraSpace": {
+          "type": "boolean",
+          "default": true,
+          "description": "检测中文间多余空格"
+        },
+        "novelCompanion.ui.mode": {
+          "type": "string",
+          "enum": [
+            "beginner",
+            "expert"
+          ],
+          "enumDescriptions": [
+            "新手（表单引导）",
+            "专家（直接编辑文件）"
+          ],
+          "default": "beginner",
+          "description": "界面模式"
+        },
+        "novelCompanion.statusBar.simpleMode": {
+          "type": "boolean",
+          "default": false,
+          "description": "状态栏简化模式"
+        },
+        "novelCompanion.snapshot.maxCount": {
+          "type": "number",
+          "default": 30,
+          "minimum": 1,
+          "description": "每章保留的最大快照数（超出自动清理最旧）"
+        },
+        "novelCompanion.snapshot.maxAgeDays": {
+          "type": "number",
+          "default": 30,
+          "minimum": 1,
+          "description": "快照最大保留天数（超出自动清理）"
+        },
+        "novelCompanion.trash.maxAgeDays": {
+          "type": "number",
+          "default": 30,
+          "minimum": 1,
+          "description": "回收站内容最大保留天数（超出自动清理）"
+        },
+        "novelCompanion.trash.maxItems": {
+          "type": "number",
+          "default": 100,
+          "minimum": 1,
+          "description": "回收站最大保留项数（超出清理最旧）"
+        },
+        "novelCompanion.aiDirect.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "是否启用 AI 直连（可选；启用后可一键校对，结果仍走审阅面板由作者确认）"
+        },
+        "novelCompanion.aiDirect.apiBaseUrl": {
+          "type": "string",
+          "default": "https://api.openai.com/v1",
+          "description": "AI 直连 API 基础地址（OpenAI 兼容端点）"
+        },
+        "novelCompanion.aiDirect.apiModel": {
+          "type": "string",
+          "default": "gpt-4o-mini",
+          "description": "AI 直连使用的模型名"
+        }
       }
     }
   },
   "scripts": {},
-  "dependencies": { "gray-matter": "^4.0.3", "yaml": "^2.3.0", "ajv": "^8.12.0" },
-  "devDependencies": {}
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "yaml": "^2.3.0",
+    "ajv": "^8.12.0"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nex-coding2/novel-companion-bida"
+  },
+  "bugs": {
+    "url": "https://github.com/nex-coding2/novel-companion-bida/issues"
+  },
+  "homepage": "https://github.com/nex-coding2/novel-companion-bida"
 }

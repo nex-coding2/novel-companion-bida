@@ -82,6 +82,34 @@ var init_events = __esm({
   }
 });
 
+// src/shared/types/project.ts
+var init_project = __esm({
+  "src/shared/types/project.ts"() {
+    "use strict";
+  }
+});
+
+// src/shared/types/r2.ts
+var init_r2 = __esm({
+  "src/shared/types/r2.ts"() {
+    "use strict";
+  }
+});
+
+// src/shared/types/r3.ts
+var init_r3 = __esm({
+  "src/shared/types/r3.ts"() {
+    "use strict";
+  }
+});
+
+// src/shared/types/r4.ts
+var init_r4 = __esm({
+  "src/shared/types/r4.ts"() {
+    "use strict";
+  }
+});
+
 // src/shared/types/index.ts
 var init_types = __esm({
   "src/shared/types/index.ts"() {
@@ -93,6 +121,10 @@ var init_types = __esm({
     init_suggestion();
     init_config();
     init_events();
+    init_project();
+    init_r2();
+    init_r3();
+    init_r4();
   }
 });
 
@@ -128,7 +160,7 @@ var init_enums = __esm({
 });
 
 // src/shared/constants/defaults.ts
-var DEFAULT_STATS_CONFIG, DEFAULT_DAILY_GOAL, DEFAULT_REVIEW_INTERVAL, DEFAULT_REVIEW_WORDCOUNT, DEFAULT_LONG_SENTENCE_THRESHOLD, DEFAULT_HIGH_FREQUENCY_THRESHOLD;
+var DEFAULT_STATS_CONFIG, DEFAULT_DAILY_GOAL, DEFAULT_REVIEW_INTERVAL, DEFAULT_REVIEW_WORDCOUNT, DEFAULT_LONG_SENTENCE_THRESHOLD, DEFAULT_HIGH_FREQUENCY_THRESHOLD, DEFAULT_SNAPSHOT_MAX_COUNT, DEFAULT_SNAPSHOT_MAX_AGE_DAYS, DEFAULT_TRASH_MAX_AGE_DAYS, DEFAULT_TRASH_MAX_ITEMS, DEFAULT_NAMING_COUNT;
 var init_defaults = __esm({
   "src/shared/constants/defaults.ts"() {
     "use strict";
@@ -144,6 +176,11 @@ var init_defaults = __esm({
     DEFAULT_REVIEW_WORDCOUNT = 1e3;
     DEFAULT_LONG_SENTENCE_THRESHOLD = 80;
     DEFAULT_HIGH_FREQUENCY_THRESHOLD = 20;
+    DEFAULT_SNAPSHOT_MAX_COUNT = 30;
+    DEFAULT_SNAPSHOT_MAX_AGE_DAYS = 30;
+    DEFAULT_TRASH_MAX_AGE_DAYS = 30;
+    DEFAULT_TRASH_MAX_ITEMS = 100;
+    DEFAULT_NAMING_COUNT = 12;
   }
 });
 
@@ -161,6 +198,7 @@ var init_paths = __esm({
       FORESHADOWING: "foreshadowing",
       TIMELINE: "timeline",
       NOTES: "notes",
+      SNIPPETS: "snippets",
       NOVEL_AI: ".novel-ai",
       NOVEL_AI_TASKS: ".novel-ai/tasks",
       NOVEL_AI_RESULTS: ".novel-ai/results",
@@ -168,6 +206,11 @@ var init_paths = __esm({
       NOVEL_AI_STATS: ".novel-ai/stats",
       NOVEL_AI_INDEXES: ".novel-ai/indexes",
       NOVEL_AI_LOGS: ".novel-ai/logs",
+      NOVEL_AI_SNAPSHOTS: ".novel-ai/snapshots",
+      NOVEL_AI_TRASH: ".novel-ai/trash",
+      NOVEL_AI_AI_DRAFT: ".novel-ai/ai-drafts",
+      NOVEL_AI_EXPORTS: ".novel-ai/exports",
+      NOVEL_AI_BACKUPS: ".novel-ai/backups",
       VSCODE: ".vscode"
     };
     PROJECT_FILES = {
@@ -370,6 +413,18 @@ var init_configManager = __esm({
       getUIMode() {
         return this.getLayered("ui.mode", ["ui_mode"], "beginner");
       }
+      getSnapshotMaxCount() {
+        return this.getLayered("snapshot.maxCount", ["snapshot_max_count"], DEFAULT_SNAPSHOT_MAX_COUNT);
+      }
+      getSnapshotMaxAgeDays() {
+        return this.getLayered("snapshot.maxAgeDays", ["snapshot_max_age_days"], DEFAULT_SNAPSHOT_MAX_AGE_DAYS);
+      }
+      getTrashMaxAgeDays() {
+        return this.getLayered("trash.maxAgeDays", ["trash_max_age_days"], DEFAULT_TRASH_MAX_AGE_DAYS);
+      }
+      getTrashMaxItems() {
+        return this.getLayered("trash.maxItems", ["trash_max_items"], DEFAULT_TRASH_MAX_ITEMS);
+      }
     };
   }
 });
@@ -451,17 +506,17 @@ var require_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    function visit_(key, node, visitor, path8) {
-      const ctrl = callVisitor(key, node, visitor, path8);
+    function visit_(key, node, visitor, path18) {
+      const ctrl = callVisitor(key, node, visitor, path18);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key, path8, ctrl);
-        return visit_(key, ctrl, visitor, path8);
+        replaceNode(key, path18, ctrl);
+        return visit_(key, ctrl, visitor, path18);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path8 = Object.freeze(path8.concat(node));
+          path18 = Object.freeze(path18.concat(node));
           for (let i = 0; i < node.items.length; ++i) {
-            const ci = visit_(i, node.items[i], visitor, path8);
+            const ci = visit_(i, node.items[i], visitor, path18);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -472,13 +527,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path8 = Object.freeze(path8.concat(node));
-          const ck = visit_("key", node.key, visitor, path8);
+          path18 = Object.freeze(path18.concat(node));
+          const ck = visit_("key", node.key, visitor, path18);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = visit_("value", node.value, visitor, path8);
+          const cv = visit_("value", node.value, visitor, path18);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -499,17 +554,17 @@ var require_visit = __commonJS({
     visitAsync.BREAK = BREAK;
     visitAsync.SKIP = SKIP;
     visitAsync.REMOVE = REMOVE;
-    async function visitAsync_(key, node, visitor, path8) {
-      const ctrl = await callVisitor(key, node, visitor, path8);
+    async function visitAsync_(key, node, visitor, path18) {
+      const ctrl = await callVisitor(key, node, visitor, path18);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key, path8, ctrl);
-        return visitAsync_(key, ctrl, visitor, path8);
+        replaceNode(key, path18, ctrl);
+        return visitAsync_(key, ctrl, visitor, path18);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path8 = Object.freeze(path8.concat(node));
+          path18 = Object.freeze(path18.concat(node));
           for (let i = 0; i < node.items.length; ++i) {
-            const ci = await visitAsync_(i, node.items[i], visitor, path8);
+            const ci = await visitAsync_(i, node.items[i], visitor, path18);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -520,13 +575,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path8 = Object.freeze(path8.concat(node));
-          const ck = await visitAsync_("key", node.key, visitor, path8);
+          path18 = Object.freeze(path18.concat(node));
+          const ck = await visitAsync_("key", node.key, visitor, path18);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = await visitAsync_("value", node.value, visitor, path8);
+          const cv = await visitAsync_("value", node.value, visitor, path18);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -553,23 +608,23 @@ var require_visit = __commonJS({
       }
       return visitor;
     }
-    function callVisitor(key, node, visitor, path8) {
+    function callVisitor(key, node, visitor, path18) {
       if (typeof visitor === "function")
-        return visitor(key, node, path8);
+        return visitor(key, node, path18);
       if (identity.isMap(node))
-        return visitor.Map?.(key, node, path8);
+        return visitor.Map?.(key, node, path18);
       if (identity.isSeq(node))
-        return visitor.Seq?.(key, node, path8);
+        return visitor.Seq?.(key, node, path18);
       if (identity.isPair(node))
-        return visitor.Pair?.(key, node, path8);
+        return visitor.Pair?.(key, node, path18);
       if (identity.isScalar(node))
-        return visitor.Scalar?.(key, node, path8);
+        return visitor.Scalar?.(key, node, path18);
       if (identity.isAlias(node))
-        return visitor.Alias?.(key, node, path8);
+        return visitor.Alias?.(key, node, path18);
       return void 0;
     }
-    function replaceNode(key, path8, node) {
-      const parent = path8[path8.length - 1];
+    function replaceNode(key, path18, node) {
+      const parent = path18[path18.length - 1];
       if (identity.isCollection(parent)) {
         parent.items[key] = node;
       } else if (identity.isPair(parent)) {
@@ -1179,10 +1234,10 @@ var require_Collection = __commonJS({
     var createNode = require_createNode();
     var identity = require_identity();
     var Node = require_Node();
-    function collectionFromPath(schema, path8, value) {
+    function collectionFromPath(schema, path18, value) {
       let v = value;
-      for (let i = path8.length - 1; i >= 0; --i) {
-        const k = path8[i];
+      for (let i = path18.length - 1; i >= 0; --i) {
+        const k = path18[i];
         if (typeof k === "number" && Number.isInteger(k) && k >= 0) {
           const a = [];
           a[k] = v;
@@ -1201,7 +1256,7 @@ var require_Collection = __commonJS({
         sourceObjects: /* @__PURE__ */ new Map()
       });
     }
-    var isEmptyPath = (path8) => path8 == null || typeof path8 === "object" && !!path8[Symbol.iterator]().next().done;
+    var isEmptyPath = (path18) => path18 == null || typeof path18 === "object" && !!path18[Symbol.iterator]().next().done;
     var Collection = class extends Node.NodeBase {
       constructor(type, schema) {
         super(type);
@@ -1231,11 +1286,11 @@ var require_Collection = __commonJS({
        * be a Pair instance or a `{ key, value }` object, which may not have a key
        * that already exists in the map.
        */
-      addIn(path8, value) {
-        if (isEmptyPath(path8))
+      addIn(path18, value) {
+        if (isEmptyPath(path18))
           this.add(value);
         else {
-          const [key, ...rest] = path8;
+          const [key, ...rest] = path18;
           const node = this.get(key, true);
           if (identity.isCollection(node))
             node.addIn(rest, value);
@@ -1249,8 +1304,8 @@ var require_Collection = __commonJS({
        * Removes a value from the collection.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path8) {
-        const [key, ...rest] = path8;
+      deleteIn(path18) {
+        const [key, ...rest] = path18;
         if (rest.length === 0)
           return this.delete(key);
         const node = this.get(key, true);
@@ -1264,8 +1319,8 @@ var require_Collection = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path8, keepScalar) {
-        const [key, ...rest] = path8;
+      getIn(path18, keepScalar) {
+        const [key, ...rest] = path18;
         const node = this.get(key, true);
         if (rest.length === 0)
           return !keepScalar && identity.isScalar(node) ? node.value : node;
@@ -1283,8 +1338,8 @@ var require_Collection = __commonJS({
       /**
        * Checks if the collection includes a value with the key `key`.
        */
-      hasIn(path8) {
-        const [key, ...rest] = path8;
+      hasIn(path18) {
+        const [key, ...rest] = path18;
         if (rest.length === 0)
           return this.has(key);
         const node = this.get(key, true);
@@ -1294,8 +1349,8 @@ var require_Collection = __commonJS({
        * Sets a value in this collection. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path8, value) {
-        const [key, ...rest] = path8;
+      setIn(path18, value) {
+        const [key, ...rest] = path18;
         if (rest.length === 0) {
           this.set(key, value);
         } else {
@@ -3810,9 +3865,9 @@ var require_Document = __commonJS({
           this.contents.add(value);
       }
       /** Adds a value to the document. */
-      addIn(path8, value) {
+      addIn(path18, value) {
         if (assertCollection(this.contents))
-          this.contents.addIn(path8, value);
+          this.contents.addIn(path18, value);
       }
       /**
        * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -3887,14 +3942,14 @@ var require_Document = __commonJS({
        * Removes a value from the document.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path8) {
-        if (Collection.isEmptyPath(path8)) {
+      deleteIn(path18) {
+        if (Collection.isEmptyPath(path18)) {
           if (this.contents == null)
             return false;
           this.contents = null;
           return true;
         }
-        return assertCollection(this.contents) ? this.contents.deleteIn(path8) : false;
+        return assertCollection(this.contents) ? this.contents.deleteIn(path18) : false;
       }
       /**
        * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -3909,10 +3964,10 @@ var require_Document = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path8, keepScalar) {
-        if (Collection.isEmptyPath(path8))
+      getIn(path18, keepScalar) {
+        if (Collection.isEmptyPath(path18))
           return !keepScalar && identity.isScalar(this.contents) ? this.contents.value : this.contents;
-        return identity.isCollection(this.contents) ? this.contents.getIn(path8, keepScalar) : void 0;
+        return identity.isCollection(this.contents) ? this.contents.getIn(path18, keepScalar) : void 0;
       }
       /**
        * Checks if the document includes a value with the key `key`.
@@ -3923,10 +3978,10 @@ var require_Document = __commonJS({
       /**
        * Checks if the document includes a value at `path`.
        */
-      hasIn(path8) {
-        if (Collection.isEmptyPath(path8))
+      hasIn(path18) {
+        if (Collection.isEmptyPath(path18))
           return this.contents !== void 0;
-        return identity.isCollection(this.contents) ? this.contents.hasIn(path8) : false;
+        return identity.isCollection(this.contents) ? this.contents.hasIn(path18) : false;
       }
       /**
        * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -3943,13 +3998,13 @@ var require_Document = __commonJS({
        * Sets a value in this document. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path8, value) {
-        if (Collection.isEmptyPath(path8)) {
+      setIn(path18, value) {
+        if (Collection.isEmptyPath(path18)) {
           this.contents = value;
         } else if (this.contents == null) {
-          this.contents = Collection.collectionFromPath(this.schema, Array.from(path8), value);
+          this.contents = Collection.collectionFromPath(this.schema, Array.from(path18), value);
         } else if (assertCollection(this.contents)) {
-          this.contents.setIn(path8, value);
+          this.contents.setIn(path18, value);
         }
       }
       /**
@@ -5905,9 +5960,9 @@ var require_cst_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    visit.itemAtPath = (cst, path8) => {
+    visit.itemAtPath = (cst, path18) => {
       let item = cst;
-      for (const [field, index] of path8) {
+      for (const [field, index] of path18) {
         const tok = item?.[field];
         if (tok && "items" in tok) {
           item = tok.items[index];
@@ -5916,23 +5971,23 @@ var require_cst_visit = __commonJS({
       }
       return item;
     };
-    visit.parentCollection = (cst, path8) => {
-      const parent = visit.itemAtPath(cst, path8.slice(0, -1));
-      const field = path8[path8.length - 1][0];
+    visit.parentCollection = (cst, path18) => {
+      const parent = visit.itemAtPath(cst, path18.slice(0, -1));
+      const field = path18[path18.length - 1][0];
       const coll = parent?.[field];
       if (coll && "items" in coll)
         return coll;
       throw new Error("Parent collection not found");
     };
-    function _visit(path8, item, visitor) {
-      let ctrl = visitor(item, path8);
+    function _visit(path18, item, visitor) {
+      let ctrl = visitor(item, path18);
       if (typeof ctrl === "symbol")
         return ctrl;
       for (const field of ["key", "value"]) {
         const token = item[field];
         if (token && "items" in token) {
           for (let i = 0; i < token.items.length; ++i) {
-            const ci = _visit(Object.freeze(path8.concat([[field, i]])), token.items[i], visitor);
+            const ci = _visit(Object.freeze(path18.concat([[field, i]])), token.items[i], visitor);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -5943,10 +5998,10 @@ var require_cst_visit = __commonJS({
             }
           }
           if (typeof ctrl === "function" && field === "key")
-            ctrl = ctrl(item, path8);
+            ctrl = ctrl(item, path18);
         }
       }
-      return typeof ctrl === "function" ? ctrl(item, path8) : ctrl;
+      return typeof ctrl === "function" ? ctrl(item, path18) : ctrl;
     }
     exports2.visit = visit;
   }
@@ -7243,14 +7298,14 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs10 = this.flowScalar(this.type);
+              const fs15 = this.flowScalar(this.type);
               if (atNextItem || it.value) {
-                map.items.push({ start, key: fs10, sep: [] });
+                map.items.push({ start, key: fs15, sep: [] });
                 this.onKeyLine = true;
               } else if (it.sep) {
-                this.stack.push(fs10);
+                this.stack.push(fs15);
               } else {
-                Object.assign(it, { key: fs10, sep: [] });
+                Object.assign(it, { key: fs15, sep: [] });
                 this.onKeyLine = true;
               }
               return;
@@ -7378,13 +7433,13 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs10 = this.flowScalar(this.type);
+              const fs15 = this.flowScalar(this.type);
               if (!it || it.value)
-                fc.items.push({ start: [], key: fs10, sep: [] });
+                fc.items.push({ start: [], key: fs15, sep: [] });
               else if (it.sep)
-                this.stack.push(fs10);
+                this.stack.push(fs15);
               else
-                Object.assign(it, { key: fs10, sep: [] });
+                Object.assign(it, { key: fs15, sep: [] });
               return;
             }
             case "flow-map-end":
@@ -7591,7 +7646,7 @@ var require_public_api = __commonJS({
       }
       return doc;
     }
-    function parse4(src, reviver, options2) {
+    function parse5(src, reviver, options2) {
       let _reviver = void 0;
       if (typeof reviver === "function") {
         _reviver = reviver;
@@ -7632,7 +7687,7 @@ var require_public_api = __commonJS({
         return value.toString(options2);
       return new Document.Document(value, _replacer, options2).toString(options2);
     }
-    exports2.parse = parse4;
+    exports2.parse = parse5;
     exports2.parseAllDocuments = parseAllDocuments;
     exports2.parseDocument = parseDocument;
     exports2.stringify = stringify4;
@@ -7701,12 +7756,36 @@ function extractChapterId(filePath) {
   const match = normalized.match(/\/chapters\/(ch\d{3})\//);
   return match ? match[1] : void 0;
 }
+function extractCharacterId(filePath) {
+  const normalized = filePath.replace(/\\/g, "/");
+  const match = normalized.match(/\/characters\/(.+)\.md$/);
+  return match ? match[1] : void 0;
+}
+function extractSettingId(filePath) {
+  const normalized = filePath.replace(/\\/g, "/");
+  const match = normalized.match(/\/world\/(.+)\.md$/);
+  return match ? match[1] : void 0;
+}
 function normalizePath(filePath) {
   return filePath.replace(/\\/g, "/");
 }
+function joinPath(...segments) {
+  return normalizePath(path2.join(...segments));
+}
+function isPathSafe(relativePath) {
+  if (!relativePath)
+    return false;
+  if (path2.isAbsolute(relativePath))
+    return false;
+  if (relativePath.includes(".."))
+    return false;
+  return true;
+}
+var path2;
 var init_pathUtils = __esm({
   "src/shared/utils/pathUtils.ts"() {
     "use strict";
+    path2 = __toESM(require("path"));
   }
 });
 
@@ -7716,6 +7795,14 @@ function todayISO() {
 }
 function nowISO() {
   return (/* @__PURE__ */ new Date()).toISOString();
+}
+function formatDateForDisplay(iso) {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function formatTimeForDisplay(iso) {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 var init_dateUtils = __esm({
   "src/shared/utils/dateUtils.ts"() {
@@ -7748,6 +7835,9 @@ function generateTaskId(seq) {
 function generateChapterId(seq) {
   return `ch${String(seq).padStart(3, "0")}`;
 }
+function generateSuggestionId(seq) {
+  return `sug-${String(seq).padStart(3, "0")}`;
+}
 function pinyinFromChinese(name) {
   return name.trim().toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]/g, "-").replace(/\s+/g, "-") || "unnamed";
 }
@@ -7757,24 +7847,470 @@ var init_formatUtils = __esm({
   }
 });
 
+// src/shared/utils/zipWriter.ts
+function dosTime(date) {
+  const d = date.getTime() < DOS_EPOCH_OFFSET ? new Date(DOS_EPOCH_OFFSET) : date;
+  return {
+    time: d.getHours() << 11 | d.getMinutes() << 5 | d.getSeconds() >> 1,
+    date: (d.getFullYear() - 1980 & 127) << 9 | d.getMonth() + 1 << 5 | d.getDate()
+  };
+}
+function crc32(buf) {
+  let c = ~0;
+  for (let i = 0; i < buf.length; i++) {
+    c ^= buf[i];
+    for (let k = 0; k < 8; k++) {
+      c = c >>> 1 ^ 3988292384 & -(c & 1);
+    }
+  }
+  return ~c >>> 0;
+}
+function u16(n) {
+  const b = Buffer.alloc(2);
+  b.writeUInt16LE(n & 65535, 0);
+  return b;
+}
+function u32(n) {
+  const b = Buffer.alloc(4);
+  b.writeUInt32LE(n >>> 0, 0);
+  return b;
+}
+function createZip(entries) {
+  const chunks = [];
+  const centralRecords = [];
+  let offset = 0;
+  const now = /* @__PURE__ */ new Date();
+  const { time, date } = dosTime(now);
+  for (const entry of entries) {
+    const nameBuf = Buffer.from(entry.name, "utf8");
+    const useStore = entry.store === true;
+    let compressed;
+    let method;
+    if (useStore) {
+      compressed = entry.data;
+      method = 0;
+    } else {
+      try {
+        compressed = zlib.deflateRawSync(entry.data, { level: 6 });
+        method = 8;
+      } catch {
+        compressed = entry.data;
+        method = 0;
+      }
+    }
+    const crc = crc32(entry.data);
+    const sizesOk = entry.data.length <= 4294967295 && compressed.length <= 4294967295;
+    const localHeader = Buffer.concat([
+      u32(67324752),
+      u16(20),
+      u16(2048),
+      u16(method),
+      u16(time),
+      u16(date),
+      u32(crc),
+      u32(sizesOk ? compressed.length : 4294967295),
+      u32(sizesOk ? entry.data.length : 4294967295),
+      u16(nameBuf.length),
+      u16(0),
+      nameBuf
+    ]);
+    chunks.push(localHeader);
+    if (compressed.length > 0)
+      chunks.push(compressed);
+    const localLen = localHeader.length + compressed.length;
+    centralRecords.push(
+      Buffer.concat([
+        u32(33639248),
+        u16(20),
+        u16(20),
+        u16(2048),
+        u16(method),
+        u16(time),
+        u16(date),
+        u32(crc),
+        u32(sizesOk ? compressed.length : 4294967295),
+        u32(sizesOk ? entry.data.length : 4294967295),
+        u16(nameBuf.length),
+        u16(0),
+        u16(0),
+        u16(0),
+        u16(0),
+        u32(0),
+        u32(offset),
+        nameBuf
+      ])
+    );
+    offset += localLen;
+  }
+  const central = Buffer.concat(centralRecords);
+  const end = Buffer.concat([
+    u32(101010256),
+    u16(0),
+    u16(0),
+    u16(entries.length),
+    u16(entries.length),
+    u32(central.length),
+    u32(offset),
+    u16(0)
+  ]);
+  return Buffer.concat([...chunks, central, end]);
+}
+var zlib, DOS_EPOCH_OFFSET;
+var init_zipWriter = __esm({
+  "src/shared/utils/zipWriter.ts"() {
+    "use strict";
+    zlib = __toESM(require("zlib"));
+    DOS_EPOCH_OFFSET = (/* @__PURE__ */ new Date("1980-01-01T00:00:00Z")).getTime();
+  }
+});
+
+// src/shared/utils/xmlEscape.ts
+function xmlEscape(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+}
+var init_xmlEscape = __esm({
+  "src/shared/utils/xmlEscape.ts"() {
+    "use strict";
+  }
+});
+
 // src/shared/utils/index.ts
+var utils_exports = {};
+__export(utils_exports, {
+  createZip: () => createZip,
+  extractChapterId: () => extractChapterId,
+  extractCharacterId: () => extractCharacterId,
+  extractSettingId: () => extractSettingId,
+  formatDateForDisplay: () => formatDateForDisplay,
+  formatDelta: () => formatDelta,
+  formatTimeForDisplay: () => formatTimeForDisplay,
+  formatWordCount: () => formatWordCount,
+  generateChapterId: () => generateChapterId,
+  generateSuggestionId: () => generateSuggestionId,
+  generateTaskId: () => generateTaskId,
+  isChapterDraft: () => isChapterDraft,
+  isPathSafe: () => isPathSafe,
+  joinPath: () => joinPath,
+  normalizePath: () => normalizePath,
+  nowISO: () => nowISO,
+  pinyinFromChinese: () => pinyinFromChinese,
+  progressBar: () => progressBar,
+  todayISO: () => todayISO,
+  xmlEscape: () => xmlEscape
+});
 var init_utils = __esm({
   "src/shared/utils/index.ts"() {
     "use strict";
     init_pathUtils();
     init_dateUtils();
     init_formatUtils();
+    init_zipWriter();
+    init_xmlEscape();
+  }
+});
+
+// src/presentation/webview/projectWizardProvider.ts
+var projectWizardProvider_exports = {};
+__export(projectWizardProvider_exports, {
+  ProjectWizardProvider: () => ProjectWizardProvider
+});
+var vscode3, path3, ProjectWizardProvider;
+var init_projectWizardProvider = __esm({
+  "src/presentation/webview/projectWizardProvider.ts"() {
+    "use strict";
+    vscode3 = __toESM(require("vscode"));
+    path3 = __toESM(require("path"));
+    init_projectCommands();
+    ProjectWizardProvider = class {
+      constructor(container) {
+        this.container = container;
+      }
+      panel;
+      async open() {
+        const folder = await pickWorkspaceFolder();
+        if (!folder) {
+          vscode3.window.showWarningMessage("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A\u5DE5\u4F5C\u533A\u6587\u4EF6\u5939\u4EE5\u521B\u5EFA\u5C0F\u8BF4\u9879\u76EE");
+          return;
+        }
+        if (this.panel) {
+          this.panel.reveal(vscode3.ViewColumn.Active, true);
+          return;
+        }
+        this.panel = vscode3.window.createWebviewPanel(
+          "novelCompanion.projectWizard",
+          "\u65B0\u5EFA\u5C0F\u8BF4\u9879\u76EE",
+          vscode3.ViewColumn.Active,
+          {
+            enableScripts: true,
+            retainContextWhenHidden: true,
+            localResourceRoots: []
+          }
+        );
+        this.panel.iconPath = new vscode3.ThemeIcon("book");
+        this.panel.webview.html = this.getHtml(folder);
+        this.panel.webview.onDidReceiveMessage(
+          (msg) => {
+            this.handleMessage(msg, folder).catch((e) => {
+              vscode3.window.showErrorMessage(`\u521B\u5EFA\u5931\u8D25\uFF1A${e.message}`);
+            });
+          },
+          void 0,
+          this.container.context.subscriptions
+        );
+        this.panel.onDidDispose(
+          () => {
+            this.panel = void 0;
+          },
+          void 0,
+          this.container.context.subscriptions
+        );
+      }
+      async handleMessage(msg, folder) {
+        if (msg.type === "preview") {
+          this.panel?.webview.postMessage({
+            type: "preview",
+            directoryTree: this.buildTree(folder)
+          });
+          return;
+        }
+        if (msg.type === "templatePreview") {
+          this.panel?.webview.postMessage({
+            type: "templatePreview",
+            premise: getPremiseTemplate(msg.genre || GENRES[0]),
+            styleGuide: getStyleGuideTemplate(msg.genre || GENRES[0]),
+            outline: getOutlineTemplate(msg.genre || GENRES[0])
+          });
+          return;
+        }
+        if (msg.type === "submit") {
+          const data = msg.data;
+          if (!data.title || !data.title.trim()) {
+            vscode3.window.showErrorMessage("\u4E66\u540D\u4E0D\u80FD\u4E3A\u7A7A");
+            return;
+          }
+          const lengthOption = LENGTH_OPTIONS.find((l) => l.value === data.length) ?? LENGTH_OPTIONS[2];
+          const targetWords = parseInt(data.targetWords, 10) || lengthOption.targetWords;
+          const dailyGoal = parseInt(data.dailyGoal, 10) || 2e3;
+          const created = await createProjectAt(folder, this.container, {
+            title: data.title.trim(),
+            author: data.author?.trim() || void 0,
+            genre: data.genre || GENRES[0],
+            length: data.length || "\u957F\u7BC7",
+            targetWords,
+            dailyGoal
+          });
+          if (created) {
+            vscode3.window.showInformationMessage(`\u5DF2\u521B\u5EFA\u5C0F\u8BF4\u9879\u76EE\uFF1A${data.title}`);
+            const detector = this.container.get("projectDetector");
+            await detector.detect();
+            this.panel?.dispose();
+          }
+        }
+      }
+      buildTree(folder) {
+        const name = path3.basename(folder);
+        const lines = [
+          `${name}/`,
+          "\u251C\u2500 bible/",
+          "\u2502   \u251C\u2500 premise.md",
+          "\u2502   \u2514\u2500 style-guide.md",
+          "\u251C\u2500 outline/",
+          "\u2502   \u2514\u2500 main-outline.md",
+          "\u251C\u2500 chapters/",
+          "\u251C\u2500 characters/",
+          "\u251C\u2500 world/",
+          "\u251C\u2500 foreshadowing/",
+          "\u251C\u2500 timeline/",
+          "\u251C\u2500 notes/",
+          "\u251C\u2500 .novel-ai/",
+          "\u2502   \u251C\u2500 config.yaml",
+          "\u2502   \u251C\u2500 tasks/",
+          "\u2502   \u251C\u2500 results/",
+          "\u2502   \u251C\u2500 schemas/",
+          "\u2502   \u2514\u2500 stats/",
+          "\u2514\u2500 novel.yaml"
+        ];
+        return lines.join("\n");
+      }
+      getHtml(folder) {
+        const esc5 = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        const folderEsc = esc5(folder);
+        const genreOptions = GENRES.map(
+          (g, i) => `<option value="${g}" ${i === 0 ? "selected" : ""}>${g}</option>`
+        ).join("");
+        const lengthOptions = LENGTH_OPTIONS.map(
+          (l, i) => `<option value="${l.value}" ${i === 2 ? "selected" : ""}>${l.label}</option>`
+        ).join("");
+        return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body { font-family: var(--vscode-font-family); color: var(--vscode-foreground); background: var(--vscode-editor-background); padding: 20px; max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  .subtitle { color: var(--vscode-descriptionForeground); margin-bottom: 20px; font-size: 12px; }
+  .layout { display: flex; gap: 24px; }
+  .form { flex: 1; min-width: 0; }
+  .preview { flex: 1; min-width: 0; }
+  .field { margin-bottom: 14px; }
+  label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 13px; }
+  .hint { color: var(--vscode-descriptionForeground); font-size: 11px; margin-top: 2px; }
+  input, select, textarea { width: 100%; box-sizing: border-box; padding: 6px 8px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); border-radius: 2px; font-family: inherit; font-size: 13px; }
+  .row { display: flex; gap: 12px; }
+  .row > .field { flex: 1; }
+  pre { background: var(--vscode-textCodeBlock-background); padding: 10px; border-radius: 4px; font-size: 11px; overflow: auto; max-height: 240px; white-space: pre-wrap; }
+  .section-title { font-size: 13px; font-weight: 600; margin: 14px 0 6px; }
+  .actions { margin-top: 20px; }
+  button { padding: 8px 18px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 2px; cursor: pointer; font-size: 13px; }
+  button:hover { background: var(--vscode-button-hoverBackground); }
+  button.secondary { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); }
+  .tabs { display: flex; gap: 4px; margin-bottom: 6px; }
+  .tab { padding: 4px 10px; cursor: pointer; border-bottom: 2px solid transparent; font-size: 12px; }
+  .tab.active { border-bottom-color: var(--vscode-focusBorder); font-weight: 600; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+</style>
+</head>
+<body>
+  <h1>\u65B0\u5EFA\u5C0F\u8BF4\u9879\u76EE</h1>
+  <div class="subtitle">\u5C06\u5728\u76EE\u5F55\u521B\u5EFA\u6807\u51C6\u5C0F\u8BF4\u9879\u76EE\u7ED3\u6784\uFF1A${folderEsc}</div>
+  <div class="layout">
+    <div class="form">
+      <div class="field">
+        <label>\u4E66\u540D *</label>
+        <input id="title" placeholder="\u8BF7\u8F93\u5165\u5C0F\u8BF4\u6807\u9898" />
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>\u4F5C\u8005\uFF08\u53EF\u7559\u7A7A\uFF09</label>
+          <input id="author" placeholder="\u7B14\u540D" />
+        </div>
+        <div class="field">
+          <label>\u9898\u6750</label>
+          <select id="genre">${genreOptions}</select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>\u7BC7\u5E45</label>
+          <select id="length">${lengthOptions}</select>
+          <div class="hint">\u7BC7\u5E45\u4F1A\u81EA\u52A8\u63A8\u8350\u76EE\u6807\u5B57\u6570\uFF0C\u53EF\u5728\u4E0B\u65B9\u4FEE\u6539</div>
+        </div>
+        <div class="field">
+          <label>\u76EE\u6807\u5B57\u6570</label>
+          <input id="targetWords" placeholder="300000" />
+        </div>
+      </div>
+      <div class="field">
+        <label>\u6BCF\u65E5\u76EE\u6807\u5B57\u6570</label>
+        <input id="dailyGoal" placeholder="2000" />
+      </div>
+      <div class="actions">
+        <button id="create">\u521B\u5EFA\u9879\u76EE</button>
+      </div>
+    </div>
+    <div class="preview">
+      <div class="section-title">\u76EE\u5F55\u9884\u89C8</div>
+      <pre id="tree">\u70B9\u51FB\u4E0B\u65B9\u5237\u65B0\u9884\u89C8\u2026</pre>
+      <button class="secondary" id="refreshTree" style="margin-top:6px;">\u5237\u65B0\u76EE\u5F55\u9884\u89C8</button>
+      <div class="section-title" style="margin-top:18px;">\u9898\u6750\u6A21\u677F\u9884\u89C8</div>
+      <div class="tabs">
+        <div class="tab active" data-tab="premise">\u6545\u4E8B\u524D\u63D0</div>
+        <div class="tab" data-tab="styleGuide">\u98CE\u683C\u6307\u5357</div>
+        <div class="tab" data-tab="outline">\u603B\u5927\u7EB2</div>
+      </div>
+      <div class="tab-content active" id="tab-premise"><pre id="premisePreview">\u9009\u62E9\u9898\u6750\u540E\u9884\u89C8\u2026</pre></div>
+      <div class="tab-content" id="tab-styleGuide"><pre id="styleGuidePreview"></pre></div>
+      <div class="tab-content" id="tab-outline"><pre id="outlinePreview"></pre></div>
+    </div>
+  </div>
+<script>
+  const vscodeApi = acquireVsCodeApi();
+  const lengthTargets = ${JSON.stringify(LENGTH_OPTIONS.map((l) => ({ value: l.value, targetWords: l.targetWords })))};
+
+  function send(type, extra) {
+    vscodeApi.postMessage(Object.assign({ type }, extra || {}));
+  }
+
+  function $(id) { return document.getElementById(id); }
+
+  function updateLengthTarget() {
+    const len = $('length').value;
+    const match = lengthTargets.find((l) => l.value === len);
+    if (match && !$('targetWords').value) {
+      $('targetWords').value = String(match.targetWords);
+    }
+  }
+
+  $('length').addEventListener('change', updateLengthTarget);
+  $('genre').addEventListener('change', () => send('templatePreview', { genre: $('genre').value }));
+  $('refreshTree').addEventListener('click', () => send('preview'));
+
+  document.querySelectorAll('.tab').forEach((t) => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach((x) => x.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach((x) => x.classList.remove('active'));
+      t.classList.add('active');
+      $('tab-' + t.dataset.tab).classList.add('active');
+    });
+  });
+
+  $('create').addEventListener('click', () => {
+    send('submit', {
+      data: {
+        title: $('title').value,
+        author: $('author').value,
+        genre: $('genre').value,
+        length: $('length').value,
+        targetWords: $('targetWords').value,
+        dailyGoal: $('dailyGoal').value,
+      },
+    });
+  });
+
+  window.addEventListener('message', (e) => {
+    const msg = e.data;
+    if (msg.type === 'preview') {
+      $('tree').textContent = msg.directoryTree;
+    } else if (msg.type === 'templatePreview') {
+      $('premisePreview').textContent = msg.premise;
+      $('styleGuidePreview').textContent = msg.styleGuide;
+      $('outlinePreview').textContent = msg.outline;
+    }
+  });
+
+  updateLengthTarget();
+  send('preview');
+  send('templatePreview', { genre: $('genre').value });
+</script>
+</body>
+</html>`;
+      }
+    };
   }
 });
 
 // src/presentation/commands/projectCommands.ts
 async function createProject(container) {
-  const folder = await pickWorkspaceFolder();
-  if (!folder) {
-    vscode3.window.showWarningMessage("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A\u5DE5\u4F5C\u533A\u6587\u4EF6\u5939\u4EE5\u521B\u5EFA\u5C0F\u8BF4\u9879\u76EE");
+  const uiMode = container.get("configManager")?.getUIMode();
+  if (uiMode !== "expert") {
+    const { ProjectWizardProvider: ProjectWizardProvider2 } = await Promise.resolve().then(() => (init_projectWizardProvider(), projectWizardProvider_exports));
+    let provider = container.has("projectWizard") ? container.get("projectWizard") : void 0;
+    if (!provider) {
+      provider = new ProjectWizardProvider2(container);
+      container.register("projectWizard", provider);
+    }
+    await provider.open();
     return;
   }
-  const title = await vscode3.window.showInputBox({
+  const folder = await pickWorkspaceFolder();
+  if (!folder) {
+    vscode4.window.showWarningMessage("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A\u5DE5\u4F5C\u533A\u6587\u4EF6\u5939\u4EE5\u521B\u5EFA\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  const title = await vscode4.window.showInputBox({
     prompt: "\u5C0F\u8BF4\u540D\u79F0",
     placeHolder: "\u8BF7\u8F93\u5165\u5C0F\u8BF4\u6807\u9898",
     validateInput: (v) => v && v.trim() ? void 0 : "\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A"
@@ -7782,51 +8318,65 @@ async function createProject(container) {
   if (!title) {
     return;
   }
-  const author = await vscode3.window.showInputBox({
+  const author = await vscode4.window.showInputBox({
     prompt: "\u4F5C\u8005\uFF08\u53EF\u7559\u7A7A\uFF09",
     placeHolder: "\u7B14\u540D"
   });
-  const genre = await vscode3.window.showQuickPick(GENRES, {
+  const genre = await vscode4.window.showQuickPick(GENRES, {
     placeHolder: "\u9009\u62E9\u9898\u6750",
     canPickMany: false
   });
   if (!genre) {
     return;
   }
-  const lengthItems = [
-    { label: "\u77ED\u7BC7", description: "<5\u4E07\u5B57", value: "\u77ED\u7BC7" },
-    { label: "\u4E2D\u7BC7", description: "5~20\u4E07\u5B57", value: "\u4E2D\u7BC7" },
-    { label: "\u957F\u7BC7", description: "20~80\u4E07\u5B57", value: "\u957F\u7BC7" },
-    { label: "\u7F51\u6587\u957F\u7BC7", description: ">80\u4E07\u5B57", value: "\u7F51\u6587\u957F\u7BC7" }
-  ];
-  const lengthPicked = await vscode3.window.showQuickPick(lengthItems, {
+  const lengthPicked = await vscode4.window.showQuickPick(LENGTH_OPTIONS, {
     placeHolder: "\u9009\u62E9\u7BC7\u5E45"
   });
   const length = lengthPicked?.value;
-  const targetWordsInput = await vscode3.window.showInputBox({
-    prompt: "\u76EE\u6807\u5B57\u6570\uFF08\u53EF\u7559\u7A7A\u4F7F\u7528\u9ED8\u8BA4 300000\uFF09",
-    placeHolder: "300000",
+  const lengthDefaultTarget = lengthPicked?.targetWords ?? LENGTH_OPTIONS[2].targetWords;
+  const targetWordsInput = await vscode4.window.showInputBox({
+    prompt: `\u76EE\u6807\u5B57\u6570\uFF08\u53EF\u7559\u7A7A\u4F7F\u7528 ${lengthDefaultTarget}\uFF09`,
+    placeHolder: String(lengthDefaultTarget),
     validateInput: (v) => !v || /^\d+$/.test(v) ? void 0 : "\u8BF7\u8F93\u5165\u6570\u5B57"
   });
-  const targetWords = targetWordsInput ? parseInt(targetWordsInput, 10) : 3e5;
-  const dailyGoalInput = await vscode3.window.showInputBox({
+  const targetWords = targetWordsInput ? parseInt(targetWordsInput, 10) : lengthDefaultTarget;
+  const dailyGoalInput = await vscode4.window.showInputBox({
     prompt: "\u6BCF\u65E5\u76EE\u6807\u5B57\u6570\uFF08\u53EF\u7559\u7A7A\u4F7F\u7528\u9ED8\u8BA4 2000\uFF09",
     placeHolder: "2000",
     validateInput: (v) => !v || /^\d+$/.test(v) ? void 0 : "\u8BF7\u8F93\u5165\u6570\u5B57"
   });
   const dailyGoal = dailyGoalInput ? parseInt(dailyGoalInput, 10) : 2e3;
-  const novelId = pinyinFromChinese(title) || "novel";
+  try {
+    const created = await createProjectAt(folder, container, {
+      title: title.trim(),
+      author: author?.trim() || void 0,
+      genre,
+      length,
+      targetWords,
+      dailyGoal
+    });
+    if (created) {
+      vscode4.window.showInformationMessage(`\u5DF2\u521B\u5EFA\u5C0F\u8BF4\u9879\u76EE\uFF1A${title}`);
+      const detector = container.get("projectDetector");
+      await detector.detect();
+    }
+  } catch (e) {
+    vscode4.window.showErrorMessage(`\u521B\u5EFA\u9879\u76EE\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function createProjectAt(folder, container, input) {
+  const novelId = pinyinFromChinese(input.title) || "novel";
   const now = nowISO();
   const pluginVersion = getPluginVersion(container);
   const yaml2 = {
     novel_id: novelId,
-    title: title.trim(),
-    author: author?.trim() || void 0,
-    genre,
-    length,
+    title: input.title,
+    author: input.author || void 0,
+    genre: input.genre,
+    length: input.length,
     style: void 0,
-    target_words: targetWords,
-    daily_goal: dailyGoal,
+    target_words: input.targetWords,
+    daily_goal: input.dailyGoal,
     created_at: now,
     updated_at: now,
     plugin_version: pluginVersion,
@@ -7834,30 +8384,29 @@ async function createProject(container) {
   };
   try {
     createDirectories(folder);
-    createTemplateFiles(folder, container, genre);
+    createTemplateFiles(folder, container, input.genre);
     copySchemaFiles(folder, container);
-    const novelYamlPath = path2.join(folder, "novel.yaml");
+    const novelYamlPath = path4.join(folder, "novel.yaml");
     if (fs2.existsSync(novelYamlPath)) {
-      const overwrite = await vscode3.window.showWarningMessage(
+      const overwrite = await vscode4.window.showWarningMessage(
         "\u8BE5\u76EE\u5F55\u4E0B\u5DF2\u5B58\u5728 novel.yaml\uFF0C\u662F\u5426\u8986\u76D6\uFF1F",
         { modal: true },
         "\u8986\u76D6",
         "\u53D6\u6D88"
       );
       if (overwrite !== "\u8986\u76D6") {
-        return;
+        return false;
       }
     }
     fs2.writeFileSync(novelYamlPath, YAML.stringify(yaml2), "utf8");
-    vscode3.window.showInformationMessage(`\u5DF2\u521B\u5EFA\u5C0F\u8BF4\u9879\u76EE\uFF1A${title}`);
-    const detector = container.get("projectDetector");
-    await detector.detect();
+    return true;
   } catch (e) {
-    vscode3.window.showErrorMessage(`\u521B\u5EFA\u9879\u76EE\u5931\u8D25\uFF1A${e.message}`);
+    vscode4.window.showErrorMessage(`\u521B\u5EFA\u9879\u76EE\u5931\u8D25\uFF1A${e.message}`);
+    return false;
   }
 }
 async function pickWorkspaceFolder() {
-  const folders = vscode3.workspace.workspaceFolders;
+  const folders = vscode4.workspace.workspaceFolders;
   if (!folders || folders.length === 0) {
     return void 0;
   }
@@ -7869,7 +8418,7 @@ async function pickWorkspaceFolder() {
     description: f.uri.fsPath,
     path: f.uri.fsPath
   }));
-  const picked = await vscode3.window.showQuickPick(items, {
+  const picked = await vscode4.window.showQuickPick(items, {
     placeHolder: "\u9009\u62E9\u521B\u5EFA\u9879\u76EE\u7684\u6587\u4EF6\u5939"
   });
   return picked?.path;
@@ -7894,7 +8443,7 @@ function createDirectories(root) {
     PROJECT_DIRS.VSCODE
   ];
   for (const d of dirs) {
-    const full = path2.join(root, d);
+    const full = path4.join(root, d);
     fs2.mkdirSync(full, { recursive: true });
   }
 }
@@ -7907,474 +8456,141 @@ function getPluginVersion(container) {
   }
 }
 function createTemplateFiles(root, container, genre) {
-  const bibleDir = path2.join(root, PROJECT_DIRS.BIBLE);
-  const outlineDir = path2.join(root, PROJECT_DIRS.OUTLINE);
-  const aiDir = path2.join(root, PROJECT_DIRS.NOVEL_AI);
-  const premisePath = path2.join(bibleDir, "premise.md");
+  const bibleDir = path4.join(root, PROJECT_DIRS.BIBLE);
+  const outlineDir = path4.join(root, PROJECT_DIRS.OUTLINE);
+  const aiDir = path4.join(root, PROJECT_DIRS.NOVEL_AI);
+  const premisePath = path4.join(bibleDir, "premise.md");
   if (!fs2.existsSync(premisePath)) {
     fs2.writeFileSync(premisePath, getPremiseTemplate(genre), "utf8");
   }
-  const styleGuidePath = path2.join(bibleDir, "style-guide.md");
+  const styleGuidePath = path4.join(bibleDir, "style-guide.md");
   if (!fs2.existsSync(styleGuidePath)) {
     fs2.writeFileSync(styleGuidePath, getStyleGuideTemplate(genre), "utf8");
   }
-  const mainOutlinePath = path2.join(outlineDir, "main-outline.md");
+  const mainOutlinePath = path4.join(outlineDir, "main-outline.md");
   if (!fs2.existsSync(mainOutlinePath)) {
     fs2.writeFileSync(mainOutlinePath, getOutlineTemplate(genre), "utf8");
   }
-  const configPath = path2.join(aiDir, "config.yaml");
+  const configPath = path4.join(aiDir, "config.yaml");
   if (!fs2.existsSync(configPath)) {
-    fs2.writeFileSync(configPath, `ai:
-  plugin: kilo-code
-  permission_default: suggest_revision
-  review_interval: 30
-  review_wordcount: 1000
-  reminder_enabled: true
-stats:
-  count_punctuation: true
-  count_spaces: false
-  count_markdown_syntax: false
-  english_word_as_one: true
-  exclude_front_matter: true
-localCheck:
-  enabled: true
-  repeated_word: true
-  punctuation: true
-  typo_dict: true
-  long_sentence: true
-  long_sentence_threshold: 80
-  high_frequency: true
-  high_frequency_threshold: 20
-  extra_space: true
-reminder:
-  mode: statusbar
-  snooze_minutes: 10
-task:
-  default_template: full-review
-  auto_open_instruction: true
-`, "utf8");
+    fs2.writeFileSync(configPath, "ai:\n  plugin: kilo-code\n  permission_default: suggest_revision\n  review_interval: 30\n  review_wordcount: 1000\n  reminder_enabled: true\nstats:\n  count_punctuation: true\n  count_spaces: false\n  count_markdown_syntax: false\n  english_word_as_one: true\n  exclude_front_matter: true\nlocalCheck:\n  enabled: true\n  repeated_word: true\n  punctuation: true\n  typo_dict: true\n  long_sentence: true\n  long_sentence_threshold: 80\n  high_frequency: true\n  high_frequency_threshold: 20\n  extra_space: true\nreminder:\n  mode: statusbar\n  snooze_minutes: 10\ntask:\n  default_template: full-review\n  auto_open_instruction: true\n", "utf8");
   }
-  const vsCodeDir = path2.join(root, PROJECT_DIRS.VSCODE);
-  const settingsPath = path2.join(vsCodeDir, "settings.json");
+  const vsCodeDir = path4.join(root, PROJECT_DIRS.VSCODE);
+  const settingsPath = path4.join(vsCodeDir, "settings.json");
   if (!fs2.existsSync(settingsPath)) {
     fs2.writeFileSync(settingsPath, JSON.stringify({ "editor.wordWrap": "on" }, null, 2), "utf8");
   }
 }
 function getPremiseTemplate(genre) {
   const templates = {
-    "\u7384\u5E7B": `# \u6545\u4E8B\u524D\u63D0
-
-## \u6838\u5FC3\u5356\u70B9
-
-\uFF08\u4E00\u53E5\u8BDD\u5438\u5F15\u8BFB\u8005\uFF1A\u5982\u300C\u4E00\u4E2A\u88AB\u5E9F\u7684\u5929\u624D\u91CD\u751F\u56DE\u5C11\u5E74\u65F6\u4EE3\uFF0C\u51ED\u501F\u524D\u4E16\u8BB0\u5FC6\u78BE\u538B\u4E00\u5207\u300D\uFF09
-
-## \u4E3B\u89D2
-
-- \u59D3\u540D\uFF1A
-- \u6B32\u671B\uFF1A
-- \u7F3A\u9677\uFF1A
-- \u80CC\u666F\uFF1A
-- \u529F\u6CD5/\u8840\u8109/\u4F53\u8D28\uFF1A
-
-## \u4E3B\u8981\u51B2\u7A81
-
-
-## \u529B\u91CF\u4F53\u7CFB
-
-- \u5883\u754C\u5212\u5206\uFF1A
-- \u4FEE\u70BC\u8D44\u6E90\uFF1A
-- \u6218\u529B\u89C4\u5219\uFF1A\u8DE8\u5883\u754C\u6218\u6597\u6781\u96BE
-
-## \u6545\u4E8B\u7B80\u4ECB
-
-
-## \u4E3B\u9898
-`,
-    "\u90FD\u5E02": `# \u6545\u4E8B\u524D\u63D0
-
-## \u6838\u5FC3\u5356\u70B9
-
-\uFF08\u5982\u300C\u90FD\u5E02\u91CD\u751F\uFF0C\u56DE\u5230\u5341\u5E74\u524D\u5F25\u8865\u6240\u6709\u9057\u61BE\u300D\uFF09
-
-## \u4E3B\u89D2
-
-- \u59D3\u540D\uFF1A
-- \u6B32\u671B\uFF1A
-- \u7F3A\u9677\uFF1A
-- \u80CC\u666F\uFF1A
-- \u804C\u4E1A\uFF1A
-
-## \u4E3B\u8981\u51B2\u7A81
-
-
-## \u6545\u4E8B\u7B80\u4ECB
-
-
-## \u4E3B\u9898
-`,
-    "\u79D1\u5E7B": `# \u6545\u4E8B\u524D\u63D0
-
-## \u6838\u5FC3\u5356\u70B9
-
-\uFF08\u5982\u300C\u4EBA\u7C7B\u6587\u660E\u7684\u6700\u540E\u5E78\u5B58\u8005\u7A7F\u8D8A\u866B\u6D1E\u5BFB\u627E\u65B0\u5BB6\u56ED\u300D\uFF09
-
-## \u4E3B\u89D2
-
-- \u59D3\u540D\uFF1A
-- \u6B32\u671B\uFF1A
-- \u7F3A\u9677\uFF1A
-- \u80CC\u666F\uFF1A
-- \u79D1\u6280/\u80FD\u529B\uFF1A
-
-## \u4E16\u754C\u89C2\u8BBE\u5B9A
-
-- \u79D1\u6280\u6C34\u5E73\uFF1A
-- \u793E\u4F1A\u5F62\u6001\uFF1A
-- \u6838\u5FC3\u79D1\u6280/\u80FD\u6E90\uFF1A
-
-## \u4E3B\u8981\u51B2\u7A81
-
-
-## \u6545\u4E8B\u7B80\u4ECB
-
-
-## \u4E3B\u9898
-`,
-    "\u5386\u53F2": `# \u6545\u4E8B\u524D\u63D0
-
-## \u6838\u5FC3\u5356\u70B9
-
-\uFF08\u5982\u300C\u7A7F\u8D8A\u6210\u4EA1\u56FD\u4E4B\u541B\uFF0C\u7FFB\u76D8\u6551\u56FD\u300D\uFF09
-
-## \u4E3B\u89D2
-
-- \u59D3\u540D\uFF1A
-- \u6B32\u671B\uFF1A
-- \u7F3A\u9677\uFF1A
-- \u80CC\u666F\uFF1A
-- \u5386\u53F2\u8EAB\u4EFD\uFF1A
-
-## \u65F6\u4EE3\u80CC\u666F
-
-- \u671D\u4EE3/\u5E74\u4EE3\uFF1A
-- \u5173\u952E\u5386\u53F2\u4E8B\u4EF6\uFF1A
-- \u670D\u9970/\u793C\u4EEA/\u5B98\u5236\uFF1A
-
-## \u4E3B\u8981\u51B2\u7A81
-
-
-## \u6545\u4E8B\u7B80\u4ECB
-
-
-## \u4E3B\u9898
-`,
-    "\u8A00\u60C5": `# \u6545\u4E8B\u524D\u63D0
-
-## \u6838\u5FC3\u5356\u70B9
-
-\uFF08\u5982\u300C\u6B22\u559C\u51A4\u5BB6\u4ECE\u76F8\u6740\u5230\u76F8\u7231\u300D\uFF09
-
-## \u4E3B\u89D2
-
-- \u59D3\u540D\uFF1A
-- \u6027\u683C\uFF1A
-- \u80CC\u666F\uFF1A
-- \u60C5\u611F\u9700\u6C42\uFF1A
-
-## \u53E6\u4E00\u534A
-
-- \u59D3\u540D\uFF1A
-- \u6027\u683C\uFF1A
-- \u4E0E\u4E3B\u89D2\u5173\u7CFB\uFF1A
-
-## \u611F\u60C5\u7EBF\u89C4\u5212
-
-- \u521D\u9047\uFF1A
-- \u66A7\u6627\uFF1A
-- \u8F6C\u6298\uFF1A
-- \u5728\u4E00\u8D77\uFF1A
-
-## \u6545\u4E8B\u7B80\u4ECB
-
-
-## \u4E3B\u9898
-`,
-    "\u60AC\u7591": `# \u6545\u4E8B\u524D\u63D0
-
-## \u6838\u5FC3\u5356\u70B9
-
-\uFF08\u5982\u300C\u8FDE\u73AF\u51F6\u6848\u80CC\u540E\u9690\u85CF\u7740\u4E8C\u5341\u5E74\u7684\u65E7\u6848\u300D\uFF09
-
-## \u4E3B\u89D2
-
-- \u59D3\u540D\uFF1A
-- \u8EAB\u4EFD\uFF1A
-- \u80FD\u529B/\u7279\u957F\uFF1A
-- \u5F31\u70B9\uFF1A
-
-## \u6838\u5FC3\u60AC\u5FF5
-
-
-## \u7EBF\u7D22\u8BBE\u8BA1
-
-- \u7269\u8BC1\u7EBF\u7D22\uFF1A
-- \u4EBA\u7269\u7EBF\u7D22\uFF1A
-- \u65F6\u95F4\u7EBF\u7D22\uFF1A
-
-## \u6545\u4E8B\u7B80\u4ECB
-
-
-## \u4E3B\u9898
-`,
-    "\u6B66\u4FA0": `# \u6545\u4E8B\u524D\u63D0
-
-## \u6838\u5FC3\u5356\u70B9
-
-\uFF08\u5982\u300C\u5C11\u5E74\u4ED7\u5251\u6C5F\u6E56\uFF0C\u63ED\u5F00\u5E08\u95E8\u706D\u95E8\u771F\u76F8\u300D\uFF09
-
-## \u4E3B\u89D2
-
-- \u59D3\u540D\uFF1A
-- \u6B32\u671B\uFF1A
-- \u6B66\u529F\uFF1A
-- \u5E08\u95E8\uFF1A
-
-## \u6B66\u529F\u4F53\u7CFB
-
-- \u6B66\u529F\u5883\u754C\uFF1A
-- \u95E8\u6D3E\u52BF\u529B\uFF1A
-- \u6C5F\u6E56\u683C\u5C40\uFF1A
-
-## \u4E3B\u8981\u51B2\u7A81
-
-
-## \u6545\u4E8B\u7B80\u4ECB
-
-
-## \u4E3B\u9898
-`,
-    "\u6E38\u620F": `# \u6545\u4E8B\u524D\u63D0
-
-## \u6838\u5FC3\u5356\u70B9
-
-\uFF08\u5982\u300C\u73A9\u5BB6\u7A7F\u8D8A\u8FDB\u6E38\u620F\u4E16\u754C\uFF0CNPC\u5F00\u59CB\u89C9\u9192\u300D\uFF09
-
-## \u4E3B\u89D2
-
-- \u59D3\u540D\uFF1A
-- \u804C\u4E1A\u6280\u80FD\uFF1A
-- \u7B49\u7EA7/\u5C5E\u6027\uFF1A
-- \u7279\u6B8A\u80FD\u529B\uFF1A
-
-## \u6E38\u620F\u7CFB\u7EDF
-
-- \u7B49\u7EA7\u4F53\u7CFB\uFF1A
-- \u6280\u80FD/\u88C5\u5907\uFF1A
-- \u4EFB\u52A1/\u526F\u672C\uFF1A
-- \u6B7B\u4EA1\u60E9\u7F5A\uFF1A
-
-## \u6545\u4E8B\u7B80\u4ECB
-
-
-## \u4E3B\u9898
-`,
-    "\u65E0\u9650\u6D41": `# \u6545\u4E8B\u524D\u63D0
-
-## \u6838\u5FC3\u5356\u70B9
-
-\uFF08\u5982\u300C\u8F6E\u56DE\u8005\u7A7F\u8D8A\u591A\u4E2A\u526F\u672C\u4E16\u754C\uFF0C\u641C\u96C6\u7EBF\u7D22\u5BFB\u627E\u771F\u76F8\u300D\uFF09
-
-## \u4E3B\u89D2
-
-- \u59D3\u540D\uFF1A
-- \u8F6E\u56DE\u8005\u7F16\u53F7\uFF1A
-- \u7279\u6B8A\u80FD\u529B/\u5929\u8D4B\uFF1A
-
-## \u526F\u672C\u7CFB\u7EDF
-
-- \u526F\u672C\u7C7B\u578B\uFF1A
-- \u96BE\u5EA6\u5206\u7EA7\uFF1A
-- \u5956\u52B1/\u60E9\u7F5A\uFF1A
-- \u4E3B\u7EBF\u526F\u672C\uFF1A
-
-## \u6545\u4E8B\u7B80\u4ECB
-
-
-## \u4E3B\u9898
-`
+    "\u7384\u5E7B": "# \u6545\u4E8B\u524D\u63D0\n\n## \u6838\u5FC3\u5356\u70B9\n\n\uFF08\u4E00\u53E5\u8BDD\u5438\u5F15\u8BFB\u8005\uFF1A\u5982\u300C\u4E00\u4E2A\u88AB\u5E9F\u7684\u5929\u624D\u91CD\u751F\u56DE\u5C11\u5E74\u65F6\u4EE3\uFF0C\u51ED\u501F\u524D\u4E16\u8BB0\u5FC6\u78BE\u538B\u4E00\u5207\u300D\uFF09\n\n## \u4E3B\u89D2\n\n- \u59D3\u540D\uFF1A\n- \u6B32\u671B\uFF1A\n- \u7F3A\u9677\uFF1A\n- \u80CC\u666F\uFF1A\n- \u529F\u6CD5/\u8840\u8109/\u4F53\u8D28\uFF1A\n\n## \u4E3B\u8981\u51B2\u7A81\n\n\n## \u529B\u91CF\u4F53\u7CFB\n\n- \u5883\u754C\u5212\u5206\uFF1A\n- \u4FEE\u70BC\u8D44\u6E90\uFF1A\n- \u6218\u529B\u89C4\u5219\uFF1A\u8DE8\u5883\u754C\u6218\u6597\u6781\u96BE\n\n## \u6545\u4E8B\u7B80\u4ECB\n\n\n## \u4E3B\u9898\n",
+    "\u90FD\u5E02": "# \u6545\u4E8B\u524D\u63D0\n\n## \u6838\u5FC3\u5356\u70B9\n\n\uFF08\u5982\u300C\u90FD\u5E02\u91CD\u751F\uFF0C\u56DE\u5230\u5341\u5E74\u524D\u5F25\u8865\u6240\u6709\u9057\u61BE\u300D\uFF09\n\n## \u4E3B\u89D2\n\n- \u59D3\u540D\uFF1A\n- \u6B32\u671B\uFF1A\n- \u7F3A\u9677\uFF1A\n- \u80CC\u666F\uFF1A\n- \u804C\u4E1A\uFF1A\n\n## \u4E3B\u8981\u51B2\u7A81\n\n\n## \u6545\u4E8B\u7B80\u4ECB\n\n\n## \u4E3B\u9898\n",
+    "\u79D1\u5E7B": "# \u6545\u4E8B\u524D\u63D0\n\n## \u6838\u5FC3\u5356\u70B9\n\n\uFF08\u5982\u300C\u4EBA\u7C7B\u6587\u660E\u7684\u6700\u540E\u5E78\u5B58\u8005\u7A7F\u8D8A\u866B\u6D1E\u5BFB\u627E\u65B0\u5BB6\u56ED\u300D\uFF09\n\n## \u4E3B\u89D2\n\n- \u59D3\u540D\uFF1A\n- \u6B32\u671B\uFF1A\n- \u7F3A\u9677\uFF1A\n- \u80CC\u666F\uFF1A\n- \u79D1\u6280/\u80FD\u529B\uFF1A\n\n## \u4E16\u754C\u89C2\u8BBE\u5B9A\n\n- \u79D1\u6280\u6C34\u5E73\uFF1A\n- \u793E\u4F1A\u5F62\u6001\uFF1A\n- \u6838\u5FC3\u79D1\u6280/\u80FD\u6E90\uFF1A\n\n## \u4E3B\u8981\u51B2\u7A81\n\n\n## \u6545\u4E8B\u7B80\u4ECB\n\n\n## \u4E3B\u9898\n",
+    "\u5386\u53F2": "# \u6545\u4E8B\u524D\u63D0\n\n## \u6838\u5FC3\u5356\u70B9\n\n\uFF08\u5982\u300C\u7A7F\u8D8A\u6210\u4EA1\u56FD\u4E4B\u541B\uFF0C\u7FFB\u76D8\u6551\u56FD\u300D\uFF09\n\n## \u4E3B\u89D2\n\n- \u59D3\u540D\uFF1A\n- \u6B32\u671B\uFF1A\n- \u7F3A\u9677\uFF1A\n- \u80CC\u666F\uFF1A\n- \u5386\u53F2\u8EAB\u4EFD\uFF1A\n\n## \u65F6\u4EE3\u80CC\u666F\n\n- \u671D\u4EE3/\u5E74\u4EE3\uFF1A\n- \u5173\u952E\u5386\u53F2\u4E8B\u4EF6\uFF1A\n- \u670D\u9970/\u793C\u4EEA/\u5B98\u5236\uFF1A\n\n## \u4E3B\u8981\u51B2\u7A81\n\n\n## \u6545\u4E8B\u7B80\u4ECB\n\n\n## \u4E3B\u9898\n",
+    "\u8A00\u60C5": "# \u6545\u4E8B\u524D\u63D0\n\n## \u6838\u5FC3\u5356\u70B9\n\n\uFF08\u5982\u300C\u6B22\u559C\u51A4\u5BB6\u4ECE\u76F8\u6740\u5230\u76F8\u7231\u300D\uFF09\n\n## \u4E3B\u89D2\n\n- \u59D3\u540D\uFF1A\n- \u6027\u683C\uFF1A\n- \u80CC\u666F\uFF1A\n- \u60C5\u611F\u9700\u6C42\uFF1A\n\n## \u53E6\u4E00\u534A\n\n- \u59D3\u540D\uFF1A\n- \u6027\u683C\uFF1A\n- \u4E0E\u4E3B\u89D2\u5173\u7CFB\uFF1A\n\n## \u611F\u60C5\u7EBF\u89C4\u5212\n\n- \u521D\u9047\uFF1A\n- \u66A7\u6627\uFF1A\n- \u8F6C\u6298\uFF1A\n- \u5728\u4E00\u8D77\uFF1A\n\n## \u6545\u4E8B\u7B80\u4ECB\n\n\n## \u4E3B\u9898\n",
+    "\u60AC\u7591": "# \u6545\u4E8B\u524D\u63D0\n\n## \u6838\u5FC3\u5356\u70B9\n\n\uFF08\u5982\u300C\u8FDE\u73AF\u51F6\u6848\u80CC\u540E\u9690\u85CF\u7740\u4E8C\u5341\u5E74\u7684\u65E7\u6848\u300D\uFF09\n\n## \u4E3B\u89D2\n\n- \u59D3\u540D\uFF1A\n- \u8EAB\u4EFD\uFF1A\n- \u80FD\u529B/\u7279\u957F\uFF1A\n- \u5F31\u70B9\uFF1A\n\n## \u6838\u5FC3\u60AC\u5FF5\n\n\n## \u7EBF\u7D22\u8BBE\u8BA1\n\n- \u7269\u8BC1\u7EBF\u7D22\uFF1A\n- \u4EBA\u7269\u7EBF\u7D22\uFF1A\n- \u65F6\u95F4\u7EBF\u7D22\uFF1A\n\n## \u6545\u4E8B\u7B80\u4ECB\n\n\n## \u4E3B\u9898\n",
+    "\u6B66\u4FA0": "# \u6545\u4E8B\u524D\u63D0\n\n## \u6838\u5FC3\u5356\u70B9\n\n\uFF08\u5982\u300C\u5C11\u5E74\u4ED7\u5251\u6C5F\u6E56\uFF0C\u63ED\u5F00\u5E08\u95E8\u706D\u95E8\u771F\u76F8\u300D\uFF09\n\n## \u4E3B\u89D2\n\n- \u59D3\u540D\uFF1A\n- \u6B32\u671B\uFF1A\n- \u6B66\u529F\uFF1A\n- \u5E08\u95E8\uFF1A\n\n## \u6B66\u529F\u4F53\u7CFB\n\n- \u6B66\u529F\u5883\u754C\uFF1A\n- \u95E8\u6D3E\u52BF\u529B\uFF1A\n- \u6C5F\u6E56\u683C\u5C40\uFF1A\n\n## \u4E3B\u8981\u51B2\u7A81\n\n\n## \u6545\u4E8B\u7B80\u4ECB\n\n\n## \u4E3B\u9898\n",
+    "\u6E38\u620F": "# \u6545\u4E8B\u524D\u63D0\n\n## \u6838\u5FC3\u5356\u70B9\n\n\uFF08\u5982\u300C\u73A9\u5BB6\u7A7F\u8D8A\u8FDB\u6E38\u620F\u4E16\u754C\uFF0CNPC\u5F00\u59CB\u89C9\u9192\u300D\uFF09\n\n## \u4E3B\u89D2\n\n- \u59D3\u540D\uFF1A\n- \u804C\u4E1A\u6280\u80FD\uFF1A\n- \u7B49\u7EA7/\u5C5E\u6027\uFF1A\n- \u7279\u6B8A\u80FD\u529B\uFF1A\n\n## \u6E38\u620F\u7CFB\u7EDF\n\n- \u7B49\u7EA7\u4F53\u7CFB\uFF1A\n- \u6280\u80FD/\u88C5\u5907\uFF1A\n- \u4EFB\u52A1/\u526F\u672C\uFF1A\n- \u6B7B\u4EA1\u60E9\u7F5A\uFF1A\n\n## \u6545\u4E8B\u7B80\u4ECB\n\n\n## \u4E3B\u9898\n",
+    "\u65E0\u9650\u6D41": "# \u6545\u4E8B\u524D\u63D0\n\n## \u6838\u5FC3\u5356\u70B9\n\n\uFF08\u5982\u300C\u8F6E\u56DE\u8005\u7A7F\u8D8A\u591A\u4E2A\u526F\u672C\u4E16\u754C\uFF0C\u641C\u96C6\u7EBF\u7D22\u5BFB\u627E\u771F\u76F8\u300D\uFF09\n\n## \u4E3B\u89D2\n\n- \u59D3\u540D\uFF1A\n- \u8F6E\u56DE\u8005\u7F16\u53F7\uFF1A\n- \u7279\u6B8A\u80FD\u529B/\u5929\u8D4B\uFF1A\n\n## \u526F\u672C\u7CFB\u7EDF\n\n- \u526F\u672C\u7C7B\u578B\uFF1A\n- \u96BE\u5EA6\u5206\u7EA7\uFF1A\n- \u5956\u52B1/\u60E9\u7F5A\uFF1A\n- \u4E3B\u7EBF\u526F\u672C\uFF1A\n\n## \u6545\u4E8B\u7B80\u4ECB\n\n\n## \u4E3B\u9898\n"
   };
   return templates[genre] || templates["\u7384\u5E7B"];
 }
 function getStyleGuideTemplate(_genre) {
-  return `# \u98CE\u683C\u6307\u5357
-
-## \u53D9\u4E8B\u4EBA\u79F0
-
-\uFF08\u7B2C\u4E00\u4EBA\u79F0 / \u7B2C\u4E09\u4EBA\u79F0\u9650\u77E5 / \u7B2C\u4E09\u4EBA\u79F0\u5168\u77E5\uFF09
-
-## \u65F6\u6001
-
-\uFF08\u8FC7\u53BB\u65F6 / \u73B0\u5728\u65F6\uFF09
-
-## \u6587\u98CE
-
-\uFF08\u534E\u4E3D / \u6734\u5B9E / \u5E7D\u9ED8 / \u51B7\u5CFB\uFF09
-
-## \u5BF9\u8BDD\u98CE\u683C
-
-\uFF08\u7B80\u6D01\u660E\u5FEB / \u53E4\u98CE / \u53E3\u8BED\u5316\uFF09
-
-## \u7981\u5FCC
-
-\uFF08\u907F\u514D\u7684\u4E8B\u9879\uFF0C\u5982\uFF1A\u4E0D\u5199\u8FC7\u4E8E\u8840\u8165\u7684\u66B4\u529B\u63CF\u5199\uFF09
-`;
+  return "# \u98CE\u683C\u6307\u5357\n\n## \u53D9\u4E8B\u4EBA\u79F0\n\n\uFF08\u7B2C\u4E00\u4EBA\u79F0 / \u7B2C\u4E09\u4EBA\u79F0\u9650\u77E5 / \u7B2C\u4E09\u4EBA\u79F0\u5168\u77E5\uFF09\n\n## \u65F6\u6001\n\n\uFF08\u8FC7\u53BB\u65F6 / \u73B0\u5728\u65F6\uFF09\n\n## \u6587\u98CE\n\n\uFF08\u534E\u4E3D / \u6734\u5B9E / \u5E7D\u9ED8 / \u51B7\u5CFB\uFF09\n\n## \u5BF9\u8BDD\u98CE\u683C\n\n\uFF08\u7B80\u6D01\u660E\u5FEB / \u53E4\u98CE / \u53E3\u8BED\u5316\uFF09\n\n## \u7981\u5FCC\n\n\uFF08\u907F\u514D\u7684\u4E8B\u9879\uFF0C\u5982\uFF1A\u4E0D\u5199\u8FC7\u4E8E\u8840\u8165\u7684\u66B4\u529B\u63CF\u5199\uFF09\n";
 }
 function getOutlineTemplate(genre) {
-  const base = `# \u603B\u5927\u7EB2
-
-## \u6545\u4E8B\u4E3B\u7EBF
-
-
-## \u5206\u5377\u89C4\u5212
-
-`;
+  const base = "# \u603B\u5927\u7EB2\n\n## \u6545\u4E8B\u4E3B\u7EBF\n\n\n## \u5206\u5377\u89C4\u5212\n\n";
   const genreTips = {
-    "\u7384\u5E7B": `## \u723D\u70B9\u8282\u594F
-
-- \u6BCF 5~10 \u7AE0\u4E00\u4E2A\u5C0F\u9AD8\u6F6E
-- \u6BCF\u5377\u4E00\u4E2A\u5927\u9AD8\u6F6E
-- \u6218\u529B\u5347\u7EA7\u8282\u594F\uFF1A
-
-## 10 \u7AE0\u7C97\u7EB2
-
-\u7B2C 1 \u7AE0\uFF1A
-\u7B2C 2 \u7AE0\uFF1A
-\u7B2C 3 \u7AE0\uFF1A
-\u7B2C 4 \u7AE0\uFF1A
-\u7B2C 5 \u7AE0\uFF1A
-\u7B2C 6 \u7AE0\uFF1A
-\u7B2C 7 \u7AE0\uFF1A
-\u7B2C 8 \u7AE0\uFF1A
-\u7B2C 9 \u7AE0\uFF1A
-\u7B2C 10 \u7AE0\uFF1A
-`,
-    "\u90FD\u5E02": `## \u723D\u70B9\u8282\u594F
-
-- \u793E\u4EA4\u6253\u8138\u8282\u594F\uFF1A
-- \u5546\u4E1A\u7EBF\u8282\u594F\uFF1A
-
-## 10 \u7AE0\u7C97\u7EB2
-
-\u7B2C 1 \u7AE0\uFF1A
-\u7B2C 2 \u7AE0\uFF1A
-\u7B2C 3 \u7AE0\uFF1A
-\u7B2C 4 \u7AE0\uFF1A
-\u7B2C 5 \u7AE0\uFF1A
-\u7B2C 6 \u7AE0\uFF1A
-\u7B2C 7 \u7AE0\uFF1A
-\u7B2C 8 \u7AE0\uFF1A
-\u7B2C 9 \u7AE0\uFF1A
-\u7B2C 10 \u7AE0\uFF1A
-`,
-    "\u60AC\u7591": `## \u60AC\u5FF5\u8282\u594F
-
-- \u6BCF 3 \u7AE0\u4E00\u4E2A\u53CD\u8F6C
-- \u7EBF\u7D22\u91CA\u653E\u8282\u594F\uFF1A
-
-## 10 \u7AE0\u7C97\u7EB2
-
-\u7B2C 1 \u7AE0\uFF1A
-\u7B2C 2 \u7AE0\uFF1A
-\u7B2C 3 \u7AE0\uFF1A
-\u7B2C 4 \u7AE0\uFF1A
-\u7B2C 5 \u7AE0\uFF1A
-\u7B2C 6 \u7AE0\uFF1A
-\u7B2C 7 \u7AE0\uFF1A
-\u7B2C 8 \u7AE0\uFF1A
-\u7B2C 9 \u7AE0\uFF1A
-\u7B2C 10 \u7AE0\uFF1A
-`
+    "\u7384\u5E7B": "## \u723D\u70B9\u8282\u594F\n\n- \u6BCF 5~10 \u7AE0\u4E00\u4E2A\u5C0F\u9AD8\u6F6E\n- \u6BCF\u5377\u4E00\u4E2A\u5927\u9AD8\u6F6E\n- \u6218\u529B\u5347\u7EA7\u8282\u594F\uFF1A\n\n## 10 \u7AE0\u7C97\u7EB2\n\n\u7B2C 1 \u7AE0\uFF1A\n\u7B2C 2 \u7AE0\uFF1A\n\u7B2C 3 \u7AE0\uFF1A\n\u7B2C 4 \u7AE0\uFF1A\n\u7B2C 5 \u7AE0\uFF1A\n\u7B2C 6 \u7AE0\uFF1A\n\u7B2C 7 \u7AE0\uFF1A\n\u7B2C 8 \u7AE0\uFF1A\n\u7B2C 9 \u7AE0\uFF1A\n\u7B2C 10 \u7AE0\uFF1A\n",
+    "\u90FD\u5E02": "## \u723D\u70B9\u8282\u594F\n\n- \u793E\u4EA4\u6253\u8138\u8282\u594F\uFF1A\n- \u5546\u4E1A\u7EBF\u8282\u594F\uFF1A\n\n## 10 \u7AE0\u7C97\u7EB2\n\n\u7B2C 1 \u7AE0\uFF1A\n\u7B2C 2 \u7AE0\uFF1A\n\u7B2C 3 \u7AE0\uFF1A\n\u7B2C 4 \u7AE0\uFF1A\n\u7B2C 5 \u7AE0\uFF1A\n\u7B2C 6 \u7AE0\uFF1A\n\u7B2C 7 \u7AE0\uFF1A\n\u7B2C 8 \u7AE0\uFF1A\n\u7B2C 9 \u7AE0\uFF1A\n\u7B2C 10 \u7AE0\uFF1A\n",
+    "\u60AC\u7591": "## \u60AC\u5FF5\u8282\u594F\n\n- \u6BCF 3 \u7AE0\u4E00\u4E2A\u53CD\u8F6C\n- \u7EBF\u7D22\u91CA\u653E\u8282\u594F\uFF1A\n\n## 10 \u7AE0\u7C97\u7EB2\n\n\u7B2C 1 \u7AE0\uFF1A\n\u7B2C 2 \u7AE0\uFF1A\n\u7B2C 3 \u7AE0\uFF1A\n\u7B2C 4 \u7AE0\uFF1A\n\u7B2C 5 \u7AE0\uFF1A\n\u7B2C 6 \u7AE0\uFF1A\n\u7B2C 7 \u7AE0\uFF1A\n\u7B2C 8 \u7AE0\uFF1A\n\u7B2C 9 \u7AE0\uFF1A\n\u7B2C 10 \u7AE0\uFF1A\n"
   };
   return base + (genreTips[genre] || genreTips["\u7384\u5E7B"]);
 }
 function copySchemaFiles(root, container) {
-  const schemaDir = path2.join(root, PROJECT_DIRS.NOVEL_AI_SCHEMAS);
+  const schemaDir = path4.join(root, PROJECT_DIRS.NOVEL_AI_SCHEMAS);
   try {
     const extRoot = container.context.extensionPath;
-    const srcTaskSchema = path2.join(extRoot, "resources", "schemas", "task.schema.json");
-    const srcSugSchema = path2.join(extRoot, "resources", "schemas", "suggestions.schema.json");
+    const srcTaskSchema = path4.join(extRoot, "resources", "schemas", "task.schema.json");
+    const srcSugSchema = path4.join(extRoot, "resources", "schemas", "suggestions.schema.json");
     if (fs2.existsSync(srcTaskSchema)) {
-      fs2.copyFileSync(srcTaskSchema, path2.join(schemaDir, "task.schema.json"));
+      fs2.copyFileSync(srcTaskSchema, path4.join(schemaDir, "task.schema.json"));
     }
     if (fs2.existsSync(srcSugSchema)) {
-      fs2.copyFileSync(srcSugSchema, path2.join(schemaDir, "suggestions.schema.json"));
+      fs2.copyFileSync(srcSugSchema, path4.join(schemaDir, "suggestions.schema.json"));
     }
   } catch {
   }
 }
-var vscode3, fs2, path2, YAML, GENRES;
+var vscode4, fs2, path4, YAML, GENRES, LENGTH_OPTIONS;
 var init_projectCommands = __esm({
   "src/presentation/commands/projectCommands.ts"() {
     "use strict";
-    vscode3 = __toESM(require("vscode"));
+    vscode4 = __toESM(require("vscode"));
     fs2 = __toESM(require("fs"));
-    path2 = __toESM(require("path"));
+    path4 = __toESM(require("path"));
     YAML = __toESM(require_dist());
     init_constants();
     init_utils();
     GENRES = ["\u7384\u5E7B", "\u90FD\u5E02", "\u79D1\u5E7B", "\u5386\u53F2", "\u8A00\u60C5", "\u60AC\u7591", "\u6B66\u4FA0", "\u6E38\u620F", "\u5176\u4ED6"];
+    LENGTH_OPTIONS = [
+      { label: "\u77ED\u7BC7", description: "<5\u4E07\u5B57", value: "\u77ED\u7BC7", targetWords: 3e4 },
+      { label: "\u4E2D\u7BC7", description: "5~20\u4E07\u5B57", value: "\u4E2D\u7BC7", targetWords: 1e5 },
+      { label: "\u957F\u7BC7", description: "20~80\u4E07\u5B57", value: "\u957F\u7BC7", targetWords: 5e5 },
+      { label: "\u7F51\u6587\u957F\u7BC7", description: ">80\u4E07\u5B57", value: "\u7F51\u6587\u957F\u7BC7", targetWords: 2e6 }
+    ];
   }
 });
 
 // src/presentation/commands/novelCommands.ts
 async function editNovelInfo(container) {
   if (!container.has("fileSystem")) {
-    vscode4.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    vscode5.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
     return;
   }
-  const fs10 = container.get("fileSystem");
+  const fs15 = container.get("fileSystem");
   let novel;
   try {
-    novel = await fs10.readYaml(PROJECT_FILES.NOVEL_YAML);
+    novel = await fs15.readYaml(PROJECT_FILES.NOVEL_YAML);
   } catch (e) {
-    vscode4.window.showErrorMessage(`\u8BFB\u53D6\u5C0F\u8BF4\u4FE1\u606F\u5931\u8D25\uFF1A${e.message}`);
+    vscode5.window.showErrorMessage(`\u8BFB\u53D6\u5C0F\u8BF4\u4FE1\u606F\u5931\u8D25\uFF1A${e.message}`);
     return;
   }
-  const title = await vscode4.window.showInputBox({
+  const title = await vscode5.window.showInputBox({
     prompt: "\u4E66\u540D",
     value: novel.title || ""
   });
   if (title === void 0)
     return;
-  const author = await vscode4.window.showInputBox({
+  const author = await vscode5.window.showInputBox({
     prompt: "\u4F5C\u8005\u7B14\u540D",
     value: novel.author || ""
   });
   if (author === void 0)
     return;
-  const genre = await vscode4.window.showQuickPick(GENRES2, {
+  const genre = await vscode5.window.showQuickPick(GENRES2, {
     placeHolder: "\u9009\u62E9\u9898\u6750"
   });
   if (genre === void 0)
     return;
-  const length = await vscode4.window.showQuickPick(LENGTHS, {
+  const length = await vscode5.window.showQuickPick(LENGTHS, {
     placeHolder: "\u9009\u62E9\u7BC7\u5E45"
   });
   if (length === void 0)
     return;
-  const style = await vscode4.window.showQuickPick(STYLES, {
+  const style = await vscode5.window.showQuickPick(STYLES, {
     placeHolder: "\u9009\u62E9\u98CE\u683C"
   });
   if (style === void 0)
     return;
-  const targetWordsInput = await vscode4.window.showInputBox({
+  const targetWordsInput = await vscode5.window.showInputBox({
     prompt: "\u76EE\u6807\u5B57\u6570",
     value: String(novel.target_words || 3e5),
     validateInput: (v) => !v || /^\d+$/.test(v) ? void 0 : "\u8BF7\u8F93\u5165\u6570\u5B57"
   });
   if (targetWordsInput === void 0)
     return;
-  const dailyGoalInput = await vscode4.window.showInputBox({
+  const dailyGoalInput = await vscode5.window.showInputBox({
     prompt: "\u6BCF\u65E5\u76EE\u6807\u5B57\u6570",
     value: String(novel.daily_goal || 2e3),
     validateInput: (v) => !v || /^\d+$/.test(v) ? void 0 : "\u8BF7\u8F93\u5165\u6570\u5B57"
@@ -8393,28 +8609,28 @@ async function editNovelInfo(container) {
     updated_at: nowISO()
   };
   try {
-    await fs10.writeYaml(PROJECT_FILES.NOVEL_YAML, updated);
+    await fs15.writeYaml(PROJECT_FILES.NOVEL_YAML, updated);
     container.eventBus.publish("config.changed", { keys: ["novel_info"] });
-    vscode4.window.showInformationMessage(`\u5C0F\u8BF4\u4FE1\u606F\u5DF2\u66F4\u65B0\uFF1A${updated.title}`);
+    vscode5.window.showInformationMessage(`\u5C0F\u8BF4\u4FE1\u606F\u5DF2\u66F4\u65B0\uFF1A${updated.title}`);
   } catch (e) {
-    vscode4.window.showErrorMessage(`\u4FDD\u5B58\u5931\u8D25\uFF1A${e.message}`);
+    vscode5.window.showErrorMessage(`\u4FDD\u5B58\u5931\u8D25\uFF1A${e.message}`);
   }
 }
 async function editSynopsis(container) {
   if (!container.has("fileSystem")) {
-    vscode4.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    vscode5.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
     return;
   }
-  const fs10 = container.get("fileSystem");
+  const fs15 = container.get("fileSystem");
   const premisePath = "bible/premise.md";
   let content = "";
   try {
-    content = await fs10.readFile(premisePath);
+    content = await fs15.readFile(premisePath);
   } catch {
     content = "# \u6545\u4E8B\u524D\u63D0\n\n## \u6838\u5FC3\u5356\u70B9\n\n\n## \u4E3B\u89D2\n\n\n## \u4E3B\u8981\u51B2\u7A81\n\n\n## \u6545\u4E8B\u7B80\u4ECB\n\n\n## \u4E3B\u9898\n";
   }
   const currentSynopsis = extractSection(content, "\u6545\u4E8B\u7B80\u4ECB");
-  const newSynopsis = await vscode4.window.showInputBox({
+  const newSynopsis = await vscode5.window.showInputBox({
     prompt: "\u6545\u4E8B\u6897\u6982\uFF08\u7528\u4E8E\u5C01\u9762\u7B80\u4ECB\uFF0C\u5EFA\u8BAE 50~200 \u5B57\uFF09",
     value: currentSynopsis,
     placeHolder: "\u4F8B\u5982\uFF1A\u4E00\u4E2A\u88AB\u5E9F\u7684\u5929\u624D\u91CD\u751F\u56DE\u5C11\u5E74\u65F6\u4EE3\uFF0C\u51ED\u501F\u524D\u4E16\u8BB0\u5FC6\u78BE\u538B\u4E00\u5207\u2026\u2026"
@@ -8423,11 +8639,11 @@ async function editSynopsis(container) {
     return;
   const updatedContent = replaceSection(content, "\u6545\u4E8B\u7B80\u4ECB", newSynopsis.trim());
   try {
-    await fs10.writeFile(premisePath, updatedContent);
+    await fs15.writeFile(premisePath, updatedContent);
     container.eventBus.publish("config.changed", { keys: ["synopsis"] });
-    vscode4.window.showInformationMessage("\u6545\u4E8B\u6897\u6982\u5DF2\u66F4\u65B0");
+    vscode5.window.showInformationMessage("\u6545\u4E8B\u6897\u6982\u5DF2\u66F4\u65B0");
   } catch (e) {
-    vscode4.window.showErrorMessage(`\u4FDD\u5B58\u5931\u8D25\uFF1A${e.message}`);
+    vscode5.window.showErrorMessage(`\u4FDD\u5B58\u5931\u8D25\uFF1A${e.message}`);
   }
 }
 function extractSection(content, sectionName) {
@@ -8446,476 +8662,16 @@ function replaceSection(content, sectionName, newValue) {
 ${newValue}
 `;
 }
-var vscode4, GENRES2, LENGTHS, STYLES;
+var vscode5, GENRES2, LENGTHS, STYLES;
 var init_novelCommands = __esm({
   "src/presentation/commands/novelCommands.ts"() {
     "use strict";
-    vscode4 = __toESM(require("vscode"));
+    vscode5 = __toESM(require("vscode"));
     init_constants();
     init_utils();
     GENRES2 = ["\u7384\u5E7B", "\u90FD\u5E02", "\u79D1\u5E7B", "\u5386\u53F2", "\u8A00\u60C5", "\u60AC\u7591", "\u6B66\u4FA0", "\u6E38\u620F", "\u65E0\u9650\u6D41", "\u5176\u4ED6"];
     LENGTHS = ["\u77ED\u7BC7\uFF08<5\u4E07\u5B57\uFF09", "\u4E2D\u7BC7\uFF085~20\u4E07\u5B57\uFF09", "\u957F\u7BC7\uFF0820~80\u4E07\u5B57\uFF09", "\u7F51\u6587\u957F\u7BC7\uFF08>80\u4E07\u5B57\uFF09"];
     STYLES = ["\u5546\u4E1A", "\u6587\u5B66", "\u8F7B\u677E", "\u9ED1\u6697"];
-  }
-});
-
-// src/presentation/commands/argUtils.ts
-function resolveChapterId(arg) {
-  if (typeof arg === "string") {
-    return arg;
-  }
-  if (arg && typeof arg === "object") {
-    const obj = arg;
-    if (typeof obj.id === "string") {
-      return obj.id;
-    }
-    if (obj.chapter && typeof obj.chapter.id === "string") {
-      return obj.chapter.id;
-    }
-    if (typeof obj.chapterId === "string") {
-      return obj.chapterId;
-    }
-  }
-  return void 0;
-}
-function resolveEntityId(arg) {
-  if (typeof arg === "string") {
-    return arg;
-  }
-  if (arg && typeof arg === "object") {
-    const obj = arg;
-    if (typeof obj.id === "string") {
-      return obj.id;
-    }
-    if (obj.entry && typeof obj.entry.id === "string") {
-      return obj.entry.id;
-    }
-  }
-  return void 0;
-}
-var init_argUtils = __esm({
-  "src/presentation/commands/argUtils.ts"() {
-    "use strict";
-  }
-});
-
-// src/presentation/commands/chapterCommands.ts
-async function createChapter(container) {
-  const workflow = container.get("workflow");
-  const title = await vscode5.window.showInputBox({
-    prompt: "\u7AE0\u8282\u6807\u9898",
-    placeHolder: "\u4F8B\u5982\uFF1A\u7B2C\u4E00\u7AE0 \u521D\u5165\u6C5F\u6E56",
-    validateInput: (v) => v && v.trim() ? void 0 : "\u6807\u9898\u4E0D\u80FD\u4E3A\u7A7A"
-  });
-  if (!title) {
-    return;
-  }
-  const volume = await vscode5.window.showInputBox({
-    prompt: "\u6240\u5C5E\u5377\uFF08\u53EF\u7559\u7A7A\uFF09",
-    placeHolder: "\u4F8B\u5982\uFF1A\u7B2C\u4E00\u5377"
-  });
-  try {
-    const chapterId = await workflow.createChapter(volume?.trim() ?? "", title.trim());
-    vscode5.window.showInformationMessage(`\u5DF2\u521B\u5EFA\u7AE0\u8282\uFF1A${title}\uFF08${chapterId}\uFF09`);
-    await openDraft(container, chapterId);
-  } catch (e) {
-    vscode5.window.showErrorMessage(`\u521B\u5EFA\u7AE0\u8282\u5931\u8D25\uFF1A${e.message}`);
-  }
-}
-async function openDraft(container, arg) {
-  const chapterId = resolveChapterId(arg);
-  if (!chapterId) {
-    vscode5.window.showWarningMessage("\u8BF7\u4ECE\u7AE0\u8282\u5217\u8868\u4E2D\u9009\u62E9\u4E00\u4E2A\u7AE0\u8282");
-    return;
-  }
-  await openChapterFile(container, chapterId, CHAPTER_FILES.DRAFT);
-}
-async function openOutline(container, arg) {
-  const chapterId = resolveChapterId(arg);
-  if (!chapterId) {
-    vscode5.window.showWarningMessage("\u8BF7\u4ECE\u7AE0\u8282\u5217\u8868\u4E2D\u9009\u62E9\u4E00\u4E2A\u7AE0\u8282");
-    return;
-  }
-  await openChapterFile(container, chapterId, CHAPTER_FILES.OUTLINE);
-}
-async function openChapterFile(container, chapterId, fileName) {
-  if (!container.has("fileSystem")) {
-    vscode5.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
-    return;
-  }
-  const fs10 = container.get("fileSystem");
-  const rel = `${PROJECT_DIRS.CHAPTERS}/${chapterId}/${fileName}`;
-  try {
-    const abs = fs10.resolvePath(rel);
-    await vscode5.commands.executeCommand("vscode.open", vscode5.Uri.file(abs));
-  } catch (e) {
-    vscode5.window.showErrorMessage(`\u6253\u5F00\u5931\u8D25\uFF1A${e.message}`);
-  }
-}
-async function archive(container, arg) {
-  const chapterId = resolveChapterId(arg);
-  if (!chapterId) {
-    vscode5.window.showWarningMessage("\u8BF7\u4ECE\u7AE0\u8282\u5217\u8868\u4E2D\u9009\u62E9\u4E00\u4E2A\u7AE0\u8282");
-    return;
-  }
-  const confirm = await vscode5.window.showWarningMessage(
-    `\u786E\u5B9A\u5F52\u6863\u7AE0\u8282 ${chapterId} \u5417\uFF1F\u5F52\u6863\u540E\u5C06\u6807\u8BB0\u4E3A\u5DF2\u5B8C\u6210\u3002`,
-    { modal: true },
-    "\u5F52\u6863",
-    "\u53D6\u6D88"
-  );
-  if (confirm !== "\u5F52\u6863") {
-    return;
-  }
-  const workflow = container.get("workflow");
-  try {
-    await workflow.archive(chapterId);
-    vscode5.window.showInformationMessage(`\u5DF2\u5F52\u6863\u7AE0\u8282\uFF1A${chapterId}`);
-  } catch (e) {
-    vscode5.window.showErrorMessage(`\u5F52\u6863\u5931\u8D25\uFF1A${e.message}`);
-  }
-}
-async function rename(container, arg) {
-  const chapterId = resolveChapterId(arg);
-  if (!chapterId) {
-    vscode5.window.showWarningMessage("\u8BF7\u4ECE\u7AE0\u8282\u5217\u8868\u4E2D\u9009\u62E9\u4E00\u4E2A\u7AE0\u8282");
-    return;
-  }
-  const newTitle = await vscode5.window.showInputBox({
-    prompt: `\u91CD\u547D\u540D\u7AE0\u8282 ${chapterId}`,
-    validateInput: (v) => v && v.trim() ? void 0 : "\u6807\u9898\u4E0D\u80FD\u4E3A\u7A7A"
-  });
-  if (!newTitle) {
-    return;
-  }
-  const workflow = container.get("workflow");
-  try {
-    await workflow.rename(chapterId, newTitle.trim());
-    vscode5.window.showInformationMessage(`\u5DF2\u91CD\u547D\u540D\u4E3A\uFF1A${newTitle}`);
-  } catch (e) {
-    vscode5.window.showErrorMessage(`\u91CD\u547D\u540D\u5931\u8D25\uFF1A${e.message}`);
-  }
-}
-async function deleteChapter(container, arg) {
-  const chapterId = resolveChapterId(arg);
-  if (!chapterId) {
-    vscode5.window.showWarningMessage("\u8BF7\u4ECE\u7AE0\u8282\u5217\u8868\u4E2D\u9009\u62E9\u4E00\u4E2A\u7AE0\u8282");
-    return;
-  }
-  const confirm = await vscode5.window.showWarningMessage(
-    `\u786E\u5B9A\u5220\u9664\u7AE0\u8282 ${chapterId} \u5417\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u6062\u590D\uFF0C\u7AE0\u8282\u6240\u6709\u6587\u4EF6\u5C06\u88AB\u5220\u9664\u3002`,
-    { modal: true },
-    "\u5220\u9664",
-    "\u53D6\u6D88"
-  );
-  if (confirm !== "\u5220\u9664") {
-    return;
-  }
-  const workflow = container.get("workflow");
-  try {
-    await workflow.deleteChapter(chapterId);
-    vscode5.window.showInformationMessage(`\u5DF2\u5220\u9664\u7AE0\u8282\uFF1A${chapterId}`);
-  } catch (e) {
-    vscode5.window.showErrorMessage(`\u5220\u9664\u5931\u8D25\uFF1A${e.message}`);
-  }
-}
-var vscode5;
-var init_chapterCommands = __esm({
-  "src/presentation/commands/chapterCommands.ts"() {
-    "use strict";
-    vscode5 = __toESM(require("vscode"));
-    init_constants();
-    init_argUtils();
-  }
-});
-
-// src/presentation/commands/characterCommands.ts
-async function createCharacter(container) {
-  if (!container.has("fileSystem")) {
-    vscode6.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
-    return;
-  }
-  const fs10 = container.get("fileSystem");
-  const indexManager = container.get("indexManager");
-  const name = await vscode6.window.showInputBox({
-    prompt: "\u4EBA\u7269\u59D3\u540D",
-    validateInput: (v) => v && v.trim() ? void 0 : "\u59D3\u540D\u4E0D\u80FD\u4E3A\u7A7A"
-  });
-  if (!name) {
-    return;
-  }
-  const rolePicked = await vscode6.window.showQuickPick(ROLE_ITEMS, {
-    placeHolder: "\u9009\u62E9\u89D2\u8272\u7C7B\u578B"
-  });
-  const role = rolePicked?.role ?? "supporting" /* Supporting */;
-  const id = await ensureUniqueId(fs10, pinyinFromChinese(name));
-  const now = nowISO();
-  const meta = {
-    id,
-    name: name.trim(),
-    role,
-    status: "alive" /* Alive */,
-    created_at: now,
-    updated_at: now
-  };
-  const body = [
-    `# ${name.trim()}`,
-    "",
-    "## \u57FA\u672C\u4FE1\u606F",
-    "",
-    "- \u522B\u540D\uFF1A",
-    "- \u5E74\u9F84\uFF1A",
-    "- \u6027\u522B\uFF1A",
-    "- \u9635\u8425\uFF1A",
-    "",
-    "## \u5916\u8C8C",
-    "",
-    "",
-    "",
-    "## \u6027\u683C",
-    "",
-    "",
-    "",
-    "## \u80CC\u666F",
-    "",
-    "",
-    "",
-    "## \u80FD\u529B",
-    "",
-    "",
-    "",
-    "## \u4EBA\u7269\u5173\u7CFB",
-    "",
-    ""
-  ].join("\n");
-  const content = `---
-${yamlString(meta)}---
-${body}
-`;
-  try {
-    await fs10.writeFile(`${PROJECT_DIRS.CHARACTERS}/${id}.md`, content);
-    await indexManager.refresh();
-    container.eventBus.publish("character.created", { id });
-    vscode6.window.showInformationMessage(`\u5DF2\u521B\u5EFA\u4EBA\u7269\u5361\uFF1A${name}\uFF08${id}\uFF09`);
-    await openCharacter(container, id);
-  } catch (e) {
-    vscode6.window.showErrorMessage(`\u521B\u5EFA\u4EBA\u7269\u5361\u5931\u8D25\uFF1A${e.message}`);
-  }
-}
-async function openCharacter(container, arg) {
-  const id = resolveEntityId(arg);
-  if (!id) {
-    vscode6.window.showWarningMessage("\u8BF7\u4ECE\u4EBA\u7269\u5217\u8868\u4E2D\u9009\u62E9\u4E00\u4E2A\u4EBA\u7269");
-    return;
-  }
-  if (!container.has("fileSystem")) {
-    vscode6.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
-    return;
-  }
-  const fs10 = container.get("fileSystem");
-  try {
-    const abs = fs10.resolvePath(`${PROJECT_DIRS.CHARACTERS}/${id}.md`);
-    await vscode6.commands.executeCommand("vscode.open", vscode6.Uri.file(abs));
-  } catch (e) {
-    vscode6.window.showErrorMessage(`\u6253\u5F00\u4EBA\u7269\u5361\u5931\u8D25\uFF1A${e.message}`);
-  }
-}
-async function ensureUniqueId(fs10, base) {
-  let id = base || "character";
-  let seq = 1;
-  while (await fs10.exists(`${PROJECT_DIRS.CHARACTERS}/${id}.md`)) {
-    id = `${base}-${seq}`;
-    seq++;
-  }
-  return id;
-}
-function yamlString(meta) {
-  const lines = [];
-  const entries = [
-    ["\u7F16\u53F7", meta.id],
-    ["\u59D3\u540D", meta.name],
-    ["\u89D2\u8272\u7C7B\u578B", meta.role],
-    ["\u72B6\u6001", meta.status],
-    ["\u521B\u5EFA\u65F6\u95F4", meta.created_at],
-    ["\u66F4\u65B0\u65F6\u95F4", meta.updated_at]
-  ];
-  for (const [k, v] of entries) {
-    lines.push(`${k}: ${yamlValue(v)}`);
-  }
-  return lines.join("\n") + "\n";
-}
-function yamlValue(v) {
-  if (v === null || v === void 0) {
-    return "null";
-  }
-  if (typeof v === "string") {
-    return v;
-  }
-  return String(v);
-}
-var vscode6, ROLE_ITEMS;
-var init_characterCommands = __esm({
-  "src/presentation/commands/characterCommands.ts"() {
-    "use strict";
-    vscode6 = __toESM(require("vscode"));
-    init_types();
-    init_constants();
-    init_utils();
-    init_argUtils();
-    ROLE_ITEMS = [
-      { label: "\u4E3B\u89D2", role: "protagonist" /* Protagonist */ },
-      { label: "\u91CD\u8981\u89D2\u8272", role: "deuteragonist" /* Deuteragonist */ },
-      { label: "\u53CD\u6D3E", role: "antagonist" /* Antagonist */ },
-      { label: "\u914D\u89D2", role: "supporting" /* Supporting */ },
-      { label: "\u6B21\u8981", role: "minor" /* Minor */ },
-      { label: "\u63D0\u53CA", role: "mentioned" /* Mentioned */ }
-    ];
-  }
-});
-
-// src/presentation/commands/settingCommands.ts
-async function createSetting(container) {
-  if (!container.has("fileSystem")) {
-    vscode7.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
-    return;
-  }
-  const fs10 = container.get("fileSystem");
-  const indexManager = container.get("indexManager");
-  const name = await vscode7.window.showInputBox({
-    prompt: "\u8BBE\u5B9A\u540D\u79F0",
-    validateInput: (v) => v && v.trim() ? void 0 : "\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A"
-  });
-  if (!name) {
-    return;
-  }
-  const catPicked = await vscode7.window.showQuickPick(CATEGORY_ITEMS, {
-    placeHolder: "\u9009\u62E9\u5206\u7C7B"
-  });
-  const category = catPicked?.category ?? "other" /* Other */;
-  const impPicked = await vscode7.window.showQuickPick(IMPORTANCE_ITEMS, {
-    placeHolder: "\u9009\u62E9\u91CD\u8981\u7A0B\u5EA6\uFF08\u53EF\u8DF3\u8FC7\uFF09",
-    canPickMany: false
-  });
-  const importance = impPicked?.importance;
-  const id = await ensureUniqueId2(fs10, pinyinFromChinese(name));
-  const now = nowISO();
-  const meta = {
-    id,
-    name: name.trim(),
-    category,
-    importance,
-    created_at: now,
-    updated_at: now
-  };
-  const body = [
-    `# ${name.trim()}`,
-    "",
-    "## \u6982\u8FF0",
-    "",
-    "",
-    "",
-    "## \u8BE6\u7EC6\u8BF4\u660E",
-    "",
-    "",
-    "",
-    "## \u76F8\u5173\u4EBA\u7269",
-    "",
-    "",
-    "## \u76F8\u5173\u7AE0\u8282",
-    "",
-    "",
-    "## \u5907\u6CE8",
-    ""
-  ].join("\n");
-  const content = `---
-${yamlString2(meta)}---
-${body}
-`;
-  try {
-    await fs10.writeFile(`${PROJECT_DIRS.WORLD}/${id}.md`, content);
-    await indexManager.refresh();
-    container.eventBus.publish("setting.created", { id });
-    vscode7.window.showInformationMessage(`\u5DF2\u521B\u5EFA\u8BBE\u5B9A\u5361\uFF1A${name}\uFF08${id}\uFF09`);
-    await openSetting(container, id);
-  } catch (e) {
-    vscode7.window.showErrorMessage(`\u521B\u5EFA\u8BBE\u5B9A\u5361\u5931\u8D25\uFF1A${e.message}`);
-  }
-}
-async function openSetting(container, arg) {
-  const id = resolveEntityId(arg);
-  if (!id) {
-    vscode7.window.showWarningMessage("\u8BF7\u4ECE\u8BBE\u5B9A\u5217\u8868\u4E2D\u9009\u62E9\u4E00\u4E2A\u8BBE\u5B9A");
-    return;
-  }
-  if (!container.has("fileSystem")) {
-    vscode7.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
-    return;
-  }
-  const fs10 = container.get("fileSystem");
-  try {
-    const abs = fs10.resolvePath(`${PROJECT_DIRS.WORLD}/${id}.md`);
-    await vscode7.commands.executeCommand("vscode.open", vscode7.Uri.file(abs));
-  } catch (e) {
-    vscode7.window.showErrorMessage(`\u6253\u5F00\u8BBE\u5B9A\u5361\u5931\u8D25\uFF1A${e.message}`);
-  }
-}
-async function ensureUniqueId2(fs10, base) {
-  let id = base || "setting";
-  let seq = 1;
-  while (await fs10.exists(`${PROJECT_DIRS.WORLD}/${id}.md`)) {
-    id = `${base}-${seq}`;
-    seq++;
-  }
-  return id;
-}
-function yamlString2(meta) {
-  const lines = [];
-  const entries = [
-    ["\u7F16\u53F7", meta.id],
-    ["\u540D\u79F0", meta.name],
-    ["\u5206\u7C7B", meta.category],
-    ["\u91CD\u8981\u7A0B\u5EA6", meta.importance],
-    ["\u521B\u5EFA\u65F6\u95F4", meta.created_at],
-    ["\u66F4\u65B0\u65F6\u95F4", meta.updated_at]
-  ];
-  for (const [k, v] of entries) {
-    lines.push(`${k}: ${yamlValue2(v)}`);
-  }
-  return lines.join("\n") + "\n";
-}
-function yamlValue2(v) {
-  if (v === null || v === void 0) {
-    return "null";
-  }
-  if (typeof v === "string") {
-    return v;
-  }
-  return String(v);
-}
-var vscode7, CATEGORY_ITEMS, IMPORTANCE_ITEMS;
-var init_settingCommands = __esm({
-  "src/presentation/commands/settingCommands.ts"() {
-    "use strict";
-    vscode7 = __toESM(require("vscode"));
-    init_types();
-    init_constants();
-    init_utils();
-    init_argUtils();
-    CATEGORY_ITEMS = [
-      { label: "\u89C4\u5219", category: "rule" /* Rule */ },
-      { label: "\u529B\u91CF\u4F53\u7CFB", category: "power" /* Power */ },
-      { label: "\u5730\u70B9", category: "location" /* Location */ },
-      { label: "\u7EC4\u7EC7", category: "organization" /* Organization */ },
-      { label: "\u7269\u54C1", category: "item" /* Item */ },
-      { label: "\u5386\u53F2", category: "history" /* History */ },
-      { label: "\u5176\u4ED6", category: "other" /* Other */ }
-    ];
-    IMPORTANCE_ITEMS = [
-      { label: "\u5173\u952E", importance: "critical" /* Critical */ },
-      { label: "\u9AD8", importance: "high" /* High */ },
-      { label: "\u4E2D", importance: "medium" /* Medium */ },
-      { label: "\u4F4E", importance: "low" /* Low */ }
-    ];
   }
 });
 
@@ -12381,14 +12137,14 @@ var require_parse = __commonJS({
 var require_gray_matter = __commonJS({
   "node_modules/gray-matter/index.js"(exports2, module2) {
     "use strict";
-    var fs10 = require("fs");
+    var fs15 = require("fs");
     var sections = require_section_matter();
     var defaults = require_defaults();
     var stringify4 = require_stringify2();
     var excerpt = require_excerpt();
     var engines2 = require_engines();
     var toFile = require_to_file();
-    var parse4 = require_parse();
+    var parse5 = require_parse();
     var utils = require_utils();
     function matter2(input, options2) {
       if (input === "") {
@@ -12440,7 +12196,7 @@ var require_gray_matter = __commonJS({
         file.empty = file.content;
         file.data = {};
       } else {
-        file.data = parse4(file.language, file.matter, opts);
+        file.data = parse5(file.language, file.matter, opts);
       }
       if (closeIndex === len) {
         file.content = "";
@@ -12466,7 +12222,7 @@ var require_gray_matter = __commonJS({
       return stringify4(file, data, options2);
     };
     matter2.read = function(filepath, options2) {
-      const str2 = fs10.readFileSync(filepath, "utf8");
+      const str2 = fs15.readFileSync(filepath, "utf8");
       const file = matter2(str2, options2);
       file.path = filepath;
       return file;
@@ -12495,10 +12251,6 @@ var require_gray_matter = __commonJS({
 });
 
 // src/data/parser/frontMatterParser.ts
-var frontMatterParser_exports = {};
-__export(frontMatterParser_exports, {
-  FrontMatterParser: () => FrontMatterParser
-});
 var import_gray_matter, FrontMatterParser;
 var init_frontMatterParser = __esm({
   "src/data/parser/frontMatterParser.ts"() {
@@ -12519,326 +12271,6 @@ var init_frontMatterParser = __esm({
         return this.parse(text).data;
       }
     };
-  }
-});
-
-// src/presentation/commands/foreshadowingCommands.ts
-async function createForeshadowing(container) {
-  if (!container.has("fileSystem")) {
-    vscode8.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
-    return;
-  }
-  const fs10 = container.get("fileSystem");
-  const title = await vscode8.window.showInputBox({
-    prompt: "\u4F0F\u7B14\u6807\u9898",
-    placeHolder: "\u4F8B\u5982\uFF1A\u94DC\u94C3\u58F0",
-    validateInput: (v) => v && v.trim() ? void 0 : "\u6807\u9898\u4E0D\u80FD\u4E3A\u7A7A"
-  });
-  if (!title)
-    return;
-  const desc = await vscode8.window.showInputBox({
-    prompt: "\u4F0F\u7B14\u63CF\u8FF0\uFF08\u9009\u586B\uFF09",
-    placeHolder: "\u4F8B\u5982\uFF1A\u6797\u6F88\u6BCF\u6B21\u8FDB\u5165\u65E7\u5B85\u90FD\u542C\u5230\u94DC\u94C3\u58F0"
-  });
-  const chapter = await vscode8.window.showInputBox({
-    prompt: "\u57CB\u8BBE\u7AE0\u8282\uFF08\u9009\u586B\uFF09",
-    placeHolder: "\u4F8B\u5982\uFF1Ach008"
-  });
-  const impPicked = await vscode8.window.showQuickPick(IMPORTANCE_ITEMS2, {
-    placeHolder: "\u9009\u62E9\u91CD\u8981\u7A0B\u5EA6"
-  });
-  const id = await ensureUniqueId3(fs10, pinyinFromChinese(title));
-  const meta = {
-    \u7F16\u53F7: id,
-    \u540D\u79F0: title.trim(),
-    \u72B6\u6001: "pending",
-    \u91CD\u8981\u7A0B\u5EA6: impPicked?.value || "medium",
-    \u57CB\u8BBE\u7AE0\u8282: chapter || "\u2014",
-    \u56DE\u6536\u7AE0\u8282: "",
-    \u521B\u5EFA\u65F6\u95F4: nowISO(),
-    \u66F4\u65B0\u65F6\u95F4: nowISO()
-  };
-  const body = [
-    `# ${title.trim()}`,
-    "",
-    "## \u63CF\u8FF0",
-    "",
-    desc || "\uFF08\u5F85\u8865\u5145\uFF09",
-    "",
-    "## \u76F8\u5173\u4EBA\u7269",
-    "",
-    "\uFF08\u5F85\u8865\u5145\uFF09",
-    "",
-    "## \u9884\u671F\u56DE\u6536",
-    "",
-    "\uFF08\u5F85\u8865\u5145\uFF09",
-    "",
-    "## \u56DE\u6536\u60C5\u51B5",
-    "",
-    "\uFF08\u672A\u56DE\u6536\uFF09"
-  ].join("\n");
-  const content = FM.stringify(meta, body);
-  const dir = `${PROJECT_DIRS.FORESHADOWING}/unresolved`;
-  try {
-    await fs10.createDir(dir);
-    await fs10.writeFile(`${dir}/${id}.md`, content);
-    container.eventBus.publish("foreshadowing.changed", {});
-    vscode8.window.showInformationMessage(`\u5DF2\u6DFB\u52A0\u4F0F\u7B14\uFF1A${title}\uFF08${id}\uFF09`);
-  } catch (e) {
-    vscode8.window.showErrorMessage(`\u6DFB\u52A0\u5931\u8D25\uFF1A${e.message}`);
-  }
-}
-async function openForeshadowingFile(container, arg) {
-  if (!container.has("fileSystem"))
-    return;
-  const fs10 = container.get("fileSystem");
-  const id = resolveId(arg);
-  if (id) {
-    try {
-      const dir = await findForeshadowingDir(fs10, id);
-      if (dir) {
-        const abs = fs10.resolvePath(`${dir}/${id}.md`);
-        await vscode8.commands.executeCommand("vscode.open", vscode8.Uri.file(abs));
-      }
-    } catch (e) {
-      vscode8.window.showErrorMessage(`\u6253\u5F00\u5931\u8D25\uFF1A${e.message}`);
-    }
-  }
-}
-async function resolveForeshadowing(container, arg) {
-  if (!container.has("fileSystem"))
-    return;
-  const fs10 = container.get("fileSystem");
-  const id = resolveId(arg);
-  if (!id)
-    return;
-  const dir = await findForeshadowingDir(fs10, id);
-  if (!dir) {
-    vscode8.window.showWarningMessage("\u627E\u4E0D\u5230\u4F0F\u7B14\u6587\u4EF6");
-    return;
-  }
-  const resolveChapter = await vscode8.window.showInputBox({
-    prompt: "\u56DE\u6536\u7AE0\u8282",
-    placeHolder: "\u4F8B\u5982\uFF1Ach020"
-  });
-  if (resolveChapter === void 0)
-    return;
-  try {
-    const relPath = `${dir}/${id}.md`;
-    const content = await fs10.readFile(relPath);
-    const parsed = FM.parse(content);
-    parsed.data["\u72B6\u6001"] = "resolved";
-    parsed.data["\u56DE\u6536\u7AE0\u8282"] = resolveChapter || "\u2014";
-    parsed.data["\u66F4\u65B0\u65F6\u95F4"] = nowISO();
-    const updated = FM.stringify(parsed.data, parsed.content);
-    await fs10.writeFile(relPath, updated);
-    const resolvedDir = `${PROJECT_DIRS.FORESHADOWING}/resolved`;
-    await fs10.createDir(resolvedDir);
-    await fs10.copy(relPath, `${resolvedDir}/${id}.md`);
-    await fs10.delete(relPath);
-    container.eventBus.publish("foreshadowing.changed", {});
-    vscode8.window.showInformationMessage(`\u4F0F\u7B14\u5DF2\u56DE\u6536\uFF1A${id}`);
-  } catch (e) {
-    vscode8.window.showErrorMessage(`\u56DE\u6536\u5931\u8D25\uFF1A${e.message}`);
-  }
-}
-async function ensureUniqueId3(fs10, base) {
-  let id = base || "foreshadowing";
-  let seq = 1;
-  while (await fs10.exists(`${PROJECT_DIRS.FORESHADOWING}/unresolved/${id}.md`)) {
-    id = `${base}-${seq}`;
-    seq++;
-  }
-  return id;
-}
-async function findForeshadowingDir(fs10, id) {
-  const unresolved = `${PROJECT_DIRS.FORESHADOWING}/unresolved`;
-  if (await fs10.exists(`${unresolved}/${id}.md`))
-    return unresolved;
-  const resolved = `${PROJECT_DIRS.FORESHADOWING}/resolved`;
-  if (await fs10.exists(`${resolved}/${id}.md`))
-    return resolved;
-  return void 0;
-}
-function resolveId(arg) {
-  if (typeof arg === "string")
-    return arg;
-  if (arg && typeof arg === "object") {
-    const obj = arg;
-    if (obj.id)
-      return obj.id;
-    if (obj.item?.id)
-      return obj.item.id;
-  }
-  return void 0;
-}
-var vscode8, FM, IMPORTANCE_ITEMS2;
-var init_foreshadowingCommands = __esm({
-  "src/presentation/commands/foreshadowingCommands.ts"() {
-    "use strict";
-    vscode8 = __toESM(require("vscode"));
-    init_frontMatterParser();
-    init_constants();
-    init_utils();
-    FM = new FrontMatterParser();
-    IMPORTANCE_ITEMS2 = [
-      { label: "\u9AD8", value: "high" },
-      { label: "\u4E2D", value: "medium" },
-      { label: "\u4F4E", value: "low" }
-    ];
-  }
-});
-
-// src/presentation/commands/timelineCommands.ts
-async function createTimelineEvent(container) {
-  if (!container.has("fileSystem")) {
-    vscode9.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
-    return;
-  }
-  const fs10 = container.get("fileSystem");
-  const name = await vscode9.window.showInputBox({
-    prompt: "\u65F6\u95F4\u7EBF\u540D\u79F0",
-    placeHolder: "\u4F8B\u5982\uFF1A\u7B2C\u4E00\u5377\u4E3B\u7EBF \u6216 ch012 \u65F6\u95F4\u7EBF",
-    validateInput: (v) => v && v.trim() ? void 0 : "\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A"
-  });
-  if (!name)
-    return;
-  const nodeCountInput = await vscode9.window.showInputBox({
-    prompt: "\u8282\u70B9\u6570\u91CF",
-    placeHolder: "\u4F8B\u5982\uFF1A3",
-    validateInput: (v) => !v || /^\d+$/.test(v) ? void 0 : "\u8BF7\u8F93\u5165\u6570\u5B57"
-  });
-  const nodeCount = nodeCountInput ? parseInt(nodeCountInput, 10) : 3;
-  const nodes = [];
-  for (let i = 1; i <= nodeCount; i++) {
-    const nodeName = await vscode9.window.showInputBox({
-      prompt: `\u8282\u70B9 ${i} \u540D\u79F0`,
-      placeHolder: `\u4F8B\u5982\uFF1A\u8282\u70B9${i} \u6216 \u4E8B\u4EF6${i}`,
-      validateInput: (v) => v && v.trim() ? void 0 : "\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A"
-    });
-    if (!nodeName)
-      return;
-    const time = await vscode9.window.showInputBox({
-      prompt: `\u8282\u70B9 ${i} \u6545\u4E8B\u65F6\u95F4`,
-      placeHolder: "\u4F8B\u5982\uFF1A\u6C38\u5B81\u4E09\u5E74\u4E09\u6708\u521D\u4E03\u591C"
-    });
-    const event = await vscode9.window.showInputBox({
-      prompt: `\u8282\u70B9 ${i} \u4E8B\u4EF6`,
-      placeHolder: "\u4F8B\u5982\uFF1A\u6797\u6F88\u53D1\u73B0\u65CF\u5FBD"
-    });
-    const characters = await vscode9.window.showInputBox({
-      prompt: `\u8282\u70B9 ${i} \u4EBA\u7269\uFF08\u9009\u586B\uFF09`,
-      placeHolder: "\u4F8B\u5982\uFF1A\u6797\u6F88,\u82CF\u665A"
-    });
-    const location = await vscode9.window.showInputBox({
-      prompt: `\u8282\u70B9 ${i} \u5730\u70B9\uFF08\u9009\u586B\uFF09`,
-      placeHolder: "\u4F8B\u5982\uFF1A\u85CF\u4E66\u9601"
-    });
-    nodes.push({ name: nodeName, time: time || "", event: event || "", characters: characters || "", location: location || "" });
-  }
-  const id = await ensureUniqueId4(fs10, pinyinFromChinese(name));
-  const meta = {
-    \u7F16\u53F7: id,
-    \u540D\u79F0: name.trim(),
-    \u521B\u5EFA\u65F6\u95F4: nowISO(),
-    \u66F4\u65B0\u65F6\u95F4: nowISO()
-  };
-  const mermaidLines = ["```mermaid", "graph LR"];
-  const detailLines = [];
-  for (let i = 0; i < nodes.length; i++) {
-    const n = nodes[i];
-    const nodeId = `N${i + 1}`;
-    const label = `${n.name}${n.time ? `\\n${n.time}` : ""}`;
-    mermaidLines.push(`  ${nodeId}["${label}"]`);
-    if (i > 0) {
-      const prevId = `N${i}`;
-      mermaidLines.push(`  ${prevId} --> ${nodeId}`);
-    }
-    detailLines.push(`### ${n.name}`);
-    detailLines.push("");
-    detailLines.push(`- \u6545\u4E8B\u65F6\u95F4\uFF1A${n.time || "\u2014"}`);
-    detailLines.push(`- \u4E8B\u4EF6\uFF1A${n.event || "\u2014"}`);
-    detailLines.push(`- \u4EBA\u7269\uFF1A${n.characters || "\u2014"}`);
-    detailLines.push(`- \u5730\u70B9\uFF1A${n.location || "\u2014"}`);
-    detailLines.push("");
-  }
-  mermaidLines.push("```");
-  const body = [
-    `# ${name.trim()}`,
-    "",
-    "## \u65F6\u95F4\u7EBF\u56FE",
-    "",
-    ...mermaidLines,
-    "",
-    "## \u8282\u70B9\u8BE6\u60C5",
-    "",
-    ...detailLines
-  ].join("\n");
-  const content = FM2.stringify(meta, body);
-  const dir = PROJECT_DIRS.TIMELINE;
-  try {
-    await fs10.createDir(dir);
-    await fs10.writeFile(`${dir}/${id}.md`, content);
-    container.eventBus.publish("timeline.changed", {});
-    vscode9.window.showInformationMessage(`\u5DF2\u521B\u5EFA\u65F6\u95F4\u7EBF\uFF1A${name}\uFF08${id}\uFF09`);
-  } catch (e) {
-    vscode9.window.showErrorMessage(`\u521B\u5EFA\u5931\u8D25\uFF1A${e.message}`);
-  }
-}
-async function openTimelineFile(container, arg) {
-  if (!container.has("fileSystem")) {
-    vscode9.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
-    return;
-  }
-  const fs10 = container.get("fileSystem");
-  const id = resolveId2(arg);
-  if (id) {
-    try {
-      const abs = fs10.resolvePath(`${PROJECT_DIRS.TIMELINE}/${id}.md`);
-      await vscode9.commands.executeCommand("vscode.open", vscode9.Uri.file(abs));
-    } catch (e) {
-      vscode9.window.showErrorMessage(`\u6253\u5F00\u5931\u8D25\uFF1A${e.message}`);
-    }
-    return;
-  }
-  try {
-    await fs10.createDir(PROJECT_DIRS.TIMELINE);
-    const abs = fs10.resolvePath(PROJECT_DIRS.TIMELINE);
-    await vscode9.commands.executeCommand("revealFileInOS", vscode9.Uri.file(abs));
-  } catch (e) {
-    vscode9.window.showErrorMessage(`\u6253\u5F00\u76EE\u5F55\u5931\u8D25\uFF1A${e.message}`);
-  }
-}
-async function ensureUniqueId4(fs10, base) {
-  let id = base || "timeline";
-  let seq = 1;
-  while (await fs10.exists(`${PROJECT_DIRS.TIMELINE}/${id}.md`)) {
-    id = `${base}-${seq}`;
-    seq++;
-  }
-  return id;
-}
-function resolveId2(arg) {
-  if (typeof arg === "string")
-    return arg;
-  if (arg && typeof arg === "object") {
-    const obj = arg;
-    if (obj.id)
-      return obj.id;
-    if (obj.item?.id)
-      return obj.item.id;
-  }
-  return void 0;
-}
-var vscode9, FM2;
-var init_timelineCommands = __esm({
-  "src/presentation/commands/timelineCommands.ts"() {
-    "use strict";
-    vscode9 = __toESM(require("vscode"));
-    init_frontMatterParser();
-    init_constants();
-    init_utils();
-    FM2 = new FrontMatterParser();
   }
 });
 
@@ -12863,6 +12295,7 @@ var init_wordCounter = __esm({
         }
         if (!config.countPunctuation) {
           content = content.replace(
+            // eslint-disable-next-line no-useless-escape
             /[，。！？；：、""''（）《》【】「」『』…—·,.!?;:'"()\[\]<>{}~`@#$%^&*+=|\\/]/g,
             ""
           );
@@ -12889,6 +12322,174 @@ var init_wordCounter = __esm({
   }
 });
 
+// src/business/trash/trashService.ts
+var trashService_exports = {};
+__export(trashService_exports, {
+  TrashService: () => TrashService
+});
+var path5, fs3, TrashService;
+var init_trashService = __esm({
+  "src/business/trash/trashService.ts"() {
+    "use strict";
+    path5 = __toESM(require("path"));
+    fs3 = __toESM(require("fs"));
+    init_constants();
+    init_utils();
+    TrashService = class {
+      constructor(container) {
+        this.container = container;
+      }
+      get fs() {
+        return this.container.has("fileSystem") ? this.container.get("fileSystem") : void 0;
+      }
+      get configManager() {
+        return this.container.has("configManager") ? this.container.get("configManager") : void 0;
+      }
+      async moveToTrash(originalPath, type, meta) {
+        const fsSvc = this.fs;
+        if (!fsSvc)
+          return void 0;
+        const id = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+        const flatName = originalPath.replace(/[\\/]/g, "__");
+        const trashPath = `${PROJECT_DIRS.NOVEL_AI_TRASH}/${id}/${flatName}`;
+        await fsSvc.createDir(`${PROJECT_DIRS.NOVEL_AI_TRASH}/${id}`);
+        const srcAbs = fsSvc.resolvePath(originalPath);
+        const destAbs = fsSvc.resolvePath(trashPath);
+        fs3.cpSync(srcAbs, destAbs, { recursive: true, force: true });
+        fs3.rmSync(srcAbs, { recursive: true, force: true });
+        const entry = {
+          id,
+          type,
+          originalPath: originalPath.replace(/\\/g, "/"),
+          trashPath: trashPath.replace(/\\/g, "/"),
+          deletedAt: nowISO(),
+          meta
+        };
+        await fsSvc.writeFile(
+          `${PROJECT_DIRS.NOVEL_AI_TRASH}/${id}/meta.json`,
+          JSON.stringify(entry, null, 2) + "\n"
+        );
+        this.container.eventBus.publish("trash.changed", {});
+        return entry;
+      }
+      async list() {
+        const fsSvc = this.fs;
+        if (!fsSvc)
+          return [];
+        let dirs;
+        try {
+          dirs = await fsSvc.listFiles(PROJECT_DIRS.NOVEL_AI_TRASH, "*/meta.json");
+        } catch {
+          return [];
+        }
+        const out = [];
+        for (const d of dirs) {
+          const rel = fsSvc.toRelative(d);
+          if (!rel)
+            continue;
+          try {
+            const meta = await fsSvc.readJson(rel);
+            out.push(meta);
+          } catch {
+          }
+        }
+        out.sort((a, b) => b.deletedAt.localeCompare(a.deletedAt));
+        return out;
+      }
+      async restore(entryId, overwrite = false) {
+        const fsSvc = this.fs;
+        if (!fsSvc)
+          return { restored: false, conflict: false };
+        const entries = await this.list();
+        const entry = entries.find((e) => e.id === entryId);
+        if (!entry)
+          return { restored: false, conflict: false };
+        const originalExists = await fsSvc.exists(entry.originalPath);
+        if (originalExists && !overwrite) {
+          return { restored: false, conflict: true };
+        }
+        const srcAbs = fsSvc.resolvePath(entry.trashPath);
+        const destAbs = fsSvc.resolvePath(entry.originalPath);
+        fs3.mkdirSync(path5.dirname(destAbs), { recursive: true });
+        if (originalExists && fs3.existsSync(destAbs)) {
+          const backupId = `${entry.id}-pre-restore-${Date.now()}`;
+          const backupTrashPath = `${PROJECT_DIRS.NOVEL_AI_TRASH}/${backupId}`;
+          await fsSvc.createDir(backupTrashPath);
+          const destStat = fs3.statSync(destAbs);
+          if (destStat.isDirectory()) {
+            fs3.cpSync(destAbs, fsSvc.resolvePath(`${backupTrashPath}/content`), { recursive: true, force: true });
+          } else {
+            fs3.copyFileSync(destAbs, fsSvc.resolvePath(`${backupTrashPath}/content`));
+          }
+          const backupMeta = {
+            id: backupId,
+            type: entry.type,
+            originalPath: entry.originalPath,
+            trashPath: `${backupTrashPath}/content`,
+            deletedAt: nowISO(),
+            meta: { ...entry.meta ?? {}, reason: "pre-restore-backup" }
+          };
+          await fsSvc.writeFile(
+            `${backupTrashPath}/meta.json`,
+            JSON.stringify(backupMeta, null, 2) + "\n"
+          );
+        }
+        fs3.cpSync(srcAbs, destAbs, { recursive: true, force: true });
+        fs3.rmSync(fsSvc.resolvePath(`${PROJECT_DIRS.NOVEL_AI_TRASH}/${entry.id}`), {
+          recursive: true,
+          force: true
+        });
+        this.container.eventBus.publish("trash.changed", {});
+        return { restored: true, conflict: false };
+      }
+      async purge(entryId) {
+        const fsSvc = this.fs;
+        if (!fsSvc)
+          return;
+        try {
+          fs3.rmSync(fsSvc.resolvePath(`${PROJECT_DIRS.NOVEL_AI_TRASH}/${entryId}`), {
+            recursive: true,
+            force: true
+          });
+        } catch {
+        }
+        this.container.eventBus.publish("trash.changed", {});
+      }
+      async purgeAll() {
+        const entries = await this.list();
+        for (const e of entries) {
+          await this.purge(e.id);
+        }
+        return entries.length;
+      }
+      async autoCleanup() {
+        const cm = this.configManager;
+        if (!cm)
+          return 0;
+        const maxAgeDays = cm.getTrashMaxAgeDays();
+        const maxItems = cm.getTrashMaxItems();
+        const entries = await this.list();
+        const cutoff = Date.now() - maxAgeDays * 24 * 60 * 60 * 1e3;
+        let purged = 0;
+        const expired = entries.filter((e) => new Date(e.deletedAt).getTime() < cutoff);
+        for (const e of expired) {
+          await this.purge(e.id);
+          purged++;
+        }
+        const remaining = await this.list();
+        if (remaining.length > maxItems) {
+          const overflow = remaining.slice(maxItems);
+          for (const e of overflow) {
+            await this.purge(e.id);
+            purged++;
+          }
+        }
+        return purged;
+      }
+    };
+  }
+});
+
 // src/business/workflow/chapterWorkflowEngine.ts
 var chapterWorkflowEngine_exports = {};
 __export(chapterWorkflowEngine_exports, {
@@ -12900,15 +12501,18 @@ var init_chapterWorkflowEngine = __esm({
     "use strict";
     init_wordCounter();
     init_frontMatterParser();
+    init_trashService();
     init_types();
     init_constants();
     init_utils();
     ChapterWorkflowEngine = class {
       constructor(container) {
         this.container = container;
+        this.trash = new TrashService(container);
       }
       fmParser = new FrontMatterParser();
       wordCounter = new WordCounter();
+      trash;
       get fs() {
         return this.container.get("fileSystem");
       }
@@ -12941,6 +12545,9 @@ var init_chapterWorkflowEngine = __esm({
             return 1;
           }
         }
+      }
+      async peekNextChapterNumber() {
+        return this.computeNextChapterNumber();
       }
       async createChapter(volume, title) {
         const seq = await this.computeNextChapterNumber();
@@ -13072,25 +12679,363 @@ var init_chapterWorkflowEngine = __esm({
       }
       async deleteChapter(chapterId) {
         const dir = this.chapterDir(chapterId);
-        await this.fs.deleteDir(dir);
+        const yaml2 = await this.fs.readYaml(`${dir}/${CHAPTER_FILES.YAML}`);
+        await this.trash.moveToTrash(dir, "chapter", {
+          title: yaml2.title,
+          number: yaml2.chapter_number,
+          volume: yaml2.volume
+        });
         this.indexManager.removeChapter(chapterId);
         this.container.eventBus.publish("chapter.deleted", { chapterId });
       }
       async listChapters() {
         return this.indexManager.getAllChapters();
       }
+      async moveChapter(chapterId, direction) {
+        const chapters = await this.indexManager.getAllChapters();
+        const idx = chapters.findIndex((c) => c.id === chapterId);
+        if (idx < 0)
+          throw new Error("\u7AE0\u8282\u4E0D\u5B58\u5728");
+        const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+        if (swapIdx < 0 || swapIdx >= chapters.length) {
+          throw new Error(direction === "up" ? "\u5DF2\u662F\u7B2C\u4E00\u7AE0" : "\u5DF2\u662F\u6700\u540E\u4E00\u7AE0");
+        }
+        const a = chapters[idx];
+        const b = chapters[swapIdx];
+        await this.swapNumbers(a.id, a.number, b.id, b.number);
+        this.container.eventBus.publish("chapter.renamed", { chapterId: "", newTitle: "" });
+      }
+      async moveChapterTo(chapterId, targetIndex) {
+        const chapters = await this.indexManager.getAllChapters();
+        const idx = chapters.findIndex((c) => c.id === chapterId);
+        if (idx < 0)
+          throw new Error("\u7AE0\u8282\u4E0D\u5B58\u5728");
+        const clamped = Math.max(0, Math.min(chapters.length - 1, targetIndex));
+        if (idx === clamped)
+          return;
+        const reordered = chapters.filter((c) => c.id !== chapterId);
+        const moved = chapters[idx];
+        reordered.splice(clamped, 0, moved);
+        await this.renumberAll(reordered.map((c) => c.id));
+        this.container.eventBus.publish("chapter.renamed", { chapterId: "", newTitle: "" });
+      }
+      async swapNumbers(idA, numA, idB, numB) {
+        const dirA = this.chapterDir(idA);
+        const dirB = this.chapterDir(idB);
+        const yamlA = await this.fs.readYaml(`${dirA}/${CHAPTER_FILES.YAML}`);
+        const yamlB = await this.fs.readYaml(`${dirB}/${CHAPTER_FILES.YAML}`);
+        yamlA.chapter_number = numB;
+        yamlA.updated_at = nowISO();
+        yamlB.chapter_number = numA;
+        yamlB.updated_at = nowISO();
+        await this.fs.writeYaml(`${dirA}/${CHAPTER_FILES.YAML}`, yamlA);
+        await this.fs.writeYaml(`${dirB}/${CHAPTER_FILES.YAML}`, yamlB);
+        this.indexManager.updateChapter(idA, { number: numB, updatedAt: yamlA.updated_at });
+        this.indexManager.updateChapter(idB, { number: numA, updatedAt: yamlB.updated_at });
+      }
+      async renumberAll(orderedIds) {
+        for (let i = 0; i < orderedIds.length; i++) {
+          const newNum = i + 1;
+          const dir = this.chapterDir(orderedIds[i]);
+          const yaml2 = await this.fs.readYaml(`${dir}/${CHAPTER_FILES.YAML}`);
+          if (yaml2.chapter_number === newNum)
+            continue;
+          yaml2.chapter_number = newNum;
+          yaml2.updated_at = nowISO();
+          await this.fs.writeYaml(`${dir}/${CHAPTER_FILES.YAML}`, yaml2);
+          this.indexManager.updateChapter(orderedIds[i], { number: newNum, updatedAt: yaml2.updated_at });
+        }
+      }
+    };
+  }
+});
+
+// src/business/foreshadowing/foreshadowingService.ts
+var ForeshadowingService;
+var init_foreshadowingService = __esm({
+  "src/business/foreshadowing/foreshadowingService.ts"() {
+    "use strict";
+    init_frontMatterParser();
+    init_constants();
+    ForeshadowingService = class {
+      constructor(container) {
+        this.container = container;
+      }
+      fmParser = new FrontMatterParser();
+      get fs() {
+        return this.container.has("fileSystem") ? this.container.get("fileSystem") : void 0;
+      }
+      get indexManager() {
+        return this.container.has("indexManager") ? this.container.get("indexManager") : void 0;
+      }
+      async listAll() {
+        const fs15 = this.fs;
+        if (!fs15)
+          return [];
+        const out = [];
+        const dirs = [
+          { dir: `${PROJECT_DIRS.FORESHADOWING}/unresolved`, defaultStatus: "pending" },
+          { dir: `${PROJECT_DIRS.FORESHADOWING}/resolved`, defaultStatus: "resolved" }
+        ];
+        for (const { dir, defaultStatus } of dirs) {
+          let files;
+          try {
+            files = await fs15.listFiles(dir, "**/*.md");
+          } catch {
+            continue;
+          }
+          for (const file of files) {
+            try {
+              const rel = fs15.toRelative(file);
+              if (!rel)
+                continue;
+              const content = await fs15.readFile(rel);
+              const parsed = this.fmParser.parse(content);
+              const id = parsed.data["\u7F16\u53F7"] || parsed.data["id"] || "";
+              if (!id)
+                continue;
+              out.push({
+                id,
+                name: parsed.data["\u540D\u79F0"] || parsed.data["name"] || id,
+                status: parsed.data["\u72B6\u6001"] || defaultStatus,
+                importance: parsed.data["\u91CD\u8981\u7A0B\u5EA6"] || parsed.data["importance"] || "",
+                plantedChapter: parsed.data["\u57CB\u8BBE\u7AE0\u8282"] || "",
+                resolveChapter: parsed.data["\u56DE\u6536\u7AE0\u8282"] || "",
+                dir,
+                summary: parsed.content.trim().split("\n").slice(0, 4).join("\n"),
+                path: fs15.toRelative(file)
+              });
+            } catch {
+            }
+          }
+        }
+        return out;
+      }
+      async listUnresolved() {
+        return (await this.listAll()).filter((f) => f.status !== "resolved" && f.status !== "abandoned");
+      }
+      async findByChapter(chapterId) {
+        const all = await this.listUnresolved();
+        const draftMentions = await this.scanDraftForKeywords(
+          chapterId,
+          all.flatMap((f) => [f.id, f.name])
+        );
+        return all.filter((f) => {
+          if (f.plantedChapter && f.plantedChapter.toLowerCase() === chapterId.toLowerCase())
+            return true;
+          if (draftMentions.has(f.id) || draftMentions.has(f.name))
+            return true;
+          return false;
+        });
+      }
+      async findReferences(id) {
+        const fs15 = this.fs;
+        const im = this.indexManager;
+        if (!fs15 || !im)
+          return [];
+        const entry = (await this.listAll()).find((f) => f.id === id);
+        const keywords = entry ? [entry.id, entry.name] : [id];
+        const chapters = await im.getAllChapters();
+        const refs = [];
+        for (const ch of chapters) {
+          const rel = `${PROJECT_DIRS.CHAPTERS}/${ch.id}/${CHAPTER_FILES.DRAFT}`;
+          let content;
+          try {
+            content = await fs15.readFile(rel);
+          } catch {
+            continue;
+          }
+          const lines = content.split(/\r?\n/);
+          const hitLines = [];
+          lines.forEach((line, i) => {
+            if (keywords.some((k) => k && line.includes(k)))
+              hitLines.push(i + 1);
+          });
+          if (hitLines.length)
+            refs.push({ chapterId: ch.id, title: ch.title, lines: hitLines });
+        }
+        return refs;
+      }
+      async scanDraftForKeywords(chapterId, keywords) {
+        const fs15 = this.fs;
+        if (!fs15)
+          return /* @__PURE__ */ new Set();
+        const found = /* @__PURE__ */ new Set();
+        let content;
+        try {
+          content = await fs15.readFile(`${PROJECT_DIRS.CHAPTERS}/${chapterId}/${CHAPTER_FILES.DRAFT}`);
+        } catch {
+          return found;
+        }
+        for (const k of keywords) {
+          if (k && content.includes(k))
+            found.add(k);
+        }
+        return found;
+      }
+      async formatForContext() {
+        const list = await this.listUnresolved();
+        if (!list.length)
+          return "";
+        const lines = ["### \u672A\u56DE\u6536\u4F0F\u7B14\uFF08\u8BF7\u4FDD\u6301\u56DE\u6536\u8282\u594F\uFF09", ""];
+        for (const f of list) {
+          const parts = [`- **${f.name}**\uFF08${f.id}\uFF09`];
+          if (f.importance)
+            parts.push(`\u91CD\u8981\u5EA6\uFF1A${f.importance}`);
+          if (f.plantedChapter)
+            parts.push(`\u57CB\u8BBE\u4E8E ${f.plantedChapter}`);
+          lines.push(parts.join("\uFF0C"));
+        }
+        return lines.join("\n");
+      }
+    };
+  }
+});
+
+// src/business/timeline/timelineService.ts
+function parseStoryTime(raw) {
+  if (!raw)
+    return null;
+  const t = raw.trim();
+  const ms = Date.parse(t);
+  if (!Number.isNaN(ms))
+    return ms;
+  const m = t.match(/\d+/);
+  if (m)
+    return Number(m[0]);
+  return null;
+}
+function detectTimelineConflicts(entries) {
+  if (entries.length < 2)
+    return [];
+  const sorted = [...entries].sort((a, b) => a.chapterNumber - b.chapterNumber);
+  const comparable = sorted.map((e) => ({ value: parseStoryTime(e.storyTime) }));
+  const conflicts = [];
+  for (let i = 1; i < comparable.length; i++) {
+    const prev = comparable[i - 1];
+    const curr = comparable[i];
+    if (prev.value === null || curr.value === null)
+      continue;
+    if (curr.value < prev.value) {
+      conflicts.push({ index: i, type: "reverse" });
+    } else if (curr.value === prev.value && sorted[i].chapterNumber - sorted[i - 1].chapterNumber > 1) {
+      conflicts.push({ index: i, type: "overlap" });
+    }
+  }
+  return conflicts;
+}
+var TimelineService;
+var init_timelineService = __esm({
+  "src/business/timeline/timelineService.ts"() {
+    "use strict";
+    init_constants();
+    init_utils();
+    TimelineService = class {
+      constructor(container) {
+        this.container = container;
+      }
+      get fs() {
+        return this.container.has("fileSystem") ? this.container.get("fileSystem") : void 0;
+      }
+      get indexManager() {
+        return this.container.has("indexManager") ? this.container.get("indexManager") : void 0;
+      }
+      async aggregateFromChapters() {
+        const fs15 = this.fs;
+        const im = this.indexManager;
+        if (!fs15 || !im)
+          return [];
+        const chapters = await im.getAllChapters();
+        const entries = [];
+        for (const ch of chapters) {
+          try {
+            const yaml2 = await fs15.readYaml(
+              `${PROJECT_DIRS.CHAPTERS}/${ch.id}/${CHAPTER_FILES.YAML}`
+            );
+            if (!yaml2.story_time)
+              continue;
+            entries.push({
+              chapterId: ch.id,
+              title: ch.title,
+              chapterNumber: ch.number,
+              storyTime: yaml2.story_time,
+              characters: yaml2.characters ?? [],
+              location: yaml2.location ?? [],
+              climax: yaml2.climax ?? ""
+            });
+          } catch {
+          }
+        }
+        return entries;
+      }
+      async generateTimelineMarkdown() {
+        const entries = await this.aggregateFromChapters();
+        const lines = [
+          "# \u6545\u4E8B\u65F6\u95F4\u7EBF\uFF08\u81EA\u52A8\u6C47\u603B\uFF09",
+          "",
+          "> \u7531\u5404\u7AE0\u8282 `chapter.yaml.story_time` \u81EA\u52A8\u6C47\u603B\u751F\u6210\u3002\u8BF7\u52FF\u624B\u5DE5\u7F16\u8F91\u672C\u7AE0\u81EA\u52A8\u533A\u5757\uFF1B\u81EA\u5B9A\u4E49\u65F6\u95F4\u7EBF\u8BF7\u53E6\u5EFA\u6587\u4EF6\u3002",
+          "",
+          "| \u7AE0\u8282 | \u6807\u9898 | \u6545\u4E8B\u65F6\u95F4 | \u4EBA\u7269 | \u5730\u70B9 | \u9AD8\u6F6E |",
+          "|------|------|----------|------|------|------|"
+        ];
+        for (const e of entries) {
+          lines.push(
+            `| ${e.chapterId} | ${e.title} | ${e.storyTime} | ${e.characters.join("\u3001")} | ${e.location.join("\u3001")} | ${e.climax} |`
+          );
+        }
+        lines.push("", `_\u66F4\u65B0\u4E8E ${nowISO()}_`);
+        return lines.join("\n");
+      }
+      async writeAggregatedTimeline() {
+        const fs15 = this.fs;
+        if (!fs15)
+          return void 0;
+        const md = await this.generateTimelineMarkdown();
+        const rel = `${PROJECT_DIRS.TIMELINE}/_aggregated.md`;
+        await fs15.createDir(PROJECT_DIRS.TIMELINE);
+        await fs15.writeFile(rel, md);
+        return rel;
+      }
+      async formatForContext(currentChapterId2) {
+        const entries = await this.aggregateFromChapters();
+        if (!entries.length)
+          return "";
+        const idx = entries.findIndex((e) => e.chapterId === currentChapterId2);
+        const prior = idx >= 0 ? entries.slice(0, idx) : entries;
+        if (!prior.length)
+          return "";
+        const lines = ["### \u524D\u5E8F\u6545\u4E8B\u65F6\u95F4\u7EBF", ""];
+        for (const e of prior.slice(-12)) {
+          lines.push(`- ${e.chapterId}\u300A${e.title}\u300B\u2014\u2014 ${e.storyTime}${e.climax ? `\uFF08${e.climax}\uFF09` : ""}`);
+        }
+        return lines.join("\n");
+      }
     };
   }
 });
 
 // src/business/aiTask/contextPacker.ts
-var vscode10, ContextPacker;
+var vscode6, FULL_CONTEXT_SCOPE, CONTINUATION_SCOPE, ContextPacker;
 var init_contextPacker = __esm({
   "src/business/aiTask/contextPacker.ts"() {
     "use strict";
-    vscode10 = __toESM(require("vscode"));
+    vscode6 = __toESM(require("vscode"));
     init_frontMatterParser();
     init_constants();
+    init_foreshadowingService();
+    init_timelineService();
+    FULL_CONTEXT_SCOPE = [
+      "chapter_meta",
+      "chapter_outline",
+      "chapter_draft",
+      "related_characters",
+      "related_settings",
+      "premise",
+      "style_guide",
+      "foreshadowing",
+      "timeline"
+    ];
+    CONTINUATION_SCOPE = FULL_CONTEXT_SCOPE.filter((i) => i !== "chapter_draft");
     ContextPacker = class {
       constructor(container) {
         this.container = container;
@@ -13154,6 +13099,22 @@ var init_contextPacker = __esm({
               const guide = await this.readOptional(`${PROJECT_DIRS.BIBLE}/style-guide.md`);
               if (guide) {
                 parts.push("## \u98CE\u683C\u6307\u5357", "", guide, "");
+              }
+              break;
+            }
+            case "foreshadowing": {
+              const fs22 = new ForeshadowingService(this.container);
+              const block = await fs22.formatForContext();
+              if (block) {
+                parts.push("## \u672A\u56DE\u6536\u4F0F\u7B14", "", block, "");
+              }
+              break;
+            }
+            case "timeline": {
+              const tl = new TimelineService(this.container);
+              const block = await tl.formatForContext(chapterId);
+              if (block) {
+                parts.push("## \u524D\u5E8F\u65F6\u95F4\u7EBF", "", block, "");
               }
               break;
             }
@@ -13259,7 +13220,7 @@ var init_contextPacker = __esm({
         const full = this.fs.resolvePath(relPath);
         let stat;
         try {
-          stat = await vscode10.workspace.fs.stat(vscode10.Uri.file(full));
+          stat = await vscode6.workspace.fs.stat(vscode6.Uri.file(full));
         } catch {
           return void 0;
         }
@@ -13299,12 +13260,16 @@ var init_yamlParser = __esm({
 });
 
 // src/business/aiTask/templateEngine.ts
-var fs3, path3, TemplateEngine;
+var templateEngine_exports = {};
+__export(templateEngine_exports, {
+  TemplateEngine: () => TemplateEngine
+});
+var fs4, path6, TemplateEngine;
 var init_templateEngine = __esm({
   "src/business/aiTask/templateEngine.ts"() {
     "use strict";
-    fs3 = __toESM(require("fs"));
-    path3 = __toESM(require("path"));
+    fs4 = __toESM(require("fs"));
+    path6 = __toESM(require("path"));
     init_yamlParser();
     TemplateEngine = class {
       constructor(container) {
@@ -13315,12 +13280,12 @@ var init_templateEngine = __esm({
         return this.container.context.asAbsolutePath("resources/templates");
       }
       async load(name) {
-        const templatePath = path3.join(this.templatesDir, `${name}.md`);
-        const configPath = path3.join(this.templatesDir, `${name}.yaml`);
-        const template = await fs3.promises.readFile(templatePath, "utf8");
+        const templatePath = path6.join(this.templatesDir, `${name}.md`);
+        const configPath = path6.join(this.templatesDir, `${name}.yaml`);
+        const template = await fs4.promises.readFile(templatePath, "utf8");
         let config = {};
         try {
-          const configText = await fs3.promises.readFile(configPath, "utf8");
+          const configText = await fs4.promises.readFile(configPath, "utf8");
           config = this.yamlParser.parse(configText) ?? {};
         } catch {
           config = {};
@@ -13336,7 +13301,7 @@ var init_templateEngine = __esm({
       }
       listTemplates() {
         try {
-          const files = fs3.readdirSync(this.templatesDir);
+          const files = fs4.readdirSync(this.templatesDir);
           return files.filter((f) => f.endsWith(".md")).map((f) => f.replace(/\.md$/, ""));
         } catch {
           return [];
@@ -13351,6 +13316,7 @@ var TaskGenerator;
 var init_taskGenerator = __esm({
   "src/business/aiTask/taskGenerator.ts"() {
     "use strict";
+    init_contextPacker();
     init_contextPacker();
     init_templateEngine();
     init_types();
@@ -13382,15 +13348,7 @@ var init_taskGenerator = __esm({
         const seq = await this.getNextSeq();
         const taskId = generateTaskId(seq);
         const { template, config } = await this.templateEngine.load(params.template);
-        const scope = config.scope ?? [
-          "chapter_meta",
-          "chapter_outline",
-          "chapter_draft",
-          "related_characters",
-          "related_settings",
-          "premise",
-          "style_guide"
-        ];
+        const scope = config.scope ?? [...FULL_CONTEXT_SCOPE];
         const context = await this.contextPacker.pack(params.chapterId, scope);
         const sourceFiles = await this.collectSourceFiles(params.chapterId);
         const contextFiles = await this.collectContextFiles(params.chapterId);
@@ -13427,11 +13385,7 @@ var init_taskGenerator = __esm({
           schemaPath: PROJECT_FILES.SUGGESTIONS_SCHEMA,
           status: "generated" /* Generated */
         };
-        try {
-          await this.workflow.setStatus(params.chapterId, "reviewing" /* Reviewing */);
-        } catch (e) {
-          throw e;
-        }
+        await this.workflow.setStatus(params.chapterId, "reviewing" /* Reviewing */);
         await this.fs.writeFile(`${taskDir}/task.json`, JSON.stringify(taskJson, null, 2) + "\n");
         await this.fs.writeFile(`${taskDir}/instruction.md`, instruction);
         await this.fs.writeFile(`${taskDir}/context.md`, context);
@@ -13595,11 +13549,11 @@ var init_textLocator = __esm({
 });
 
 // src/business/aiTask/resultImporter.ts
-var vscode11, ResultImporter;
+var vscode7, ResultImporter;
 var init_resultImporter = __esm({
   "src/business/aiTask/resultImporter.ts"() {
     "use strict";
-    vscode11 = __toESM(require("vscode"));
+    vscode7 = __toESM(require("vscode"));
     init_jsonParser();
     init_textLocator();
     init_types();
@@ -13679,7 +13633,7 @@ var init_resultImporter = __esm({
         const pendingSuggestions = [];
         let validCount = 0;
         let expiredCount = 0;
-        let invalidCount = 0;
+        const invalidCount = 0;
         for (const sug of suggestionsFile.suggestions) {
           const matchInfo = await this.locateSuggestion(sug, fileContentCache);
           const status = matchInfo.found ? "pending" : "expired";
@@ -13735,7 +13689,7 @@ var init_resultImporter = __esm({
           expiredCount,
           invalidCount
         });
-        vscode11.window.showInformationMessage(
+        vscode7.window.showInformationMessage(
           `\u5DF2\u5BFC\u5165 ${validCount} \u6761\u5BA1\u7A3F\u5EFA\u8BAE\uFF08${expiredCount} \u6761\u5DF2\u8FC7\u671F\uFF09`
         );
         return { taskId, chapterId, validCount, expiredCount, invalidCount, warnings };
@@ -13773,11 +13727,11 @@ var aiTaskEngine_exports = {};
 __export(aiTaskEngine_exports, {
   AiTaskEngine: () => AiTaskEngine
 });
-var vscode12, AiTaskEngine;
+var vscode8, AiTaskEngine;
 var init_aiTaskEngine = __esm({
   "src/business/aiTask/aiTaskEngine.ts"() {
     "use strict";
-    vscode12 = __toESM(require("vscode"));
+    vscode8 = __toESM(require("vscode"));
     init_contextPacker();
     init_taskGenerator();
     init_resultImporter();
@@ -13803,7 +13757,7 @@ var init_aiTaskEngine = __esm({
         return this.resultImporter.importResult(uri);
       }
       startWatching(context) {
-        this.watcher = vscode12.workspace.createFileSystemWatcher(
+        this.watcher = vscode8.workspace.createFileSystemWatcher(
           "**/.novel-ai/results/**/suggestions.json"
         );
         const debouncedImport = (uri) => {
@@ -13851,11 +13805,11 @@ var statsEngine_exports = {};
 __export(statsEngine_exports, {
   StatsEngine: () => StatsEngine
 });
-var vscode13, StatsEngine;
+var vscode9, StatsEngine;
 var init_statsEngine = __esm({
   "src/business/stats/statsEngine.ts"() {
     "use strict";
-    vscode13 = __toESM(require("vscode"));
+    vscode9 = __toESM(require("vscode"));
     init_wordCounter();
     init_frontMatterParser();
     init_constants();
@@ -13885,15 +13839,15 @@ var init_statsEngine = __esm({
         return this.container.has("statusBar") ? this.container.get("statusBar") : void 0;
       }
       activate(context) {
-        const onChange = vscode13.workspace.onDidChangeTextDocument((e) => {
+        const onChange = vscode9.workspace.onDidChangeTextDocument((e) => {
           this.scheduleLightUpdate(e.document.uri, e.document.getText());
         });
-        const onSave = vscode13.workspace.onDidSaveTextDocument((doc) => {
+        const onSave = vscode9.workspace.onDidSaveTextDocument((doc) => {
           this.flushToDisk(doc.uri, doc.getText()).catch((err) => {
             this.container.logger.warn(`Flush to disk failed: ${err.message}`);
           });
         });
-        const onActiveChange = vscode13.window.onDidChangeActiveTextEditor(() => {
+        const onActiveChange = vscode9.window.onDidChangeActiveTextEditor(() => {
           this.updateStatusBar();
         });
         const onProjectOpened = this.container.eventBus.on("project.opened", () => {
@@ -13908,6 +13862,9 @@ var init_statsEngine = __esm({
         const fsSvc = this.fs;
         if (!fsSvc)
           return;
+        this.chapterWordCache.clear();
+        this.totalWordCache = 0;
+        this.todayBaseline = 0;
         this.totalWordCache = await this.recomputeTotal();
         const date = todayISO();
         const statsPath = `${PROJECT_DIRS.NOVEL_AI_STATS}/${date}.json`;
@@ -14073,12 +14030,12 @@ var localChecker_exports = {};
 __export(localChecker_exports, {
   LocalChecker: () => LocalChecker
 });
-var vscode14, fs4, REDUP_WHITELIST, LocalChecker;
+var vscode10, fs5, REDUP_WHITELIST, LocalChecker;
 var init_localChecker = __esm({
   "src/business/checker/localChecker.ts"() {
     "use strict";
-    vscode14 = __toESM(require("vscode"));
-    fs4 = __toESM(require("fs"));
+    vscode10 = __toESM(require("vscode"));
+    fs5 = __toESM(require("fs"));
     init_frontMatterParser();
     init_utils();
     REDUP_WHITELIST = /* @__PURE__ */ new Set([
@@ -14148,18 +14105,18 @@ var init_localChecker = __esm({
         return this.container.has("diagnostics") ? this.container.get("diagnostics") : void 0;
       }
       activate(context) {
-        const onChange = vscode14.workspace.onDidChangeTextDocument((e) => {
+        const onChange = vscode10.workspace.onDidChangeTextDocument((e) => {
           this.scheduleCheck(e.document.uri, e.document.getText());
         });
-        const onOpen = vscode14.workspace.onDidOpenTextDocument((doc) => {
+        const onOpen = vscode10.workspace.onDidOpenTextDocument((doc) => {
           this.scheduleCheck(doc.uri, doc.getText());
         });
-        const onSave = vscode14.workspace.onDidSaveTextDocument((doc) => {
+        const onSave = vscode10.workspace.onDidSaveTextDocument((doc) => {
           this.checkNow(doc.uri, doc.getText(), true).catch((err) => {
             this.container.logger.warn(`Check failed: ${err.message}`);
           });
         });
-        const onClose = vscode14.workspace.onDidCloseTextDocument((doc) => {
+        const onClose = vscode10.workspace.onDidCloseTextDocument((doc) => {
           this.clear(doc.uri);
         });
         this.disposables.push(onChange, onOpen, onSave, onClose);
@@ -14256,12 +14213,12 @@ var init_localChecker = __esm({
       offsetToRange(lineIndex, text, offset, length) {
         const start = this.offsetToLineCol(lineIndex, offset);
         const end = this.offsetToLineCol(lineIndex, offset + length);
-        return new vscode14.Range(start.line, start.col, end.line, end.col);
+        return new vscode10.Range(start.line, start.col, end.line, end.col);
       }
       makeDiag(bodyOffset, lineIndex, fullText, bodyPos, length, message, severity) {
         const fullPos = bodyOffset + bodyPos;
         const range = this.offsetToRange(lineIndex, fullText, fullPos, length);
-        return new vscode14.Diagnostic(range, message, severity);
+        return new vscode10.Diagnostic(range, message, severity);
       }
       checkRepeatedWord(text, bodyOffset, lineIndex, fullText) {
         const diags = [];
@@ -14283,7 +14240,7 @@ var init_localChecker = __esm({
               match.index,
               match[0].length,
               `\u7591\u4F3C\u91CD\u590D\u8BCD\uFF1A"${match[0]}"`,
-              vscode14.DiagnosticSeverity.Warning
+              vscode10.DiagnosticSeverity.Warning
             )
           );
         }
@@ -14302,7 +14259,7 @@ var init_localChecker = __esm({
               match.index,
               1,
               '\u82F1\u6587\u9017\u53F7\u6DF7\u5165\uFF0C\u5EFA\u8BAE\u4F7F\u7528\u4E2D\u6587\u9017\u53F7"\uFF0C"',
-              vscode14.DiagnosticSeverity.Information
+              vscode10.DiagnosticSeverity.Information
             )
           );
         }
@@ -14316,7 +14273,7 @@ var init_localChecker = __esm({
               match.index,
               match[0].length,
               `\u8FDE\u7EED\u6807\u70B9\uFF1A"${match[0]}"`,
-              vscode14.DiagnosticSeverity.Warning
+              vscode10.DiagnosticSeverity.Warning
             )
           );
         }
@@ -14327,7 +14284,7 @@ var init_localChecker = __esm({
           return this.typoDict;
         const dictPath = this.container.context.asAbsolutePath("resources/typo-dict.json");
         try {
-          const raw = fs4.readFileSync(dictPath, "utf8");
+          const raw = fs5.readFileSync(dictPath, "utf8");
           this.typoDict = JSON.parse(raw);
         } catch {
           this.typoDict = [];
@@ -14348,7 +14305,7 @@ var init_localChecker = __esm({
                 idx,
                 entry.wrong.length,
                 `\u5E38\u89C1\u9519\u522B\u5B57\uFF1A"${entry.wrong}" \u2192 "${entry.right}"`,
-                vscode14.DiagnosticSeverity.Warning
+                vscode10.DiagnosticSeverity.Warning
               )
             );
             idx = text.indexOf(entry.wrong, idx + entry.wrong.length);
@@ -14372,7 +14329,7 @@ var init_localChecker = __esm({
                 match.index,
                 sentence.length,
                 `\u957F\u53E5\uFF08${stripped.length}\u5B57\uFF09\uFF0C\u5EFA\u8BAE\u62C6\u5206`,
-                vscode14.DiagnosticSeverity.Information
+                vscode10.DiagnosticSeverity.Information
               )
             );
           }
@@ -14399,7 +14356,7 @@ var init_localChecker = __esm({
                 idx,
                 word.length,
                 `\u9AD8\u9891\u8BCD\uFF1A"${word}" \u51FA\u73B0 ${count} \u6B21`,
-                vscode14.DiagnosticSeverity.Information
+                vscode10.DiagnosticSeverity.Information
               )
             );
           }
@@ -14419,7 +14376,7 @@ var init_localChecker = __esm({
               match.index,
               match[0].length,
               "\u4E2D\u6587\u4E4B\u95F4\u591A\u4F59\u7A7A\u683C",
-              vscode14.DiagnosticSeverity.Information
+              vscode10.DiagnosticSeverity.Information
             )
           );
         }
@@ -14446,13 +14403,13 @@ var suggestionMerger_exports = {};
 __export(suggestionMerger_exports, {
   SuggestionMerger: () => SuggestionMerger
 });
-var vscode15, fs5, path4, crypto, SuggestionMerger;
+var vscode11, fs6, path7, crypto, SuggestionMerger;
 var init_suggestionMerger = __esm({
   "src/business/merger/suggestionMerger.ts"() {
     "use strict";
-    vscode15 = __toESM(require("vscode"));
-    fs5 = __toESM(require("fs"));
-    path4 = __toESM(require("path"));
+    vscode11 = __toESM(require("vscode"));
+    fs6 = __toESM(require("fs"));
+    path7 = __toESM(require("path"));
     crypto = __toESM(require("crypto"));
     init_textLocator();
     init_frontMatterParser();
@@ -14537,13 +14494,13 @@ var init_suggestionMerger = __esm({
           return;
         const tempDir = this.fs.mkdtemp("novel-merge-");
         const mergeId = crypto.randomUUID();
-        const originalPath = path4.join(tempDir, `original-${mergeId}.md`);
-        const editPath = path4.join(tempDir, `edit-${mergeId}.md`);
-        await fs5.promises.writeFile(originalPath, sug.original, "utf8");
-        await fs5.promises.writeFile(editPath, sug.replacement || "", "utf8");
-        const originalUri = vscode15.Uri.file(originalPath);
-        const editUri = vscode15.Uri.file(editPath);
-        await vscode15.commands.executeCommand(
+        const originalPath = path7.join(tempDir, `original-${mergeId}.md`);
+        const editPath = path7.join(tempDir, `edit-${mergeId}.md`);
+        await fs6.promises.writeFile(originalPath, sug.original, "utf8");
+        await fs6.promises.writeFile(editPath, sug.replacement || "", "utf8");
+        const originalUri = vscode11.Uri.file(originalPath);
+        const editUri = vscode11.Uri.file(editPath);
+        await vscode11.commands.executeCommand(
           "vscode.diff",
           originalUri,
           editUri,
@@ -14557,12 +14514,12 @@ var init_suggestionMerger = __esm({
           saveSub: void 0,
           closeSub: void 0
         };
-        const saveSub = vscode15.workspace.onDidSaveTextDocument(async (doc) => {
+        const saveSub = vscode11.workspace.onDidSaveTextDocument(async (doc) => {
           if (doc.uri.fsPath !== editUri.fsPath || session.merged)
             return;
           session.merged = true;
           try {
-            const mergedText = await fs5.promises.readFile(editPath, "utf8");
+            const mergedText = await fs6.promises.readFile(editPath, "utf8");
             let content;
             try {
               content = await this.fs.readFile(sug.file);
@@ -14590,8 +14547,8 @@ var init_suggestionMerger = __esm({
             this.container.logger.warn(`Merge failed: ${e.message}`);
           }
         });
-        const closeSub = vscode15.window.onDidChangeVisibleTextEditors(() => {
-          const stillOpen = vscode15.window.visibleTextEditors.some(
+        const closeSub = vscode11.window.onDidChangeVisibleTextEditors(() => {
+          const stillOpen = vscode11.window.visibleTextEditors.some(
             (e) => e.document.uri.fsPath === editUri.fsPath || e.document.uri.fsPath === originalUri.fsPath
           );
           if (!stillOpen) {
@@ -14609,7 +14566,7 @@ var init_suggestionMerger = __esm({
         session.saveSub.dispose();
         session.closeSub.dispose();
         try {
-          fs5.rmSync(session.tempDir, { recursive: true, force: true });
+          fs6.rmSync(session.tempDir, { recursive: true, force: true });
         } catch {
         }
         this.mergeSessions.delete(suggestionId);
@@ -14708,6 +14665,19 @@ var init_suggestionMerger = __esm({
       removePendingReview(taskId) {
         this.pendingReviews.delete(taskId);
       }
+      clearAllPendingReviews() {
+        for (const [, session] of this.mergeSessions) {
+          try {
+            session.saveSub.dispose();
+            session.closeSub.dispose();
+            fs6.rmSync(session.tempDir, { recursive: true, force: true });
+          } catch {
+          }
+        }
+        this.mergeSessions.clear();
+        this.pendingReviews.clear();
+        this.container.eventBus.publish("review.updated", { taskId: "" });
+      }
       async updateStatus(taskId, suggestionId, status, extra) {
         const review = this.getPendingReview(taskId);
         if (review) {
@@ -14750,13 +14720,13 @@ var init_suggestionMerger = __esm({
 });
 
 // src/data/fileSystem/fileSystemService.ts
-var vscode16, path5, fs6, os, YAML2, FileSystemService;
+var vscode12, path8, fs7, os, YAML2, FileSystemService;
 var init_fileSystemService = __esm({
   "src/data/fileSystem/fileSystemService.ts"() {
     "use strict";
-    vscode16 = __toESM(require("vscode"));
-    path5 = __toESM(require("path"));
-    fs6 = __toESM(require("fs"));
+    vscode12 = __toESM(require("vscode"));
+    path8 = __toESM(require("path"));
+    fs7 = __toESM(require("fs"));
     os = __toESM(require("os"));
     YAML2 = __toESM(require_dist());
     FileSystemService = class {
@@ -14777,34 +14747,34 @@ var init_fileSystemService = __esm({
         return this.projectRoot;
       }
       resolvePath(relativePath) {
-        if (path5.isAbsolute(relativePath)) {
+        if (path8.isAbsolute(relativePath)) {
           throw new Error(`Absolute paths are not allowed: ${relativePath}`);
         }
         const root = this.requireRoot();
-        const full = path5.resolve(root, relativePath);
-        const rel = path5.relative(root, full);
-        if (rel.startsWith("..") || path5.isAbsolute(rel)) {
+        const full = path8.resolve(root, relativePath);
+        const rel = path8.relative(root, full);
+        if (rel.startsWith("..") || path8.isAbsolute(rel)) {
           throw new Error(`Path escapes project root: ${relativePath}`);
         }
         return full;
       }
       toRelative(absolutePath) {
         const root = this.requireRoot();
-        const rel = path5.relative(root, absolutePath);
-        if (rel.startsWith("..") || path5.isAbsolute(rel)) {
+        const rel = path8.relative(root, absolutePath);
+        if (rel.startsWith("..") || path8.isAbsolute(rel)) {
           return void 0;
         }
         return rel;
       }
       toUri(fullPath) {
-        return vscode16.Uri.file(fullPath);
+        return vscode12.Uri.file(fullPath);
       }
       async readFile(relativePath) {
         const full = this.resolvePath(relativePath);
         return this.readFileUri(this.toUri(full));
       }
       async readFileUri(uri) {
-        const buf = await vscode16.workspace.fs.readFile(uri);
+        const buf = await vscode12.workspace.fs.readFile(uri);
         let text = Buffer.from(buf).toString("utf8");
         if (text.charCodeAt(0) === 65279) {
           text = text.slice(1);
@@ -14812,13 +14782,13 @@ var init_fileSystemService = __esm({
         return text;
       }
       async ensureDir(dir) {
-        await vscode16.workspace.fs.createDirectory(this.toUri(dir));
+        await vscode12.workspace.fs.createDirectory(this.toUri(dir));
       }
       async writeFile(relativePath, content) {
         const full = this.resolvePath(relativePath);
-        await this.ensureDir(path5.dirname(full));
+        await this.ensureDir(path8.dirname(full));
         const contentBuf = Buffer.from(content, "utf8");
-        await vscode16.workspace.fs.writeFile(this.toUri(full), contentBuf);
+        await vscode12.workspace.fs.writeFile(this.toUri(full), contentBuf);
       }
       async readJson(relativePath) {
         const text = await this.readFile(relativePath);
@@ -14839,7 +14809,7 @@ var init_fileSystemService = __esm({
       async exists(relativePath) {
         const full = this.resolvePath(relativePath);
         try {
-          await vscode16.workspace.fs.stat(this.toUri(full));
+          await vscode12.workspace.fs.stat(this.toUri(full));
           return true;
         } catch {
           return false;
@@ -14847,32 +14817,32 @@ var init_fileSystemService = __esm({
       }
       async createDir(relativePath) {
         const full = this.resolvePath(relativePath);
-        await vscode16.workspace.fs.createDirectory(this.toUri(full));
+        await vscode12.workspace.fs.createDirectory(this.toUri(full));
       }
       async listFiles(dir, pattern) {
         const root = this.requireRoot();
         const normalizedDir = dir.replace(/\\/g, "/").replace(/\/$/, "");
         const glob = normalizedDir ? `${normalizedDir}/${pattern}` : pattern;
-        const include = new vscode16.RelativePattern(root, glob);
-        const uris = await vscode16.workspace.findFiles(include);
+        const include = new vscode12.RelativePattern(root, glob);
+        const uris = await vscode12.workspace.findFiles(include);
         return uris.map((u) => u.fsPath);
       }
       async delete(relativePath) {
         const full = this.resolvePath(relativePath);
-        await vscode16.workspace.fs.delete(this.toUri(full), { recursive: false, useTrash: false });
+        await vscode12.workspace.fs.delete(this.toUri(full), { recursive: false, useTrash: false });
       }
       async deleteDir(relativePath) {
         const full = this.resolvePath(relativePath);
-        await vscode16.workspace.fs.delete(this.toUri(full), { recursive: true, useTrash: false });
+        await vscode12.workspace.fs.delete(this.toUri(full), { recursive: true, useTrash: false });
       }
       async copy(src, dest) {
         const srcFull = this.resolvePath(src);
         const destFull = this.resolvePath(dest);
-        await this.ensureDir(path5.dirname(destFull));
-        await vscode16.workspace.fs.copy(this.toUri(srcFull), this.toUri(destFull), { overwrite: true });
+        await this.ensureDir(path8.dirname(destFull));
+        await vscode12.workspace.fs.copy(this.toUri(srcFull), this.toUri(destFull), { overwrite: true });
       }
       mkdtemp(prefix) {
-        return fs6.mkdtempSync(path5.join(os.tmpdir(), prefix));
+        return fs7.mkdtempSync(path8.join(os.tmpdir(), prefix));
       }
     };
   }
@@ -17728,20 +17698,20 @@ var require_compile = __commonJS({
     var util_1 = require_util();
     var validate_1 = require_validate();
     var SchemaEnv = class {
-      constructor(env2) {
+      constructor(env4) {
         var _a;
         this.refs = {};
         this.dynamicAnchors = {};
         let schema;
-        if (typeof env2.schema == "object")
-          schema = env2.schema;
-        this.schema = env2.schema;
-        this.schemaId = env2.schemaId;
-        this.root = env2.root || this;
-        this.baseId = (_a = env2.baseId) !== null && _a !== void 0 ? _a : (0, resolve_1.normalizeId)(schema === null || schema === void 0 ? void 0 : schema[env2.schemaId || "$id"]);
-        this.schemaPath = env2.schemaPath;
-        this.localRefs = env2.localRefs;
-        this.meta = env2.meta;
+        if (typeof env4.schema == "object")
+          schema = env4.schema;
+        this.schema = env4.schema;
+        this.schemaId = env4.schemaId;
+        this.root = env4.root || this;
+        this.baseId = (_a = env4.baseId) !== null && _a !== void 0 ? _a : (0, resolve_1.normalizeId)(schema === null || schema === void 0 ? void 0 : schema[env4.schemaId || "$id"]);
+        this.schemaPath = env4.schemaPath;
+        this.localRefs = env4.localRefs;
+        this.meta = env4.meta;
         this.$async = schema === null || schema === void 0 ? void 0 : schema.$async;
         this.refs = {};
       }
@@ -17925,15 +17895,15 @@ var require_compile = __commonJS({
           baseId = (0, resolve_1.resolveUrl)(this.opts.uriResolver, baseId, schId);
         }
       }
-      let env2;
+      let env4;
       if (typeof schema != "boolean" && schema.$ref && !(0, util_1.schemaHasRulesButRef)(schema, this.RULES)) {
         const $ref = (0, resolve_1.resolveUrl)(this.opts.uriResolver, baseId, schema.$ref);
-        env2 = resolveSchema.call(this, root, $ref);
+        env4 = resolveSchema.call(this, root, $ref);
       }
       const { schemaId } = this.opts;
-      env2 = env2 || new SchemaEnv({ schema, schemaId, root, baseId });
-      if (env2.schema !== env2.root.schema)
-        return env2;
+      env4 = env4 || new SchemaEnv({ schema, schemaId, root, baseId });
+      if (env4.schema !== env4.root.schema)
+        return env4;
       return void 0;
     }
   }
@@ -18085,8 +18055,8 @@ var require_utils2 = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path8) {
-      let input = path8;
+    function removeDotSegments(path18) {
+      let input = path18;
       const output = [];
       let nextSlash = -1;
       let len = 0;
@@ -18338,8 +18308,8 @@ var require_schemes = __commonJS({
         wsComponent.secure = void 0;
       }
       if (wsComponent.resourceName) {
-        const [path8, query] = wsComponent.resourceName.split("?");
-        wsComponent.path = path8 && path8 !== "/" ? path8 : void 0;
+        const [path18, query] = wsComponent.resourceName.split("?");
+        wsComponent.path = path18 && path18 !== "/" ? path18 : void 0;
         wsComponent.query = query;
         wsComponent.resourceName = void 0;
       }
@@ -18494,21 +18464,21 @@ var require_fast_uri = __commonJS({
         normalizeString(uri, options2);
       } else if (typeof uri === "object") {
         uri = /** @type {T} */
-        parse4(serialize(uri, options2), options2);
+        parse5(serialize(uri, options2), options2);
       }
       return uri;
     }
     function resolve2(baseURI, relativeURI, options2) {
       const schemelessOptions = options2 ? Object.assign({ scheme: "null" }, options2) : { scheme: "null" };
-      const resolved = resolveComponent(parse4(baseURI, schemelessOptions), parse4(relativeURI, schemelessOptions), schemelessOptions, true);
+      const resolved = resolveComponent(parse5(baseURI, schemelessOptions), parse5(relativeURI, schemelessOptions), schemelessOptions, true);
       schemelessOptions.skipEscape = true;
       return serialize(resolved, schemelessOptions);
     }
     function resolveComponent(base, relative2, options2, skipNormalization) {
       const target = {};
       if (!skipNormalization) {
-        base = parse4(serialize(base, options2), options2);
-        relative2 = parse4(serialize(relative2, options2), options2);
+        base = parse5(serialize(base, options2), options2);
+        relative2 = parse5(serialize(relative2, options2), options2);
       }
       options2 = options2 || {};
       if (!options2.tolerant && relative2.scheme) {
@@ -18732,7 +18702,7 @@ var require_fast_uri = __commonJS({
       }
       return { parsed, malformedAuthorityOrPort };
     }
-    function parse4(uri, opts) {
+    function parse5(uri, opts) {
       return parseWithStatus(uri, opts).parsed;
     }
     function normalizeString(uri, opts) {
@@ -18761,7 +18731,7 @@ var require_fast_uri = __commonJS({
       resolveComponent,
       equal,
       serialize,
-      parse: parse4
+      parse: parse5
     };
     module2.exports = fastUri;
     module2.exports.default = fastUri;
@@ -19423,8 +19393,8 @@ var require_ref = __commonJS({
       schemaType: "string",
       code(cxt) {
         const { gen, schema: $ref, it } = cxt;
-        const { baseId, schemaEnv: env2, validateName, opts, self } = it;
-        const { root } = env2;
+        const { baseId, schemaEnv: env4, validateName, opts, self } = it;
+        const { root } = env4;
         if (($ref === "#" || $ref === "#/") && baseId === root.baseId)
           return callRootRef();
         const schOrEnv = compile_1.resolveRef.call(self, root, baseId, $ref);
@@ -19434,8 +19404,8 @@ var require_ref = __commonJS({
           return callValidate(schOrEnv);
         return inlineRefSchema(schOrEnv);
         function callRootRef() {
-          if (env2 === root)
-            return callRef(cxt, validateName, env2, env2.$async);
+          if (env4 === root)
+            return callRef(cxt, validateName, env4, env4.$async);
           const rootName = gen.scopeValue("root", { ref: root });
           return callRef(cxt, (0, codegen_1._)`${rootName}.validate`, root, root.$async);
         }
@@ -19465,14 +19435,14 @@ var require_ref = __commonJS({
     exports2.getValidate = getValidate;
     function callRef(cxt, v, sch, $async) {
       const { gen, it } = cxt;
-      const { allErrors, schemaEnv: env2, opts } = it;
+      const { allErrors, schemaEnv: env4, opts } = it;
       const passCxt = opts.passContext ? names_1.default.this : codegen_1.nil;
       if ($async)
         callAsyncRef();
       else
         callSyncRef();
       function callAsyncRef() {
-        if (!env2.$async)
+        if (!env4.$async)
           throw new Error("async schema referenced by sync schema");
         const valid = gen.let("valid");
         gen.try(() => {
@@ -21430,11 +21400,11 @@ var require_ajv = __commonJS({
 });
 
 // src/data/schema/schemaValidator.ts
-var fs7, import_ajv, SchemaValidator;
+var fs8, import_ajv, SchemaValidator;
 var init_schemaValidator = __esm({
   "src/data/schema/schemaValidator.ts"() {
     "use strict";
-    fs7 = __toESM(require("fs"));
+    fs8 = __toESM(require("fs"));
     import_ajv = __toESM(require_ajv());
     SchemaValidator = class {
       constructor(container) {
@@ -21450,7 +21420,7 @@ var init_schemaValidator = __esm({
         const schemaPath = this.container.context.asAbsolutePath(
           "resources/schemas/suggestions.schema.json"
         );
-        const text = fs7.readFileSync(schemaPath, "utf8");
+        const text = fs8.readFileSync(schemaPath, "utf8");
         const schema = JSON.parse(text);
         this.suggestionsSchema = schema;
         return schema;
@@ -21619,13 +21589,14 @@ var projectDetector_exports = {};
 __export(projectDetector_exports, {
   ProjectDetector: () => ProjectDetector
 });
-var vscode17, path6, fs8, ProjectDetector;
+var vscode13, path9, fs9, YAML3, LAST_ACTIVE_KEY, RECENT_KEY, MAX_RECENT, ProjectDetector;
 var init_projectDetector = __esm({
   "src/business/project/projectDetector.ts"() {
     "use strict";
-    vscode17 = __toESM(require("vscode"));
-    path6 = __toESM(require("path"));
-    fs8 = __toESM(require("fs"));
+    vscode13 = __toESM(require("vscode"));
+    path9 = __toESM(require("path"));
+    fs9 = __toESM(require("fs"));
+    YAML3 = __toESM(require_dist());
     init_fileSystemService();
     init_configManager();
     init_schemaValidator();
@@ -21638,68 +21609,149 @@ var init_projectDetector = __esm({
     init_characterParser();
     init_settingParser();
     init_constants();
+    LAST_ACTIVE_KEY = "novelCompanion.lastActiveRoot";
+    RECENT_KEY = "novelCompanion.recentRoots";
+    MAX_RECENT = 10;
     ProjectDetector = class {
       constructor(container) {
         this.container = container;
       }
+      activeRoot;
+      getActiveRoot() {
+        return this.activeRoot;
+      }
       async detect() {
-        const root = await this.findProjectRoot();
+        const projects = await this.scanAllProjects();
+        let root = this.readLastActive();
+        if (!root || !projects.some((p) => p.root === root)) {
+          root = projects.length > 0 ? projects[0].root : void 0;
+        }
         if (!root) {
-          await vscode17.commands.executeCommand(
+          this.activeRoot = void 0;
+          await this.publishClosed();
+          await vscode13.commands.executeCommand(
+            "setContext",
+            "novelCompanion.projectLoaded",
+            false
+          );
+          this.container.eventBus.publish("bookshelf.changed", { projects });
+          return;
+        }
+        await this.openProject(root);
+        const refreshed = projects.map((p) => ({ ...p, active: p.root === root }));
+        this.container.eventBus.publish("bookshelf.changed", { projects: refreshed });
+      }
+      async scanAllProjects() {
+        const roots = await this.discoverProjectRoots();
+        const infos = [];
+        for (const root of roots) {
+          const info = await this.buildProjectInfo(root);
+          infos.push(info);
+        }
+        infos.sort((a, b) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? ""));
+        return infos;
+      }
+      async openProject(root) {
+        const novelYamlPath = path9.join(root, PROJECT_FILES.NOVEL_YAML);
+        if (!fs9.existsSync(novelYamlPath)) {
+          await this.publishClosed();
+          await vscode13.commands.executeCommand(
             "setContext",
             "novelCompanion.projectLoaded",
             false
           );
           return;
         }
-        const novelYamlPath = path6.join(root, PROJECT_FILES.NOVEL_YAML);
-        if (!fs8.existsSync(novelYamlPath)) {
-          await vscode17.commands.executeCommand(
-            "setContext",
-            "novelCompanion.projectLoaded",
-            false
-          );
-          return;
-        }
+        this.activeRoot = root;
         this.registerDataServices(root);
         const configManager = this.container.get("configManager");
         await configManager.refresh();
-        const novelId = configManager.get("novel_id") ?? configManager.get("title") ?? "";
-        await vscode17.commands.executeCommand(
+        const novelId = configManager.get("novel_id") ?? configManager.get("title") ?? path9.basename(root);
+        this.recordRecent(root);
+        this.writeLastActive(root);
+        await vscode13.commands.executeCommand(
           "setContext",
           "novelCompanion.projectLoaded",
           true
         );
-        this.container.eventBus.publish("project.opened", {
-          root,
-          novelId
-        });
         const indexManager = this.container.get("indexManager");
         await indexManager.refresh();
-        this.container.logger.info(`Project detected: ${root}`);
+        this.container.eventBus.publish("project.opened", { root, novelId });
+        this.container.logger.info(`Project opened: ${root}`);
       }
-      async findProjectRoot() {
-        const folders = vscode17.workspace.workspaceFolders;
-        if (!folders || folders.length === 0)
-          return void 0;
-        for (const folder of folders) {
-          const p = path6.join(folder.uri.fsPath, PROJECT_FILES.NOVEL_YAML);
-          if (fs8.existsSync(p)) {
-            return folder.uri.fsPath;
+      async publishClosed() {
+        if (this.activeRoot) {
+          this.container.eventBus.publish("project.closed", { root: this.activeRoot });
+        }
+        this.activeRoot = void 0;
+      }
+      async discoverProjectRoots() {
+        const roots = /* @__PURE__ */ new Set();
+        const folders = vscode13.workspace.workspaceFolders;
+        if (folders) {
+          for (const folder of folders) {
+            if (fs9.existsSync(path9.join(folder.uri.fsPath, PROJECT_FILES.NOVEL_YAML))) {
+              roots.add(folder.uri.fsPath);
+            }
           }
         }
         try {
-          const uris = await vscode17.workspace.findFiles(
+          const uris = await vscode13.workspace.findFiles(
             "**/novel.yaml",
-            "**/node_modules/**",
-            10
+            "**/{node_modules,.git,.novel-ai}/**",
+            200
           );
-          if (uris.length > 0) {
-            return path6.dirname(uris[0].fsPath);
+          for (const uri of uris) {
+            roots.add(path9.dirname(uri.fsPath));
           }
         } catch {
         }
-        return void 0;
+        return Array.from(roots);
+      }
+      async buildProjectInfo(root) {
+        let yaml2 = {};
+        try {
+          const text = fs9.readFileSync(path9.join(root, PROJECT_FILES.NOVEL_YAML), "utf8");
+          yaml2 = YAML3.parse(text) ?? {};
+        } catch {
+        }
+        let chapterCount = 0;
+        const volumes = /* @__PURE__ */ new Set();
+        let totalWords = 0;
+        const chaptersDir = path9.join(root, PROJECT_DIRS.CHAPTERS);
+        try {
+          for (const entry of fs9.readdirSync(chaptersDir, { withFileTypes: true })) {
+            if (!entry.isDirectory() || !/^ch\d{3}$/.test(entry.name))
+              continue;
+            chapterCount++;
+            const yamlPath = path9.join(chaptersDir, entry.name, "chapter.yaml");
+            try {
+              const ch = YAML3.parse(fs9.readFileSync(yamlPath, "utf8"));
+              if (ch.volume)
+                volumes.add(ch.volume);
+              totalWords += ch.word_count ?? 0;
+            } catch {
+            }
+          }
+        } catch {
+        }
+        const declaredVolumes = new Set(yaml2.volumes ?? []);
+        const volumeCount = (/* @__PURE__ */ new Set([...declaredVolumes, ...volumes])).size;
+        return {
+          root,
+          novelId: yaml2.novel_id ?? yaml2.title ?? path9.basename(root),
+          title: yaml2.title ?? path9.basename(root),
+          author: yaml2.author,
+          genre: yaml2.genre,
+          length: yaml2.length,
+          targetWords: yaml2.target_words,
+          chapterCount,
+          volumeCount,
+          totalWords,
+          updatedAt: yaml2.updated_at,
+          createdAt: yaml2.created_at,
+          active: this.activeRoot === root
+        };
       }
       registerDataServices(root) {
         if (!this.container.has("fileSystem")) {
@@ -21740,6 +21792,2687 @@ var init_projectDetector = __esm({
           this.container.register("settingParser", new SettingParser(this.container));
         }
       }
+      readLastActive() {
+        return this.container.context.globalState.get(LAST_ACTIVE_KEY);
+      }
+      writeLastActive(root) {
+        this.container.context.globalState.update(LAST_ACTIVE_KEY, root);
+      }
+      recordRecent(root) {
+        const recent = this.container.context.globalState.get(RECENT_KEY) ?? [];
+        const filtered = recent.filter((r) => r !== root);
+        filtered.unshift(root);
+        this.container.context.globalState.update(RECENT_KEY, filtered.slice(0, MAX_RECENT));
+      }
+    };
+  }
+});
+
+// src/business/export/epubWriter.ts
+function inlineMd(s) {
+  return xmlEscape(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>");
+}
+function htmlEscapeBody(text) {
+  const lines = text.split(/\r?\n/);
+  const out = [];
+  let inList = false;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      if (inList) {
+        out.push("</ul>");
+        inList = false;
+      }
+      continue;
+    }
+    if (/^#{1,6}\s+/.test(trimmed)) {
+      if (inList) {
+        out.push("</ul>");
+        inList = false;
+      }
+      const m = trimmed.match(/^(#{1,6})\s+(.*)$/);
+      const level = Math.min(m[1].length, 3);
+      out.push(`<h${level}>${inlineMd(m[2])}</h${level}>`);
+      continue;
+    }
+    if (/^[-*+]\s+/.test(trimmed)) {
+      if (!inList) {
+        out.push("<ul>");
+        inList = true;
+      }
+      out.push(`<li>${inlineMd(trimmed.replace(/^[-*+]\s+/, ""))}</li>`);
+      continue;
+    }
+    if (inList) {
+      out.push("</ul>");
+      inList = false;
+    }
+    out.push(`<p>${inlineMd(trimmed)}</p>`);
+  }
+  if (inList)
+    out.push("</ul>");
+  return out.join("\n");
+}
+function xhtmlDoc(title, body) {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-CN">
+<head><meta charset="utf-8"/><title>${title}</title><link rel="stylesheet" type="text/css" href="style.css"/></head>
+<body>
+${body}
+</body>
+</html>`;
+}
+async function buildEpub(opts) {
+  const novel = opts.novel;
+  const title = novel?.title ?? "\u672A\u547D\u540D";
+  const author = novel?.author ?? "\u4F5A\u540D";
+  const rawBookId = novel?.novel_id || Date.now().toString(16);
+  const bookId = `urn:uuid:${xmlEscape(rawBookId)}`;
+  const fm = new FrontMatterParser();
+  const entries = [];
+  entries.push({ name: "mimetype", data: Buffer.from("application/epub+zip", "utf8"), store: true });
+  entries.push({
+    name: "META-INF/container.xml",
+    data: Buffer.from(
+      '<?xml version="1.0" encoding="UTF-8"?>\n<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>',
+      "utf8"
+    )
+  });
+  const grouped = /* @__PURE__ */ new Map();
+  for (const ch of opts.chapters) {
+    const v = ch.volume || "\u6B63\u6587";
+    if (!grouped.has(v))
+      grouped.set(v, []);
+    grouped.get(v).push(ch);
+  }
+  const volumes = Array.from(grouped.entries());
+  const manifestItems = [];
+  const spineItems = [];
+  const navPoints = [];
+  let playOrder = 1;
+  for (let volIndex = 0; volIndex < volumes.length; volIndex++) {
+    const [volume, chs] = volumes[volIndex];
+    const volId = `vol-${volIndex}`;
+    const volHref = `chapter-vol-${volIndex}.xhtml`;
+    manifestItems.push(
+      `<item id="${volId}" href="${volHref}" media-type="application/xhtml+xml"/>`
+    );
+    spineItems.push(`<itemref idref="${volId}"/>`);
+    navPoints.push(
+      `<navPoint id="${volId}" playOrder="${playOrder++}"><navLabel><text>${xmlEscape(
+        volume
+      )}</text></navLabel><content src="${volHref}"/></navPoint>`
+    );
+    entries.push({
+      name: `OEBPS/${volHref}`,
+      data: Buffer.from(xhtmlDoc(xmlEscape(volume), `<h2>${xmlEscape(volume)}</h2>`), "utf8")
+    });
+    for (const ch of chs.sort((a, b) => a.number - b.number)) {
+      const cid = xmlEscape(ch.id);
+      const href = `chapter-${cid}.xhtml`;
+      manifestItems.push(`<item id="${cid}" href="${href}" media-type="application/xhtml+xml"/>`);
+      spineItems.push(`<itemref idref="${cid}"/>`);
+      navPoints.push(
+        `<navPoint id="nav-${cid}" playOrder="${playOrder++}"><navLabel><text>${xmlEscape(
+          opts.chapterHeading(ch)
+        )}</text></navLabel><content src="${href}"/></navPoint>`
+      );
+      const draftRaw = await opts.readDraft(ch.id);
+      const body = fm.extractBody(draftRaw);
+      const outline = await opts.readOutline(ch.id);
+      const parts = [`<h3>${xmlEscape(opts.chapterHeading(ch))}</h3>`];
+      if (outline)
+        parts.push(htmlEscapeBody(outline));
+      parts.push(htmlEscapeBody(body));
+      entries.push({
+        name: `OEBPS/${href}`,
+        data: Buffer.from(xhtmlDoc(xmlEscape(opts.chapterHeading(ch)), parts.join("\n")), "utf8")
+      });
+    }
+  }
+  const opf = `<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="BookId">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:identifier id="BookId">${bookId}</dc:identifier>
+    <dc:title>${xmlEscape(title)}</dc:title>
+    <dc:creator>${xmlEscape(author)}</dc:creator>
+    <dc:language>zh-CN</dc:language>
+    ${novel?.genre ? `<dc:subject>${xmlEscape(novel.genre)}</dc:subject>` : ""}
+  </metadata>
+  <manifest>
+    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+    <item id="css" href="style.css" media-type="text/css"/>
+    <item id="cover" href="cover.xhtml" media-type="application/xhtml+xml"/>
+    <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml"/>
+    ${manifestItems.join("\n    ")}
+  </manifest>
+  <spine toc="ncx">
+    <itemref idref="cover"/>
+    <itemref idref="nav"/>
+    ${spineItems.join("\n    ")}
+  </spine>
+</package>`;
+  entries.push({ name: "OEBPS/content.opf", data: Buffer.from(opf, "utf8") });
+  const ncx = `<?xml version="1.0" encoding="UTF-8"?>
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
+  <head><meta name="dtb:uid" content="${bookId}"/></head>
+  <docTitle><text>${xmlEscape(title)}</text></docTitle>
+  <navMap>
+    ${navPoints.join("\n    ")}
+  </navMap>
+</ncx>`;
+  entries.push({ name: "OEBPS/toc.ncx", data: Buffer.from(ncx, "utf8") });
+  entries.push({ name: "OEBPS/style.css", data: Buffer.from(CSS, "utf8") });
+  entries.push({
+    name: "OEBPS/cover.xhtml",
+    data: Buffer.from(
+      xhtmlDoc(
+        xmlEscape(title),
+        `<div class="cover"><h1>${xmlEscape(title)}</h1><p class="subtitle">${xmlEscape(author)}</p></div>`
+      ),
+      "utf8"
+    )
+  });
+  entries.push({
+    name: "OEBPS/nav.xhtml",
+    data: Buffer.from(xhtmlDoc("\u76EE\u5F55", "<h1>\u76EE\u5F55</h1>"), "utf8")
+  });
+  return createZip(entries);
+}
+var CSS;
+var init_epubWriter = __esm({
+  "src/business/export/epubWriter.ts"() {
+    "use strict";
+    init_zipWriter();
+    init_utils();
+    init_frontMatterParser();
+    CSS = `body{font-family:"Noto Serif SC","Source Han Serif SC",serif;line-height:1.8;margin:5% 8%;}
+h1{font-size:1.6em;text-align:center;margin-bottom:0.2em;}
+h2{font-size:1.25em;margin-top:1.5em;}
+h3{font-size:1.1em;margin-top:1.2em;}
+p{text-indent:2em;margin:0.6em 0;}
+.cover{text-align:center;margin:1em 0;}
+.subtitle{color:#666;text-align:center;font-size:0.9em;}`;
+  }
+});
+
+// src/business/export/docxWriter.ts
+function inlineMd2(s) {
+  return xmlEscape(s).replace(/\*\*(.+?)\*\*/g, "$1").replace(/\*(.+?)\*/g, "$1");
+}
+function para(text, style) {
+  return `<w:p><w:pPr><w:pStyle w:val="${style}"/></w:pPr><w:r><w:t xml:space="preserve">${inlineMd2(
+    text
+  )}</w:t></w:r></w:p>`;
+}
+function bodyFromMarkdown(text) {
+  const lines = text.split(/\r?\n/);
+  const out = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed)
+      continue;
+    if (/^#{1,6}\s+/.test(trimmed)) {
+      const m = trimmed.match(/^(#{1,6})\s+(.*)$/);
+      const level = Math.min(m[1].length, 3);
+      out.push(para(m[2], `Heading${level}`));
+      continue;
+    }
+    if (/^[-*+]\s+/.test(trimmed)) {
+      out.push(para("\xB7 " + trimmed.replace(/^[-*+]\s+/, ""), "Normal"));
+      continue;
+    }
+    out.push(para(trimmed, "Normal"));
+  }
+  return out.join("");
+}
+async function buildDocx(opts) {
+  const novel = opts.novel;
+  const title = novel?.title ?? "\u672A\u547D\u540D";
+  const fm = new FrontMatterParser();
+  const bodyParts = [];
+  bodyParts.push(para(title, "Heading1"));
+  if (novel?.author)
+    bodyParts.push(para(`\u4F5C\u8005\uFF1A${novel.author}`, "Normal"));
+  if (novel?.genre)
+    bodyParts.push(para(`\u9898\u6750\uFF1A${novel.genre}`, "Normal"));
+  bodyParts.push(para("", "Normal"));
+  const grouped = /* @__PURE__ */ new Map();
+  for (const ch of opts.chapters) {
+    const v = ch.volume || "\u6B63\u6587";
+    if (!grouped.has(v))
+      grouped.set(v, []);
+    grouped.get(v).push(ch);
+  }
+  for (const [volume, chs] of Array.from(grouped.entries())) {
+    bodyParts.push(para(volume, "Heading2"));
+    for (const ch of chs.sort((a, b) => a.number - b.number)) {
+      bodyParts.push(para(opts.chapterHeading(ch), "Heading3"));
+      const outline = await opts.readOutline(ch.id);
+      if (outline)
+        bodyParts.push(bodyFromMarkdown(outline));
+      const draftRaw = await opts.readDraft(ch.id);
+      const body = fm.extractBody(draftRaw);
+      bodyParts.push(bodyFromMarkdown(body));
+    }
+  }
+  const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    ${bodyParts.join("\n    ")}
+    <w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr>
+  </w:body>
+</w:document>`;
+  const entries = [
+    { name: "[Content_Types].xml", data: Buffer.from(CONTENT_TYPES, "utf8") },
+    { name: "_rels/.rels", data: Buffer.from(ROOT_RELS, "utf8") },
+    { name: "word/_rels/document.xml.rels", data: Buffer.from(DOC_RELS, "utf8") },
+    { name: "word/styles.xml", data: Buffer.from(STYLES2, "utf8") },
+    { name: "word/document.xml", data: Buffer.from(documentXml, "utf8") }
+  ];
+  return createZip(entries);
+}
+var CONTENT_TYPES, ROOT_RELS, DOC_RELS, STYLES2;
+var init_docxWriter = __esm({
+  "src/business/export/docxWriter.ts"() {
+    "use strict";
+    init_zipWriter();
+    init_utils();
+    init_frontMatterParser();
+    CONTENT_TYPES = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+  <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+</Types>`;
+    ROOT_RELS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`;
+    DOC_RELS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="word/styles.xml"/>
+</Relationships>`;
+    STYLES2 = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="SimSun" w:eastAsia="SimSun" w:hAnsi="SimSun"/><w:sz w:val="24"/></w:rPr></w:rPrDefault></w:docDefaults>
+  <w:style w:type="paragraph" w:styleId="Normal"><w:name w:val="Normal"/><w:pPr><w:spacing w:line="360" w:lineRule="auto"/></w:pPr></w:style>
+  <w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:pPr><w:spacing w:before="240" w:after="120"/><w:jc w:val="center"/></w:pPr><w:rPr><w:b/><w:sz w:val="44"/></w:rPr></w:style>
+  <w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/><w:basedOn w:val="Normal"/><w:pPr><w:spacing w:before="200" w:after="100"/></w:pPr><w:rPr><w:b/><w:sz w:val="32"/></w:rPr></w:style>
+  <w:style w:type="paragraph" w:styleId="Heading3"><w:name w:val="heading 3"/><w:basedOn w:val="Normal"/><w:pPr><w:spacing w:before="160" w:after="80"/></w:pPr><w:rPr><w:b/><w:sz w:val="28"/></w:rPr></w:style>
+</w:styles>`;
+  }
+});
+
+// src/business/export/exportEngine.ts
+var vscode14, DEFAULT_OPTIONS, ExportEngine;
+var init_exportEngine = __esm({
+  "src/business/export/exportEngine.ts"() {
+    "use strict";
+    vscode14 = __toESM(require("vscode"));
+    init_frontMatterParser();
+    init_types();
+    init_constants();
+    init_epubWriter();
+    init_docxWriter();
+    DEFAULT_OPTIONS = {
+      format: "markdown",
+      includeTitle: true,
+      chapterTitleTemplate: "volumeNumber",
+      statusFilter: "all",
+      includeOutline: false
+    };
+    ExportEngine = class {
+      constructor(container) {
+        this.container = container;
+      }
+      fmParser = new FrontMatterParser();
+      get fs() {
+        return this.container.get("fileSystem");
+      }
+      get indexManager() {
+        return this.container.get("indexManager");
+      }
+      async preview() {
+        const novel = await this.readNovel();
+        const chapters = await this.indexManager.getAllChapters();
+        const grouped = this.groupByVolume(chapters);
+        const volumes = grouped.map(([volume, chs]) => ({
+          volume,
+          chapters: chs.map((c) => ({
+            id: c.id,
+            title: c.title,
+            number: c.number,
+            status: c.status,
+            wordCount: c.wordCount
+          }))
+        }));
+        return {
+          novelTitle: novel?.title ?? "\u672A\u547D\u540D",
+          author: novel?.author ?? "",
+          volumeCount: volumes.length,
+          chapterCount: chapters.length,
+          totalWords: chapters.reduce((s, c) => s + c.wordCount, 0),
+          volumes
+        };
+      }
+      async export(options2) {
+        const opts = { ...DEFAULT_OPTIONS, ...options2 };
+        const novel = await this.readNovel();
+        const chapters = await this.indexManager.getAllChapters();
+        const filtered = this.filterByStatus(chapters, opts.statusFilter);
+        if (opts.format === "epub" || opts.format === "docx") {
+          return this.exportBinary(opts, novel, filtered);
+        }
+        const grouped = this.groupByVolume(filtered);
+        const parts = [];
+        if (opts.includeTitle) {
+          parts.push(`# ${novel?.title ?? "\u672A\u547D\u540D"}`, "");
+          if (novel?.author)
+            parts.push(`> \u4F5C\u8005\uFF1A${novel.author}`, "");
+          if (novel?.genre)
+            parts.push(`> \u9898\u6750\uFF1A${novel.genre}`, "");
+          parts.push("", "---", "");
+        }
+        let chapterCount = 0;
+        let wordCount = 0;
+        for (const [volume, chs] of grouped) {
+          if (grouped.length > 1 || volume && volume !== "\u9ED8\u8BA4\u5377") {
+            if (opts.format === "markdown") {
+              parts.push(`## ${volume}`, "");
+            } else {
+              parts.push(volume, "=".repeat(this.displayWidth(volume)), "");
+            }
+          }
+          for (const ch of chs) {
+            const heading = this.chapterHeading(ch, opts);
+            if (opts.format === "markdown") {
+              parts.push(`### ${heading}`, "");
+            } else {
+              parts.push(heading, "-".repeat(this.displayWidth(heading)), "");
+            }
+            if (opts.includeOutline) {
+              const outline = await this.readOptional(`${PROJECT_DIRS.CHAPTERS}/${ch.id}/${CHAPTER_FILES.OUTLINE}`);
+              if (outline) {
+                parts.push(opts.format === "markdown" ? outline : this.stripMarkdown(outline), "");
+              }
+            }
+            const draftRaw = await this.readOptional(`${PROJECT_DIRS.CHAPTERS}/${ch.id}/${CHAPTER_FILES.DRAFT}`);
+            const body = draftRaw ? this.fmParser.extractBody(draftRaw) : "";
+            parts.push(opts.format === "markdown" ? body : this.stripMarkdown(body), "");
+            chapterCount++;
+            wordCount += ch.wordCount;
+          }
+        }
+        const content = parts.join("\n");
+        const safe = this.sanitizeFilename(novel?.title ?? "\u672A\u547D\u540D");
+        const ext = opts.format === "markdown" ? "md" : "txt";
+        const fileName = `${safe}.${ext}`;
+        const outDir = `${PROJECT_DIRS.NOVEL_AI}/exports`;
+        await this.fs.createDir(outDir);
+        const relPath = `${outDir}/${fileName}`;
+        await this.fs.writeFile(relPath, content);
+        return { path: relPath, chapterCount, wordCount };
+      }
+      async resolveExportPath(relPath) {
+        return this.fs.resolvePath(relPath);
+      }
+      async exportBinary(opts, novel, chapters) {
+        const readDraft = async (chapterId) => {
+          const raw = await this.readOptional(
+            `${PROJECT_DIRS.CHAPTERS}/${chapterId}/${CHAPTER_FILES.DRAFT}`
+          );
+          return raw ?? "";
+        };
+        const readOutline = async (chapterId) => {
+          if (!opts.includeOutline)
+            return void 0;
+          return this.readOptional(`${PROJECT_DIRS.CHAPTERS}/${chapterId}/${CHAPTER_FILES.OUTLINE}`);
+        };
+        const heading = (ch) => this.chapterHeading(ch, opts);
+        let buf;
+        if (opts.format === "epub") {
+          buf = await buildEpub({ novel, chapters, readDraft, readOutline, chapterHeading: heading });
+        } else {
+          buf = await buildDocx({ novel, chapters, readDraft, readOutline, chapterHeading: heading });
+        }
+        const safe = this.sanitizeFilename(novel?.title ?? "\u672A\u547D\u540D");
+        const ext = opts.format;
+        const fileName = `${safe}.${ext}`;
+        const outDir = `${PROJECT_DIRS.NOVEL_AI}/exports`;
+        await this.fs.createDir(outDir);
+        const relPath = `${outDir}/${fileName}`;
+        const full = this.fs.resolvePath(relPath);
+        await vscode14.workspace.fs.writeFile(vscode14.Uri.file(full), buf);
+        const chapterCount = chapters.length;
+        const wordCount = chapters.reduce((s, c) => s + c.wordCount, 0);
+        return { path: relPath, chapterCount, wordCount };
+      }
+      async readNovel() {
+        try {
+          return await this.fs.readYaml(PROJECT_FILES.NOVEL_YAML);
+        } catch {
+          return void 0;
+        }
+      }
+      async readOptional(rel) {
+        try {
+          return await this.fs.readFile(rel);
+        } catch {
+          return void 0;
+        }
+      }
+      filterByStatus(chapters, filter) {
+        if (filter === "all")
+          return chapters;
+        if (filter === "archived")
+          return chapters.filter((c) => c.status === "archived" /* Archived */);
+        return chapters.filter((c) => c.status !== "planning" /* Planning */);
+      }
+      groupByVolume(chapters) {
+        const map = /* @__PURE__ */ new Map();
+        for (const ch of chapters) {
+          const v = ch.volume || "\u9ED8\u8BA4\u5377";
+          if (!map.has(v))
+            map.set(v, []);
+          map.get(v).push(ch);
+        }
+        return Array.from(map.entries()).map(([v, chs]) => [v, chs.sort((a, b) => a.number - b.number)]);
+      }
+      chapterHeading(ch, opts) {
+        switch (opts.chapterTitleTemplate) {
+          case "number":
+            return `\u7B2C ${ch.number} \u7AE0`;
+          case "titleOnly":
+            return ch.title;
+          case "volumeNumber":
+          default:
+            return `\u7B2C ${ch.number} \u7AE0 ${ch.title}`.trim();
+        }
+      }
+      stripMarkdown(text) {
+        return text.replace(/^#{1,6}\s+/gm, "").replace(/\*\*(.+?)\*\*/g, "$1").replace(/\*(.+?)\*/g, "$1").replace(/`(.+?)`/g, "$1").replace(/^\s*[-*+]\s+/gm, "\xB7 ").replace(/^\s*\d+\.\s+/gm, "").replace(/^\s*>\s?/gm, "").replace(/\[(.+?)\]\(.+?\)/g, "$1").replace(/^---+$/gm, "");
+      }
+      displayWidth(s) {
+        let w = 0;
+        for (const ch of s)
+          w += ch.charCodeAt(0) > 127 ? 2 : 1;
+        return Math.max(w, 1);
+      }
+      sanitizeFilename(name) {
+        return name.replace(/[\\/:*?"<>|]/g, "_").trim() || "\u672A\u547D\u540D";
+      }
+    };
+  }
+});
+
+// src/business/search/searchEngine.ts
+var SearchEngine;
+var init_searchEngine = __esm({
+  "src/business/search/searchEngine.ts"() {
+    "use strict";
+    init_frontMatterParser();
+    init_constants();
+    SearchEngine = class {
+      constructor(container) {
+        this.container = container;
+      }
+      fmParser = new FrontMatterParser();
+      get fs() {
+        return this.container.get("fileSystem");
+      }
+      get indexManager() {
+        return this.container.get("indexManager");
+      }
+      async search(query, scope, opts = {}) {
+        const regex = this.buildRegex(query, opts);
+        const files = await this.collectFiles(scope);
+        const groups = [];
+        let total = 0;
+        for (const file of files) {
+          const matches = await this.scanFile(file, regex);
+          if (matches.length) {
+            groups.push({ file, matches });
+            total += matches.length;
+          }
+        }
+        return {
+          query,
+          isRegex: !!opts.isRegex,
+          caseSensitive: !!opts.caseSensitive,
+          wholeWord: !!opts.wholeWord,
+          totalMatches: total,
+          files: groups.length,
+          groups
+        };
+      }
+      async planReplace(query, replacement, scope, opts = {}) {
+        const regex = this.buildRegex(query, opts, true);
+        const files = await this.collectFiles(scope);
+        const plans = [];
+        for (const file of files) {
+          let content;
+          try {
+            content = await this.fs.readFile(file);
+          } catch {
+            continue;
+          }
+          let count = 0;
+          const replaced = content.replace(regex, () => {
+            count++;
+            return replacement;
+          });
+          if (count > 0) {
+            plans.push({ file, original: content, replaced, matchCount: count });
+          }
+        }
+        return plans;
+      }
+      async applyReplace(plans) {
+        const backupDir = `${PROJECT_DIRS.NOVEL_AI}/backups/replace-${Date.now()}`;
+        let applied = 0;
+        let files = 0;
+        for (const plan of plans) {
+          try {
+            await this.fs.createDir(backupDir);
+            await this.fs.writeFile(`${backupDir}/${this.flattenName(plan.file)}.bak`, plan.original);
+            await this.fs.writeFile(plan.file, plan.replaced);
+            applied += plan.matchCount;
+            files++;
+          } catch {
+          }
+        }
+        return { applied, files, plans, backupDir };
+      }
+      async rollback(result) {
+        let restored = 0;
+        for (const plan of result.plans) {
+          try {
+            await this.fs.writeFile(plan.file, plan.original);
+            restored++;
+          } catch {
+          }
+        }
+        return restored;
+      }
+      buildRegex(query, opts, forReplace = false) {
+        let pattern = opts.isRegex ? query : this.escapeRegExp(query);
+        if (opts.wholeWord) {
+          pattern = `(?<=^|[^\\p{L}\\p{N}_])(${pattern})(?=[^\\p{L}\\p{N}_]|$)`;
+        }
+        const flags = (opts.caseSensitive ? "" : "i") + (forReplace && opts.wholeWord ? "g" : "g") + "u";
+        return new RegExp(pattern, flags);
+      }
+      escapeRegExp(s) {
+        return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      }
+      async collectFiles(scope) {
+        const files = [];
+        const push = async (dir, glob) => {
+          try {
+            const list = await this.fs.listFiles(dir, glob);
+            for (const f of list) {
+              const rel = this.fs.toRelative(f);
+              if (rel)
+                files.push(rel);
+            }
+          } catch {
+          }
+        };
+        if (scope.drafts || scope.outlines) {
+          const chapters = await this.indexManager.getAllChapters();
+          for (const ch of chapters) {
+            const base = `${PROJECT_DIRS.CHAPTERS}/${ch.id}`;
+            if (scope.drafts)
+              files.push(`${base}/${CHAPTER_FILES.DRAFT}`);
+            if (scope.outlines)
+              files.push(`${base}/${CHAPTER_FILES.OUTLINE}`);
+          }
+        }
+        if (scope.characters)
+          await push(PROJECT_DIRS.CHARACTERS, "**/*.md");
+        if (scope.settings)
+          await push(PROJECT_DIRS.WORLD, "**/*.md");
+        if (scope.bible)
+          await push(PROJECT_DIRS.BIBLE, "**/*.md");
+        return files;
+      }
+      async scanFile(file, regex) {
+        let content;
+        try {
+          content = await this.fs.readFile(file);
+        } catch {
+          return [];
+        }
+        const lines = content.split(/\r?\n/);
+        const matches = [];
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          let m;
+          const local = new RegExp(regex.source, regex.flags);
+          while ((m = local.exec(line)) !== null) {
+            const start = m.index;
+            const matchText = m[0];
+            matches.push({
+              file,
+              line: i + 1,
+              column: start + 1,
+              lineText: line,
+              preview: this.snippet(line, start, matchText.length),
+              matchText
+            });
+            if (matchText.length === 0)
+              local.lastIndex++;
+          }
+        }
+        return matches;
+      }
+      snippet(line, start, len) {
+        const max = 80;
+        const s = Math.max(0, start - 20);
+        let e = Math.min(line.length, start + len + 20);
+        if (e - s > max)
+          e = s + max;
+        let text = line.slice(s, e);
+        if (s > 0)
+          text = "\u2026" + text;
+        if (e < line.length)
+          text = text + "\u2026";
+        return text;
+      }
+      flattenName(rel) {
+        return rel.replace(/[\\/]/g, "__");
+      }
+    };
+  }
+});
+
+// src/business/naming/namingEngine.ts
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+var fs10, path10, STYLES3, NamingEngine;
+var init_namingEngine = __esm({
+  "src/business/naming/namingEngine.ts"() {
+    "use strict";
+    fs10 = __toESM(require("fs"));
+    path10 = __toESM(require("path"));
+    init_frontMatterParser();
+    init_constants();
+    init_utils();
+    STYLES3 = ["\u6587\u96C5", "\u6E05\u51B7", "\u8C6A\u8FC8", "\u6E29\u6DA6", "\u7075\u52A8", "\u53E4\u98CE", "\u73B0\u4EE3", "\u8BD7\u610F"];
+    NamingEngine = class {
+      constructor(container) {
+        this.container = container;
+      }
+      fmParser = new FrontMatterParser();
+      surnamesCache;
+      givenCache;
+      get dataDir() {
+        return this.container.context.asAbsolutePath("resources/data");
+      }
+      get fs() {
+        return this.container.has("fileSystem") ? this.container.get("fileSystem") : void 0;
+      }
+      get indexManager() {
+        return this.container.has("indexManager") ? this.container.get("indexManager") : void 0;
+      }
+      listStyles() {
+        return [...STYLES3];
+      }
+      loadLibrary() {
+        if (this.surnamesCache && this.givenCache) {
+          return { surnames: this.surnamesCache, given: this.givenCache };
+        }
+        const surnames = JSON.parse(
+          fs10.readFileSync(path10.join(this.dataDir, "surnames.json"), "utf8")
+        );
+        const given = JSON.parse(
+          fs10.readFileSync(path10.join(this.dataDir, "givenNames.json"), "utf8")
+        );
+        this.surnamesCache = surnames;
+        this.givenCache = given;
+        return { surnames, given };
+      }
+      generate(opts) {
+        const { surnames, given } = this.loadLibrary();
+        const count = Math.max(1, Math.min(50, opts.count || DEFAULT_NAMING_COUNT));
+        const surname = opts.surname && opts.surname.trim() ? opts.surname.trim() : pick(surnames);
+        const genderKey = opts.gender === "male" ? "male" : opts.gender === "female" ? "female" : "any";
+        const pool = this.buildPool(given, genderKey);
+        const charCount = opts.charCount ?? this.pickCharCount();
+        const out = [];
+        const used = /* @__PURE__ */ new Set();
+        const shuffled = shuffle(pool);
+        let idx = 0;
+        for (let i = 0; i < count && idx < shuffled.length; i++) {
+          let name;
+          if (charCount === 2) {
+            const ch = shuffled[idx++ % shuffled.length];
+            name = `${surname}${ch}`;
+          } else {
+            const a = shuffled[idx++ % shuffled.length];
+            const b = shuffled[idx++ % shuffled.length];
+            name = `${surname}${a}${b}`;
+          }
+          if (used.has(name)) {
+            i--;
+            continue;
+          }
+          used.add(name);
+          out.push({
+            name,
+            surname,
+            givenName: name.slice(surname.length),
+            source: "\u672C\u5730\u5B57\u5E93"
+          });
+        }
+        return out;
+      }
+      buildPool(given, gender) {
+        const neutral = given["neutral"] ?? [];
+        if (gender === "male") {
+          return [...given["male"] ?? [], ...neutral];
+        }
+        if (gender === "female") {
+          return [...given["female"] ?? [], ...neutral];
+        }
+        return [...given["male"] ?? [], ...given["female"] ?? [], ...neutral];
+      }
+      pickCharCount() {
+        return Math.random() < 0.5 ? 2 : 3;
+      }
+      async writeNameToCharacter(characterId, name) {
+        const fsSvc = this.fs;
+        if (!fsSvc)
+          throw new Error("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+        const rel = `${PROJECT_DIRS.CHARACTERS}/${characterId}.md`;
+        const raw = await fsSvc.readFile(rel);
+        const parsed = this.fmParser.parse(raw);
+        parsed.data["name"] = name;
+        if (!parsed.data["aliases"])
+          parsed.data["aliases"] = [];
+        const content = this.fmParser.stringify(parsed.data, parsed.content);
+        await fsSvc.writeFile(rel, content);
+        this.container.eventBus.publish("snippet.changed", {});
+      }
+      async generateAiTask(params) {
+        const fsSvc = this.fs;
+        if (!fsSvc)
+          throw new Error("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+        const taskId = `naming-${Date.now()}`;
+        const dir = `${PROJECT_DIRS.NOVEL_AI_TASKS}/${taskId}`;
+        const { TemplateEngine: TemplateEngine2 } = await Promise.resolve().then(() => (init_templateEngine(), templateEngine_exports));
+        const te = new TemplateEngine2(this.container);
+        let template = "";
+        try {
+          template = (await te.load("naming")).template;
+        } catch {
+          template = this.defaultNamingTemplate();
+        }
+        const characterContext = params.characterId ? await this.buildCharacterContext(params.characterId) : "\uFF08\u672A\u6307\u5B9A\u89D2\u8272\uFF09";
+        const instruction = te ? te.render(template, {
+          "gender": params.options.gender,
+          "style": params.options.style,
+          "count": String(params.options.count),
+          "character-context": characterContext,
+          "extra": params.context ?? "",
+          "output-path": `${PROJECT_DIRS.NOVEL_AI_RESULTS}/${taskId}`
+        }) : template;
+        await fsSvc.writeFile(`${dir}/instruction.md`, instruction);
+        await fsSvc.writeFile(
+          `${dir}/task.json`,
+          JSON.stringify(
+            {
+              taskId,
+              type: "naming",
+              createdAt: nowISO(),
+              options: params.options,
+              characterId: params.characterId
+            },
+            null,
+            2
+          ) + "\n"
+        );
+        return { path: `${dir}/instruction.md`, taskId };
+      }
+      async buildCharacterContext(characterId) {
+        const im = this.indexManager;
+        if (!im)
+          return "\uFF08\u672A\u6307\u5B9A\u89D2\u8272\uFF09";
+        try {
+          const all = await im.getAllCharacters();
+          const c = all.find((x) => x.id === characterId);
+          if (!c)
+            return "\uFF08\u672A\u6307\u5B9A\u89D2\u8272\uFF09";
+          const fsSvc = this.fs;
+          const raw = await fsSvc.readFile(c.path);
+          const content = this.fmParser.extractBody(raw);
+          const meta = this.fmParser.extractFrontMatter(raw);
+          return [
+            `\u89D2\u8272\uFF1A${c.name}\uFF08${c.id}\uFF09`,
+            `\u5B9A\u4F4D\uFF1A${meta["role"] ?? ""}`,
+            content
+          ].join("\n");
+        } catch {
+          return "\uFF08\u672A\u6307\u5B9A\u89D2\u8272\uFF09";
+        }
+      }
+      defaultNamingTemplate() {
+        return [
+          "# AI \u8D77\u540D\u4EFB\u52A1",
+          "",
+          "## \u4EFB\u52A1",
+          "\u8BF7\u4E3A\u89D2\u8272\u751F\u6210 {{count}} \u4E2A\u8D34\u5408\u8BBE\u5B9A\u7684\u540D\u5B57\u3002",
+          "",
+          "## \u8981\u6C42",
+          "- \u6027\u522B\u503E\u5411\uFF1A{{gender}}",
+          "- \u547D\u540D\u98CE\u683C\uFF1A{{style}}",
+          "- \u540D\u5B57\u5E94\u8D34\u5408\u89D2\u8272\u6027\u683C\u4E0E\u4E16\u754C\u89C2",
+          "- \u6BCF\u4E2A\u540D\u5B57\u9644\u7B80\u77ED\u91CA\u4E49",
+          "",
+          "## \u89D2\u8272\u4E0A\u4E0B\u6587",
+          "{{character-context}}",
+          "",
+          "## \u989D\u5916\u8981\u6C42",
+          "{{extra}}"
+        ].join("\n");
+      }
+    };
+  }
+});
+
+// src/business/snippets/snippetService.ts
+var DEFAULT_SNIPPET, SnippetService;
+var init_snippetService = __esm({
+  "src/business/snippets/snippetService.ts"() {
+    "use strict";
+    init_frontMatterParser();
+    init_constants();
+    init_utils();
+    DEFAULT_SNIPPET = `# \u65B0\u7247\u6BB5
+
+\u5728\u6B64\u5199\u5165\u7247\u6BB5\u5185\u5BB9\uFF08\u52A8\u4F5C\u63CF\u5199 / \u53E3\u5934\u7985 / \u573A\u666F\u6A21\u677F\u7B49\uFF09\uFF0C\u53EF\u88AB\u63D2\u5165\u5230\u6B63\u6587\u3002`;
+    SnippetService = class {
+      constructor(container) {
+        this.container = container;
+      }
+      fmParser = new FrontMatterParser();
+      get fs() {
+        return this.container.has("fileSystem") ? this.container.get("fileSystem") : void 0;
+      }
+      async listCategories() {
+        const fsSvc = this.fs;
+        if (!fsSvc)
+          return [];
+        try {
+          const files = await fsSvc.listFiles(PROJECT_DIRS.SNIPPETS, "**/*.md");
+          const cats = /* @__PURE__ */ new Set();
+          for (const f of files) {
+            const rel = fsSvc.toRelative(f);
+            if (!rel)
+              continue;
+            const parts = rel.replace(/\\/g, "/").split("/");
+            if (parts.length >= 3) {
+              cats.add(parts.slice(1, -1).join("/"));
+            }
+          }
+          return Array.from(cats).sort();
+        } catch {
+          return [];
+        }
+      }
+      async listAll() {
+        const fsSvc = this.fs;
+        if (!fsSvc)
+          return [];
+        const out = [];
+        let files;
+        try {
+          files = await fsSvc.listFiles(PROJECT_DIRS.SNIPPETS, "**/*.md");
+        } catch {
+          return [];
+        }
+        for (const f of files) {
+          const rel = fsSvc.toRelative(f);
+          if (!rel)
+            continue;
+          try {
+            const content = await fsSvc.readFile(rel);
+            const parsed = this.fmParser.parse(content);
+            const parts = rel.replace(/\\/g, "/").split("/");
+            const category = parts.length >= 3 ? parts.slice(1, -1).join("/") : "\u9ED8\u8BA4";
+            const id = parts[parts.length - 1].replace(/\.md$/, "");
+            const title = parsed.data["title"] || id;
+            out.push({
+              id,
+              title: String(title),
+              category,
+              body: parsed.content,
+              tags: parsed.data["tags"],
+              path: rel.replace(/\\/g, "/")
+            });
+          } catch {
+          }
+        }
+        out.sort((a, b) => a.category.localeCompare(b.category) || a.title.localeCompare(b.title));
+        return out;
+      }
+      async getSnippet(relPath) {
+        const fsSvc = this.fs;
+        if (!fsSvc)
+          return void 0;
+        try {
+          const content = await fsSvc.readFile(relPath);
+          const parsed = this.fmParser.parse(content);
+          const parts = relPath.replace(/\\/g, "/").split("/");
+          return {
+            id: parts[parts.length - 1].replace(/\.md$/, ""),
+            title: String(parsed.data["title"] || parts[parts.length - 1].replace(/\.md$/, "")),
+            category: parts.length >= 3 ? parts.slice(1, -1).join("/") : "\u9ED8\u8BA4",
+            body: parsed.content,
+            tags: parsed.data["tags"],
+            path: relPath.replace(/\\/g, "/")
+          };
+        } catch {
+          return void 0;
+        }
+      }
+      async create(category, title, body = DEFAULT_SNIPPET) {
+        const fsSvc = this.fs;
+        if (!fsSvc)
+          throw new Error("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+        const safeCat = this.sanitize(category || "\u9ED8\u8BA4");
+        const safeTitle = this.sanitize(title);
+        const rel = `${PROJECT_DIRS.SNIPPETS}/${safeCat}/${safeTitle}.md`;
+        const content = this.fmParser.stringify({ title, tags: [], created_at: nowISO() }, body);
+        await fsSvc.writeFile(rel, content);
+        this.container.eventBus.publish("snippet.changed", { category: safeCat });
+        return rel.replace(/\\/g, "/");
+      }
+      async insertAtCursor(relPath) {
+        const fsSvc = this.fs;
+        if (!fsSvc)
+          return false;
+        const snippet = await this.getSnippet(relPath);
+        if (!snippet)
+          return false;
+        const editor = await import("vscode").then((v) => v.window.activeTextEditor);
+        if (!editor)
+          return false;
+        const text = snippet.body.trim();
+        await editor.edit((b) => b.insert(editor.selection.active, text));
+        return true;
+      }
+      async delete(relPath) {
+        const fsSvc = this.fs;
+        if (!fsSvc)
+          return;
+        await fsSvc.delete(relPath);
+        this.container.eventBus.publish("snippet.changed", {});
+      }
+      async openSnippet(relPath) {
+        const vscode66 = await import("vscode");
+        const fsSvc = this.fs;
+        if (!fsSvc)
+          return;
+        const abs = fsSvc.resolvePath(relPath);
+        await vscode66.commands.executeCommand("vscode.open", vscode66.Uri.file(abs));
+      }
+      async search(keyword) {
+        const all = await this.listAll();
+        const kw = keyword.trim().toLowerCase();
+        if (!kw)
+          return all;
+        return all.filter(
+          (s) => s.title.toLowerCase().includes(kw) || s.body.toLowerCase().includes(kw) || s.category.toLowerCase().includes(kw) || (s.tags ?? []).some((t) => t.toLowerCase().includes(kw))
+        );
+      }
+      sanitize(name) {
+        return name.replace(/[\\/:*?"<>|]/g, "_").trim() || "\u672A\u547D\u540D";
+      }
+    };
+  }
+});
+
+// src/business/continuation/continuationService.ts
+var TAIL_LINES, ContinuationService;
+var init_continuationService = __esm({
+  "src/business/continuation/continuationService.ts"() {
+    "use strict";
+    init_frontMatterParser();
+    init_contextPacker();
+    init_templateEngine();
+    init_constants();
+    init_utils();
+    TAIL_LINES = 30;
+    ContinuationService = class {
+      constructor(container) {
+        this.container = container;
+        this.contextPacker = new ContextPacker(container);
+        this.templateEngine = new TemplateEngine(container);
+      }
+      fmParser = new FrontMatterParser();
+      contextPacker;
+      templateEngine;
+      get fs() {
+        return this.container.get("fileSystem");
+      }
+      get indexManager() {
+        return this.container.get("indexManager");
+      }
+      bufferPath(chapterId) {
+        return `${PROJECT_DIRS.NOVEL_AI_AI_DRAFT}/${chapterId}.md`;
+      }
+      async generateAiTask(params) {
+        const dir = `${PROJECT_DIRS.CHAPTERS}/${params.chapterId}`;
+        const yaml2 = await this.fs.readYaml(`${dir}/${CHAPTER_FILES.YAML}`);
+        let tail = "";
+        try {
+          const draftRaw = await this.fs.readFile(`${dir}/${CHAPTER_FILES.DRAFT}`);
+          const body = this.fmParser.extractBody(draftRaw);
+          const lines = body.split(/\r?\n/).filter((l) => l.trim());
+          tail = lines.slice(-TAIL_LINES).join("\n");
+        } catch {
+          tail = "\uFF08\u6B63\u6587\u4E3A\u7A7A\uFF09";
+        }
+        const scope = [...CONTINUATION_SCOPE];
+        const context = await this.contextPacker.pack(params.chapterId, scope);
+        const taskId = `continuation-${Date.now()}`;
+        const taskDir = `${PROJECT_DIRS.NOVEL_AI_TASKS}/${taskId}`;
+        const resultDir = `${PROJECT_DIRS.NOVEL_AI_RESULTS}/${taskId}`;
+        let template = this.defaultTemplate();
+        try {
+          template = (await this.templateEngine.load("continuation")).template;
+        } catch {
+        }
+        const instruction = this.templateEngine.render(template, {
+          "chapter-id": params.chapterId,
+          "chapter-title": yaml2.title ?? "",
+          "draft-tail": tail,
+          "context": context,
+          "output-path": this.bufferPath(params.chapterId),
+          "result-dir": resultDir
+        });
+        await this.fs.writeFile(`${taskDir}/instruction.md`, instruction);
+        await this.fs.writeFile(
+          `${taskDir}/task.json`,
+          JSON.stringify(
+            {
+              taskId,
+              type: "continuation",
+              chapter: params.chapterId,
+              createdAt: nowISO(),
+              outputPath: this.bufferPath(params.chapterId)
+            },
+            null,
+            2
+          ) + "\n"
+        );
+        this.container.eventBus.publish("continuation.changed", { chapterId: params.chapterId });
+        return { taskId, instructionPath: `${taskDir}/instruction.md` };
+      }
+      async hasBuffer(chapterId) {
+        return this.fs.exists(this.bufferPath(chapterId));
+      }
+      async readBuffer(chapterId) {
+        try {
+          return await this.fs.readFile(this.bufferPath(chapterId));
+        } catch {
+          return "";
+        }
+      }
+      async writeBuffer(chapterId, content) {
+        await this.fs.writeFile(this.bufferPath(chapterId), content);
+        this.container.eventBus.publish("continuation.changed", { chapterId });
+      }
+      async clearBuffer(chapterId) {
+        try {
+          await this.fs.delete(this.bufferPath(chapterId));
+        } catch {
+        }
+        this.container.eventBus.publish("continuation.changed", { chapterId });
+      }
+      async adoptAll(chapterId) {
+        const buffer = await this.readBuffer(chapterId);
+        if (!buffer.trim())
+          return 0;
+        const dir = `${PROJECT_DIRS.CHAPTERS}/${chapterId}`;
+        const draftRaw = await this.fs.readFile(`${dir}/${CHAPTER_FILES.DRAFT}`);
+        const parsed = this.fmParser.parse(draftRaw);
+        const body = parsed.content.replace(/\s+$/, "");
+        const addition = `
+
+${buffer.trim()}`;
+        const newContent = this.fmParser.stringify(parsed.data, body + addition);
+        await this.fs.writeFile(`${dir}/${CHAPTER_FILES.DRAFT}`, newContent);
+        await this.clearBuffer(chapterId);
+        return buffer.trim().length;
+      }
+      async adoptLines(chapterId, lineIndices) {
+        const buffer = await this.readBuffer(chapterId);
+        if (!buffer.trim())
+          return 0;
+        const allLines = buffer.split(/\r?\n/);
+        const picked = lineIndices.filter((i) => i >= 0 && i < allLines.length).map((i) => allLines[i]).filter((l) => l !== void 0);
+        if (picked.length === 0)
+          return 0;
+        const dir = `${PROJECT_DIRS.CHAPTERS}/${chapterId}`;
+        const draftRaw = await this.fs.readFile(`${dir}/${CHAPTER_FILES.DRAFT}`);
+        const parsed = this.fmParser.parse(draftRaw);
+        const body = parsed.content.replace(/\s+$/, "");
+        const addition = `
+
+${picked.join("\n").trim()}`;
+        const newContent = this.fmParser.stringify(parsed.data, body + addition);
+        await this.fs.writeFile(`${dir}/${CHAPTER_FILES.DRAFT}`, newContent);
+        return picked.join("\n").length;
+      }
+      defaultTemplate() {
+        return [
+          "# AI \u7EED\u5199\u4EFB\u52A1\uFF08\u4F5C\u8005\u638C\u63A7\u7248\uFF09",
+          "",
+          "## \u89D2\u8272",
+          "\u4F60\u662F\u7EED\u5199\u52A9\u624B\u3002\u4EC5\u63D0\u4F9B\u7EED\u5199\u8349\u7A3F\uFF0C\u4E0D\u76F4\u63A5\u4FEE\u6539\u6B63\u6587\u6587\u4EF6\u3002",
+          "",
+          "## \u4EFB\u52A1",
+          "\u57FA\u4E8E\u4EE5\u4E0B\u7AE0\u8282\u300C{{chapter-title}}\u300D\uFF08{{chapter-id}}\uFF09\u7684\u6B63\u6587\u672B\u5C3E\uFF0C\u7EED\u5199\u4E00\u6BB5\u540E\u7EED\u5185\u5BB9\u3002",
+          "",
+          "## \u9650\u5236",
+          "- \u7EED\u5199\u4EC5\u4F5C\u5EFA\u8BAE\uFF0C\u4E0D\u81EA\u52A8\u8986\u76D6\u6B63\u6587\u3002",
+          "- \u4FDD\u6301\u4EBA\u7269\u6027\u683C\u3001\u8BED\u6C14\u3001\u4E16\u754C\u89C2\u4E00\u81F4\u3002",
+          "- \u7EED\u5199\u957F\u5EA6\u7EA6 300~600 \u5B57\u3002",
+          "- \u4E0D\u8981\u91CD\u590D\u6B63\u6587\u5DF2\u6709\u5185\u5BB9\u3002",
+          "",
+          "## \u6B63\u6587\u672B\u5C3E",
+          "```",
+          "{{draft-tail}}",
+          "```",
+          "",
+          "## \u4E0A\u4E0B\u6587",
+          "{{context}}",
+          "",
+          "## \u8F93\u51FA",
+          "\u8BF7\u5C06\u7EED\u5199\u7ED3\u679C\u5199\u5165\u6587\u4EF6\uFF1A{{output-path}}",
+          "\uFF08\u4EC5\u5199\u5165\u7EED\u5199\u5185\u5BB9\u672C\u8EAB\uFF0C\u4E0D\u8981\u5305\u542B\u6B63\u6587\u5DF2\u6709\u90E8\u5206\u3002\uFF09"
+        ].join("\n");
+      }
+    };
+  }
+});
+
+// src/business/snapshot/snapshotService.ts
+var snapshotService_exports = {};
+__export(snapshotService_exports, {
+  SnapshotService: () => SnapshotService
+});
+var vscode15, path11, fs11, SnapshotService;
+var init_snapshotService = __esm({
+  "src/business/snapshot/snapshotService.ts"() {
+    "use strict";
+    vscode15 = __toESM(require("vscode"));
+    path11 = __toESM(require("path"));
+    fs11 = __toESM(require("fs"));
+    init_wordCounter();
+    init_constants();
+    init_utils();
+    SnapshotService = class {
+      constructor(container) {
+        this.container = container;
+      }
+      wordCounter = new WordCounter();
+      disposables = [];
+      get fs() {
+        return this.container.has("fileSystem") ? this.container.get("fileSystem") : void 0;
+      }
+      get configManager() {
+        return this.container.has("configManager") ? this.container.get("configManager") : void 0;
+      }
+      get indexManager() {
+        return this.container.has("indexManager") ? this.container.get("indexManager") : void 0;
+      }
+      activate(context) {
+        const onSave = vscode15.workspace.onDidSaveTextDocument((doc) => {
+          if (!isChapterDraft(doc.uri.fsPath))
+            return;
+          this.snapshot(doc.uri, doc.getText()).catch((e) => {
+            this.container.logger.warn(`Snapshot failed: ${e.message}`);
+          });
+        });
+        this.disposables.push(onSave);
+        context.subscriptions.push(onSave);
+      }
+      async isGitRepo() {
+        const fsSvc = this.fs;
+        if (!fsSvc)
+          return false;
+        try {
+          const root = fsSvc.getProjectRoot();
+          if (!root)
+            return false;
+          return await this.pathExists(path11.join(root, ".git"));
+        } catch {
+          return false;
+        }
+      }
+      async pathExists(absPath) {
+        return new Promise((res) => {
+          fs11.access(absPath, (e) => res(!e));
+        });
+      }
+      async snapshot(uri, text) {
+        const fsSvc = this.fs;
+        const cm = this.configManager;
+        if (!fsSvc || !cm)
+          return void 0;
+        const chapterId = extractChapterId(uri.fsPath);
+        if (!chapterId)
+          return void 0;
+        const content = text ?? await fsSvc.readFile(this.draftRel(chapterId));
+        const wordCount = this.wordCounter.count(content, cm.getStatsConfig());
+        const id = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+        const rel = `${PROJECT_DIRS.NOVEL_AI_SNAPSHOTS}/${chapterId}/${id}.md`;
+        await fsSvc.writeFile(rel, content);
+        const meta = {
+          id,
+          chapterId,
+          createdAt: nowISO(),
+          wordCount,
+          reason: "save",
+          path: rel.replace(/\\/g, "/")
+        };
+        await this.prune(chapterId);
+        this.container.eventBus.publish("snapshot.created", { chapterId, snapshotId: id });
+        return meta;
+      }
+      draftRel(chapterId) {
+        return `${PROJECT_DIRS.CHAPTERS}/${chapterId}/${CHAPTER_FILES.DRAFT}`;
+      }
+      async list(chapterId) {
+        const fsSvc = this.fs;
+        if (!fsSvc)
+          return [];
+        let files;
+        try {
+          files = await fsSvc.listFiles(`${PROJECT_DIRS.NOVEL_AI_SNAPSHOTS}/${chapterId}`, "**/*.md");
+        } catch {
+          return [];
+        }
+        const out = [];
+        for (const f of files) {
+          const rel = fsSvc.toRelative(f);
+          if (!rel)
+            continue;
+          const id = path11.basename(f, ".md");
+          try {
+            const stat = await vscode15.workspace.fs.stat(vscode15.Uri.file(f));
+            out.push({
+              id,
+              chapterId,
+              createdAt: new Date(stat.mtime).toISOString(),
+              wordCount: 0,
+              reason: "save",
+              path: rel.replace(/\\/g, "/")
+            });
+          } catch {
+          }
+        }
+        out.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        return out;
+      }
+      async read(snapshotPath) {
+        const fsSvc = this.fs;
+        if (!fsSvc)
+          return "";
+        return fsSvc.readFile(snapshotPath);
+      }
+      async rollback(chapterId, snapshotPath) {
+        const fsSvc = this.fs;
+        if (!fsSvc)
+          return;
+        const snapshotContent = await fsSvc.readFile(snapshotPath);
+        const draftRel = this.draftRel(chapterId);
+        const current = await fsSvc.readFile(draftRel);
+        await fsSvc.writeFile(
+          `${PROJECT_DIRS.NOVEL_AI_SNAPSHOTS}/${chapterId}/pre-rollback-${Date.now()}.md`,
+          current
+        );
+        await fsSvc.writeFile(draftRel, snapshotContent);
+      }
+      async showDiff(chapterId, snapshotPath) {
+        const fsSvc = this.fs;
+        if (!fsSvc)
+          return;
+        const draftAbs = fsSvc.resolvePath(this.draftRel(chapterId));
+        const snapAbs = fsSvc.resolvePath(snapshotPath);
+        const title = `\u5FEB\u7167 ${path11.basename(snapshotPath, ".md")} \u2194 \u5F53\u524D\u6B63\u6587`;
+        await vscode15.commands.executeCommand(
+          "vscode.diff",
+          vscode15.Uri.file(snapAbs),
+          vscode15.Uri.file(draftAbs),
+          title
+        );
+      }
+      async prune(chapterId) {
+        const fsSvc = this.fs;
+        const cm = this.configManager;
+        if (!fsSvc || !cm)
+          return;
+        const maxCount = cm.getSnapshotMaxCount();
+        const maxAgeDays = cm.getSnapshotMaxAgeDays();
+        const list = await this.list(chapterId);
+        const now = Date.now();
+        const cutoff = now - maxAgeDays * 24 * 60 * 60 * 1e3;
+        const toDelete = [];
+        for (const s of list) {
+          if (new Date(s.createdAt).getTime() < cutoff)
+            toDelete.push(s);
+        }
+        if (list.length - toDelete.length > maxCount) {
+          const overflow = list.length - toDelete.length - maxCount;
+          const kept = list.filter((s) => !toDelete.includes(s));
+          toDelete.push(...kept.slice(-overflow));
+        }
+        for (const s of toDelete) {
+          try {
+            await fsSvc.delete(s.path);
+          } catch {
+          }
+        }
+      }
+      async listChaptersWithSnapshots() {
+        const fsSvc = this.fs;
+        if (!fsSvc)
+          return [];
+        let files;
+        try {
+          files = await fsSvc.listFiles(PROJECT_DIRS.NOVEL_AI_SNAPSHOTS, "**/*.md");
+        } catch {
+          return [];
+        }
+        const ids = /* @__PURE__ */ new Set();
+        for (const f of files) {
+          const rel = fsSvc.toRelative(f);
+          if (!rel)
+            continue;
+          const parts = rel.replace(/\\/g, "/").split("/");
+          if (parts.length >= 3)
+            ids.add(parts[1]);
+        }
+        return Array.from(ids);
+      }
+    };
+  }
+});
+
+// src/business/git/gitWorkflowService.ts
+function getGitApi() {
+  return vscode16.extensions.getExtension("vscode.git");
+}
+function asApi(ext) {
+  return ext.exports;
+}
+function findRepo(api, root) {
+  return api.repositories.find((r) => r.rootUri.fsPath === root);
+}
+var vscode16, path12, fs12, GitWorkflowService;
+var init_gitWorkflowService = __esm({
+  "src/business/git/gitWorkflowService.ts"() {
+    "use strict";
+    vscode16 = __toESM(require("vscode"));
+    path12 = __toESM(require("path"));
+    fs12 = __toESM(require("fs"));
+    init_constants();
+    GitWorkflowService = class {
+      constructor(container) {
+        this.container = container;
+      }
+      get indexManager() {
+        return this.container.has("indexManager") ? this.container.get("indexManager") : void 0;
+      }
+      getRoot() {
+        if (!this.container.has("fileSystem"))
+          return void 0;
+        return this.container.get(
+          "fileSystem"
+        ).getProjectRoot();
+      }
+      async isGitRepo() {
+        const root = this.getRoot();
+        if (!root)
+          return false;
+        return fs12.existsSync(path12.join(root, ".git"));
+      }
+      async getStatus() {
+        const root = this.getRoot();
+        if (!root)
+          return { isRepo: false, modified: 0, added: 0, deleted: 0, entries: [] };
+        const ext = getGitApi();
+        if (!ext)
+          return { isRepo: false, modified: 0, added: 0, deleted: 0, entries: [] };
+        const api = asApi(ext);
+        const repo = findRepo(api, root);
+        if (!repo) {
+          return { isRepo: false, modified: 0, added: 0, deleted: 0, entries: [] };
+        }
+        const changes = repo.state.workingTreeChanges ?? [];
+        const entries = changes.map((c) => ({
+          path: c.uri.fsPath,
+          status: String(c.status),
+          chapterId: this.extractChapterId(c.uri.fsPath),
+          kind: this.classify(c.uri.fsPath)
+        }));
+        let modified = 0, added = 0, deleted = 0;
+        for (const c of changes) {
+          const s = c.status;
+          if (s === 1)
+            added++;
+          else if (s === 5)
+            deleted++;
+          else if (s === 2 || s === 4 || s === 6)
+            modified++;
+          else
+            modified++;
+        }
+        return {
+          isRepo: true,
+          branch: repo.state.HEAD?.name,
+          modified,
+          added,
+          deleted,
+          entries
+        };
+      }
+      async stageChapter(chapterId) {
+        const root = this.getRoot();
+        if (!root)
+          return 0;
+        const ext = getGitApi();
+        if (!ext)
+          return 0;
+        const repo = findRepo(asApi(ext), root);
+        if (!repo)
+          return 0;
+        const dir = path12.join(root, PROJECT_DIRS.CHAPTERS, chapterId);
+        const uris = [];
+        this.collectFiles(dir, uris);
+        if (uris.length === 0)
+          return 0;
+        await repo.add(uris.map((u) => u.fsPath));
+        return uris.length;
+      }
+      async stageVolume(volume) {
+        const im = this.indexManager;
+        if (!im)
+          return 0;
+        const chapters = (await im.getAllChapters()).filter((c) => c.volume === volume);
+        let total = 0;
+        for (const ch of chapters) {
+          total += await this.stageChapter(ch.id);
+        }
+        return total;
+      }
+      async stageAll() {
+        const root = this.getRoot();
+        if (!root)
+          return;
+        const ext = getGitApi();
+        if (!ext)
+          return;
+        const repo = findRepo(asApi(ext), root);
+        if (!repo)
+          return;
+        await repo.add([]);
+      }
+      async commit(message) {
+        const root = this.getRoot();
+        if (!root)
+          return false;
+        const ext = getGitApi();
+        if (!ext)
+          return false;
+        const repo = findRepo(asApi(ext), root);
+        if (!repo)
+          return false;
+        await repo.commit(message);
+        return true;
+      }
+      async stageAndCommitChapter(chapterId) {
+        const staged = await this.stageChapter(chapterId);
+        const title = await this.readChapterTitle(chapterId);
+        const message = `chore(chapter): ${chapterId} ${title}`.trim();
+        const committed = await this.commit(message);
+        return { staged, committed, message };
+      }
+      async createTag(name, message) {
+        const root = this.getRoot();
+        if (!root)
+          return false;
+        const ext = getGitApi();
+        if (!ext)
+          return false;
+        const repo = findRepo(asApi(ext), root);
+        if (!repo)
+          return false;
+        if (repo.tag) {
+          await repo.tag(name, message);
+          return true;
+        }
+        return false;
+      }
+      openChanges(file) {
+        vscode16.commands.executeCommand("git.openChange", vscode16.Uri.file(file));
+      }
+      viewHistory() {
+        vscode16.commands.executeCommand("git.viewHistory");
+      }
+      refresh() {
+        vscode16.commands.executeCommand("git.refresh");
+      }
+      collectFiles(dir, out) {
+        if (!fs12.existsSync(dir))
+          return;
+        for (const entry of fs12.readdirSync(dir, { withFileTypes: true })) {
+          const full = path12.join(dir, entry.name);
+          if (entry.isDirectory())
+            this.collectFiles(full, out);
+          else
+            out.push(vscode16.Uri.file(full));
+        }
+      }
+      extractChapterId(absPath) {
+        const m = absPath.replace(/\\/g, "/").match(/chapters\/(ch\d{3})\//);
+        return m ? m[1] : void 0;
+      }
+      classify(absPath) {
+        const p = absPath.replace(/\\/g, "/");
+        if (p.includes(`/${PROJECT_DIRS.CHAPTERS}/`))
+          return "chapter";
+        if (p.includes(`/${PROJECT_DIRS.CHARACTERS}/`))
+          return "character";
+        if (p.includes(`/${PROJECT_DIRS.WORLD}/`))
+          return "setting";
+        return "other";
+      }
+      async readChapterTitle(chapterId) {
+        if (!this.container.has("fileSystem"))
+          return "";
+        const fsSvc = this.container.get("fileSystem");
+        try {
+          const yaml2 = await fsSvc.readYaml(
+            `${PROJECT_DIRS.CHAPTERS}/${chapterId}/${CHAPTER_FILES.YAML}`
+          );
+          return yaml2.title ?? "";
+        } catch {
+          return "";
+        }
+      }
+    };
+  }
+});
+
+// src/business/calendar/calendarService.ts
+var path13, CalendarService;
+var init_calendarService = __esm({
+  "src/business/calendar/calendarService.ts"() {
+    "use strict";
+    path13 = __toESM(require("path"));
+    init_constants();
+    CalendarService = class {
+      constructor(container) {
+        this.container = container;
+      }
+      get fs() {
+        return this.container.has("fileSystem") ? this.container.get("fileSystem") : void 0;
+      }
+      get configManager() {
+        return this.container.has("configManager") ? this.container.get("configManager") : void 0;
+      }
+      get indexManager() {
+        return this.container.has("indexManager") ? this.container.get("indexManager") : void 0;
+      }
+      async getSummary(days = 120) {
+        const fsSvc = this.fs;
+        const cm = this.configManager;
+        if (!fsSvc || !cm)
+          return void 0;
+        const dailyGoal = cm.getDailyGoal();
+        let files;
+        try {
+          files = await fsSvc.listFiles(PROJECT_DIRS.NOVEL_AI_STATS, "*.json");
+        } catch {
+          files = [];
+        }
+        const byDate = /* @__PURE__ */ new Map();
+        for (const f of files) {
+          const rel = fsSvc.toRelative(f);
+          if (!rel)
+            continue;
+          const base = path13.basename(f, ".json");
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(base))
+            continue;
+          try {
+            const stats = await fsSvc.readJson(rel);
+            byDate.set(base, stats);
+          } catch {
+          }
+        }
+        const end = /* @__PURE__ */ new Date();
+        const start = new Date(end);
+        start.setDate(start.getDate() - (days - 1));
+        const calendarDays = [];
+        let totalWords = 0;
+        let activeDays = 0;
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          const iso = this.toISO(d);
+          const stats = byDate.get(iso);
+          const delta = stats?.todayDelta ?? 0;
+          const peak = stats?.peakWords ?? stats?.currentWords ?? 0;
+          const hasGoal = delta > 0;
+          const goalMet = delta >= dailyGoal && dailyGoal > 0;
+          calendarDays.push({ date: iso, words: stats?.currentWords ?? 0, delta, peak, hasGoal, goalMet });
+          totalWords += delta;
+          if (hasGoal)
+            activeDays++;
+        }
+        const streakDays = this.computeStreak(calendarDays);
+        const longestStreak = this.computeLongestStreak(calendarDays);
+        const totalWordsNow = await this.currentTotal();
+        const target = await this.targetWords();
+        const goalProgress = target && target > 0 ? Math.min(1, totalWordsNow / target) : 0;
+        return {
+          days: calendarDays,
+          totalWords,
+          streakDays,
+          longestStreak,
+          activeDays,
+          dailyGoal,
+          targetWords: target,
+          totalWordsNow,
+          goalProgress
+        };
+      }
+      computeStreak(days) {
+        let streak = 0;
+        for (let i = days.length - 1; i >= 0; i--) {
+          if (days[i].delta >= 1)
+            streak++;
+          else if (i === days.length - 1)
+            continue;
+          else
+            break;
+        }
+        return streak;
+      }
+      computeLongestStreak(days) {
+        let best = 0, cur = 0;
+        for (const d of days) {
+          if (d.delta >= 1) {
+            cur++;
+            best = Math.max(best, cur);
+          } else {
+            cur = 0;
+          }
+        }
+        return best;
+      }
+      async currentTotal() {
+        const im = this.indexManager;
+        if (!im)
+          return 0;
+        try {
+          const chapters = await im.getAllChapters();
+          return chapters.reduce((s, c) => s + c.wordCount, 0);
+        } catch {
+          return 0;
+        }
+      }
+      async targetWords() {
+        const fsSvc = this.fs;
+        if (!fsSvc)
+          return void 0;
+        try {
+          const novel = await fsSvc.readYaml(PROJECT_FILES.NOVEL_YAML);
+          return novel.target_words;
+        } catch {
+          return void 0;
+        }
+      }
+      toISO(d) {
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+          d.getDate()
+        ).padStart(2, "0")}`;
+      }
+    };
+  }
+});
+
+// src/business/consistency/consistencyService.ts
+var consistencyService_exports = {};
+__export(consistencyService_exports, {
+  ConsistencyService: () => ConsistencyService
+});
+var ConsistencyService;
+var init_consistencyService = __esm({
+  "src/business/consistency/consistencyService.ts"() {
+    "use strict";
+    init_frontMatterParser();
+    init_foreshadowingService();
+    init_timelineService();
+    init_constants();
+    init_utils();
+    ConsistencyService = class {
+      constructor(container) {
+        this.container = container;
+      }
+      fmParser = new FrontMatterParser();
+      get fs() {
+        return this.container.has("fileSystem") ? this.container.get("fileSystem") : void 0;
+      }
+      get indexManager() {
+        return this.container.has("indexManager") ? this.container.get("indexManager") : void 0;
+      }
+      async scan() {
+        const fs15 = this.fs;
+        const im = this.indexManager;
+        const scannedAt = nowISO();
+        if (!fs15 || !im) {
+          return { scannedAt, chapterCount: 0, issues: [] };
+        }
+        const chapters = await im.getAllChapters();
+        const chapterCount = chapters.length;
+        if (chapterCount === 0) {
+          return { scannedAt, chapterCount: 0, issues: [] };
+        }
+        const issues = [];
+        const refMap = this.buildChapterRefMap(chapters);
+        const maxNumber = chapters.reduce((m, c) => Math.max(m, c.number), 0);
+        const foreshadowings = await this.safeListForeshadowings();
+        const characters = await this.loadAllCharacters();
+        const settings = await this.loadAllSettings();
+        const timeline = await this.aggregateTimeline();
+        let i = 0;
+        const nextId = () => `csy-${String(++i).padStart(3, "0")}`;
+        this.checkForeshadowings(foreshadowings, refMap, maxNumber, issues, nextId);
+        this.checkTimeline(timeline, issues, nextId);
+        this.checkCharacters(characters, refMap, issues, nextId);
+        this.checkSettings(settings, characters, refMap, issues, nextId);
+        this.checkPowerSettings(settings, chapters, issues, nextId);
+        const report = { scannedAt, chapterCount, issues };
+        await this.writeReport(report);
+        this.container.eventBus.publish("consistency.scanned", { issueCount: issues.length });
+        return report;
+      }
+      buildChapterRefMap(chapters) {
+        const map = /* @__PURE__ */ new Map();
+        for (const ch of chapters) {
+          map.set(ch.id, { id: ch.id, number: ch.number, title: ch.title });
+          map.set(ch.title, { id: ch.id, number: ch.number, title: ch.title });
+        }
+        return map;
+      }
+      resolveChapterRef(ref, map) {
+        if (!ref)
+          return void 0;
+        const trimmed = ref.trim();
+        const direct = map.get(trimmed);
+        if (direct)
+          return direct;
+        const lower = trimmed.toLowerCase();
+        for (const [key, value] of map) {
+          if (key.toLowerCase() === lower)
+            return value;
+        }
+        const m = trimmed.match(/ch\d{3}/i);
+        if (m) {
+          const byId = map.get(m[0].toLowerCase());
+          if (byId)
+            return byId;
+        }
+        return void 0;
+      }
+      async safeListForeshadowings() {
+        try {
+          return await new ForeshadowingService(this.container).listAll();
+        } catch {
+          return [];
+        }
+      }
+      async aggregateTimeline() {
+        try {
+          return await new TimelineService(this.container).aggregateFromChapters();
+        } catch {
+          return [];
+        }
+      }
+      async loadAllCharacters() {
+        const im = this.indexManager;
+        if (!im)
+          return [];
+        try {
+          return await im.getAllCharacterMetas();
+        } catch {
+          return [];
+        }
+      }
+      async loadAllSettings() {
+        const im = this.indexManager;
+        if (!im)
+          return [];
+        try {
+          return await im.getAllSettingMetas();
+        } catch {
+          return [];
+        }
+      }
+      checkForeshadowings(list, refMap, maxNumber, issues, nextId) {
+        for (const f of list) {
+          const resolved = f.status === "resolved" || f.status === "abandoned";
+          if (resolved)
+            continue;
+          if (f.resolveChapter) {
+            const resolveRef = this.resolveChapterRef(f.resolveChapter, refMap);
+            if (resolveRef && maxNumber >= resolveRef.number) {
+              issues.push({
+                id: nextId(),
+                category: "foreshadowing",
+                severity: "high",
+                title: `\u4F0F\u7B14\u300C${f.name}\u300D\u5DF2\u8FC7\u56DE\u6536\u70B9\u672A\u56DE\u6536`,
+                description: `\u57CB\u8BBE\u4E8E ${f.plantedChapter || "\uFF08\u672A\u8BB0\u5F55\uFF09"}\uFF0C\u8BA1\u5212\u5728 ${f.resolveChapter} \u56DE\u6536\uFF0C\u4F46\u5168\u4E66\u5DF2\u63A8\u8FDB\u5230\u7B2C ${maxNumber} \u7AE0\u4ECD\u672A\u56DE\u6536\u3002`,
+                file: this.foreshadowingFile(f),
+                chapterId: resolveRef.id,
+                evidence: [
+                  `\u4F0F\u7B14\u7F16\u53F7\uFF1A${f.id}`,
+                  `\u72B6\u6001\uFF1A${f.status}`,
+                  `\u8BA1\u5212\u56DE\u6536\u7AE0\u8282\uFF1A${f.resolveChapter}`,
+                  `\u5F53\u524D\u6700\u672B\u7AE0\u8282\u53F7\uFF1A${maxNumber}`
+                ]
+              });
+              continue;
+            }
+          }
+          if (f.plantedChapter) {
+            const plantedRef = this.resolveChapterRef(f.plantedChapter, refMap);
+            if (plantedRef && maxNumber - plantedRef.number >= 20) {
+              issues.push({
+                id: nextId(),
+                category: "foreshadowing",
+                severity: "low",
+                title: `\u4F0F\u7B14\u300C${f.name}\u300D\u4E45\u672A\u56DE\u6536`,
+                description: `\u57CB\u8BBE\u4E8E\u7B2C ${plantedRef.number} \u7AE0\uFF0C\u8DDD\u4ECA\u5DF2\u63A8\u8FDB ${maxNumber - plantedRef.number} \u7AE0\u4ECD\u672A\u56DE\u6536\uFF0C\u7559\u610F\u56DE\u6536\u8282\u594F\u3002`,
+                file: this.foreshadowingFile(f),
+                chapterId: plantedRef.id,
+                evidence: [
+                  `\u4F0F\u7B14\u7F16\u53F7\uFF1A${f.id}`,
+                  `\u57CB\u8BBE\u7AE0\u8282\uFF1A${f.plantedChapter}\uFF08\u7B2C ${plantedRef.number} \u7AE0\uFF09`,
+                  `\u5F53\u524D\u6700\u672B\u7AE0\u8282\u53F7\uFF1A${maxNumber}`
+                ]
+              });
+            }
+          }
+        }
+      }
+      foreshadowingFile(f) {
+        return f.path ?? `${f.dir}/${f.id}.md`;
+      }
+      checkTimeline(timeline, issues, nextId) {
+        if (timeline.length < 2)
+          return;
+        const sorted = [...timeline].sort((a, b) => a.chapterNumber - b.chapterNumber);
+        for (const conflict of detectTimelineConflicts(sorted)) {
+          const i = conflict.index;
+          const prev = sorted[i - 1];
+          const curr = sorted[i];
+          if (conflict.type === "reverse") {
+            issues.push({
+              id: nextId(),
+              category: "timeline",
+              severity: "medium",
+              title: `\u65F6\u95F4\u7EBF\u9006\u5E8F\uFF1A\u7B2C ${curr.chapterNumber} \u7AE0\u65E9\u4E8E\u7B2C ${prev.chapterNumber} \u7AE0`,
+              description: `\u300A${prev.title}\u300B\u6545\u4E8B\u65F6\u95F4\u4E3A\u300C${prev.storyTime}\u300D\uFF0C\u800C\u5176\u540E\u300A${curr.title}\u300B\u4E3A\u300C${curr.storyTime}\u300D\uFF0C\u65F6\u95F4\u51FA\u73B0\u5012\u9000\u3002`,
+              file: `${PROJECT_DIRS.CHAPTERS}/${curr.chapterId}/${CHAPTER_FILES.DRAFT}`,
+              chapterId: curr.chapterId,
+              evidence: [
+                `${prev.chapterId}\u300A${prev.title}\u300Bstory_time=${prev.storyTime}`,
+                `${curr.chapterId}\u300A${curr.title}\u300Bstory_time=${curr.storyTime}`
+              ]
+            });
+          } else {
+            issues.push({
+              id: nextId(),
+              category: "timeline",
+              severity: "low",
+              title: `\u65F6\u95F4\u7EBF\u91CD\u53E0\uFF1A\u7B2C ${prev.chapterNumber} \u7AE0\u4E0E\u7B2C ${curr.chapterNumber} \u7AE0\u6545\u4E8B\u65F6\u95F4\u76F8\u540C`,
+              description: `\u4E24\u4E2A\u76F8\u9694\u8F83\u8FDC\u7684\u7AE0\u8282 story_time \u76F8\u540C\uFF08${curr.storyTime}\uFF09\uFF0C\u786E\u8BA4\u662F\u5426\u4E3A\u540C\u65F6\u5E76\u884C\u53D9\u4E8B\u6216\u586B\u5199\u9057\u6F0F\u3002`,
+              file: `${PROJECT_DIRS.CHAPTERS}/${curr.chapterId}/${CHAPTER_FILES.DRAFT}`,
+              chapterId: curr.chapterId,
+              evidence: [
+                `${prev.chapterId}\u300A${prev.title}\u300Bstory_time=${prev.storyTime}`,
+                `${curr.chapterId}\u300A${curr.title}\u300Bstory_time=${curr.storyTime}`
+              ]
+            });
+          }
+        }
+      }
+      checkCharacters(characters, refMap, issues, nextId) {
+        for (const c of characters) {
+          if (c.status === "deceased") {
+            const lastRef = c.last_appearance ? this.resolveChapterRef(c.last_appearance, refMap) : void 0;
+            if (lastRef) {
+              issues.push({
+                id: nextId(),
+                category: "character",
+                severity: "high",
+                title: `\u5DF2\u6545\u89D2\u8272\u300C${c.name}\u300D\u9700\u5173\u6CE8\u540E\u7EED\u767B\u573A`,
+                description: `\u89D2\u8272\u6807\u8BB0\u4E3A\u5DF2\u6545\uFF0C\u6700\u540E\u767B\u573A\u4E3A\u7B2C ${lastRef.number} \u7AE0\u300C${lastRef.title}\u300D\u3002\u8BF7\u6838\u5BF9\u540E\u7EED\u7AE0\u8282\u662F\u5426\u4ECD\u5C06\u5176\u5217\u5165 characters\uFF0C\u907F\u514D"\u6B7B\u540E\u51FA\u573A"\u3002`,
+                file: `${PROJECT_DIRS.CHARACTERS}/${c.id}.md`,
+                evidence: [
+                  `\u89D2\u8272\uFF1A${c.name}\uFF08${c.id}\uFF09`,
+                  "\u72B6\u6001\uFF1Adeceased",
+                  `\u6700\u540E\u767B\u573A\uFF1A${c.last_appearance}\uFF08\u7B2C ${lastRef.number} \u7AE0\uFF09`
+                ]
+              });
+            }
+          }
+          if (c.first_appearance) {
+            const firstRef = this.resolveChapterRef(c.first_appearance, refMap);
+            if (!firstRef) {
+              issues.push({
+                id: nextId(),
+                category: "character",
+                severity: "medium",
+                title: `\u89D2\u8272\u300C${c.name}\u300D\u9996\u767B\u573A\u7AE0\u8282\u4E0D\u5B58\u5728`,
+                description: `\u4EBA\u7269\u5361 first_appearance \u6307\u5411\u300C${c.first_appearance}\u300D\uFF0C\u4F46\u672A\u627E\u5230\u5BF9\u5E94\u7AE0\u8282\u3002`,
+                file: `${PROJECT_DIRS.CHARACTERS}/${c.id}.md`,
+                evidence: [`first_appearance=${c.first_appearance}`, "\u672A\u5728\u7AE0\u8282\u7D22\u5F15\u4E2D\u5339\u914D\u5230"]
+              });
+            }
+          }
+          if (c.last_appearance) {
+            const lastRef = this.resolveChapterRef(c.last_appearance, refMap);
+            if (!lastRef) {
+              issues.push({
+                id: nextId(),
+                category: "character",
+                severity: "low",
+                title: `\u89D2\u8272\u300C${c.name}\u300D\u672B\u767B\u573A\u7AE0\u8282\u4E0D\u5B58\u5728`,
+                description: `\u4EBA\u7269\u5361 last_appearance \u6307\u5411\u300C${c.last_appearance}\u300D\uFF0C\u4F46\u672A\u627E\u5230\u5BF9\u5E94\u7AE0\u8282\u3002`,
+                file: `${PROJECT_DIRS.CHARACTERS}/${c.id}.md`,
+                evidence: [`last_appearance=${c.last_appearance}`, "\u672A\u5728\u7AE0\u8282\u7D22\u5F15\u4E2D\u5339\u914D\u5230"]
+              });
+            }
+          }
+        }
+      }
+      checkSettings(settings, characters, refMap, issues, nextId) {
+        const charIds = new Set(characters.map((c) => c.id));
+        const charNames = new Set(characters.map((c) => c.name));
+        for (const s of settings) {
+          if (s.related_characters) {
+            for (const ref of s.related_characters) {
+              if (!ref)
+                continue;
+              if (!charIds.has(ref) && !charNames.has(ref)) {
+                issues.push({
+                  id: nextId(),
+                  category: "setting",
+                  severity: "medium",
+                  title: `\u8BBE\u5B9A\u300C${s.name}\u300D\u5173\u8054\u4E86\u4E0D\u5B58\u5728\u7684\u4EBA\u7269`,
+                  description: `\u8BBE\u5B9A\u5361 related_characters \u5F15\u7528\u300C${ref}\u300D\uFF0C\u4F46\u4EBA\u7269\u5E93\u4E2D\u65E0\u6B64\u89D2\u8272\u3002`,
+                  file: `${PROJECT_DIRS.WORLD}/${s.id}.md`,
+                  evidence: [`\u8BBE\u5B9A\uFF1A${s.name}\uFF08${s.id}\uFF09`, `related_characters \u5305\u542B\uFF1A${ref}`]
+                });
+              }
+            }
+          }
+          if (s.related_chapters) {
+            for (const ref of s.related_chapters) {
+              if (!ref)
+                continue;
+              if (!this.resolveChapterRef(ref, refMap)) {
+                issues.push({
+                  id: nextId(),
+                  category: "setting",
+                  severity: "low",
+                  title: `\u8BBE\u5B9A\u300C${s.name}\u300D\u5173\u8054\u4E86\u4E0D\u5B58\u5728\u7684\u7AE0\u8282`,
+                  description: `\u8BBE\u5B9A\u5361 related_chapters \u5F15\u7528\u300C${ref}\u300D\uFF0C\u4F46\u672A\u627E\u5230\u5BF9\u5E94\u7AE0\u8282\u3002`,
+                  file: `${PROJECT_DIRS.WORLD}/${s.id}.md`,
+                  evidence: [`\u8BBE\u5B9A\uFF1A${s.name}\uFF08${s.id}\uFF09`, `related_chapters \u5305\u542B\uFF1A${ref}`]
+                });
+              }
+            }
+          }
+        }
+      }
+      checkPowerSettings(settings, chapters, issues, nextId) {
+        if (chapters.length < 10)
+          return;
+        const powerSettings = settings.filter((s) => s.category === "power");
+        for (const s of powerSettings) {
+          const hasChapterLink = (s.related_chapters?.length ?? 0) > 0;
+          if (!hasChapterLink) {
+            issues.push({
+              id: nextId(),
+              category: "power",
+              severity: "low",
+              title: `\u6218\u529B\u8BBE\u5B9A\u300C${s.name}\u300D\u672A\u5173\u8054\u4EFB\u4F55\u7AE0\u8282`,
+              description: "\u6218\u529B\u7C7B\u8BBE\u5B9A\u672A\u586B\u5199 related_chapters\uFF0C\u96BE\u4EE5\u8FFD\u8E2A\u6218\u529B\u66F2\u7EBF\u53D8\u5316\u3002\u5EFA\u8BAE\u5173\u8054\u76F8\u5173\u7AE0\u8282\u4EE5\u652F\u6301\u6218\u529B\u53D8\u5316\u68C0\u67E5\u3002",
+              file: `${PROJECT_DIRS.WORLD}/${s.id}.md`,
+              evidence: [
+                `\u8BBE\u5B9A\uFF1A${s.name}\uFF08${s.id}\uFF09`,
+                "category=power",
+                "related_chapters \u4E3A\u7A7A",
+                `\u5168\u4E66\u5DF2\u6709 ${chapters.length} \u7AE0`
+              ]
+            });
+          }
+        }
+      }
+      severityRank(s) {
+        return { critical: 0, high: 1, medium: 2, low: 3 }[s];
+      }
+      async writeReport(report) {
+        const fs15 = this.fs;
+        if (!fs15)
+          return;
+        const sorted = {
+          ...report,
+          issues: [...report.issues].sort(
+            (a, b) => this.severityRank(a.severity) - this.severityRank(b.severity) || a.id.localeCompare(b.id)
+          )
+        };
+        try {
+          await fs15.createDir(`${PROJECT_DIRS.NOVEL_AI}/consistency`);
+          const reportRel = `${PROJECT_DIRS.NOVEL_AI}/consistency/report.json`;
+          const prev = await fs15.exists(reportRel);
+          if (prev) {
+            try {
+              const prevContent = await fs15.readFile(reportRel);
+              await fs15.writeFile(`${PROJECT_DIRS.NOVEL_AI}/consistency/report.json.bak`, prevContent);
+            } catch {
+            }
+          }
+          await fs15.writeJson(reportRel, sorted);
+        } catch (e) {
+          this.container.logger.warn(`Failed to write consistency report: ${e.message}`);
+        }
+      }
+      async loadLastReport() {
+        const fs15 = this.fs;
+        if (!fs15)
+          return void 0;
+        try {
+          return await fs15.readJson(`${PROJECT_DIRS.NOVEL_AI}/consistency/report.json`);
+        } catch {
+          return void 0;
+        }
+      }
+    };
+  }
+});
+
+// src/business/relations/relationService.ts
+var RELATION_SECTION_RE, RelationService;
+var init_relationService = __esm({
+  "src/business/relations/relationService.ts"() {
+    "use strict";
+    init_frontMatterParser();
+    init_constants();
+    RELATION_SECTION_RE = /^##\s*人物关系\s*$/m;
+    RelationService = class {
+      constructor(container) {
+        this.container = container;
+      }
+      fmParser = new FrontMatterParser();
+      get fs() {
+        return this.container.has("fileSystem") ? this.container.get("fileSystem") : void 0;
+      }
+      get indexManager() {
+        return this.container.has("indexManager") ? this.container.get("indexManager") : void 0;
+      }
+      async buildGraph() {
+        const fs15 = this.fs;
+        const im = this.indexManager;
+        if (!fs15 || !im)
+          return { nodes: [], edges: [] };
+        const metas = await im.getAllCharacterMetas();
+        if (metas.length === 0)
+          return { nodes: [], edges: [] };
+        const cards = [];
+        for (const meta of metas) {
+          if (!meta.name)
+            continue;
+          let body = "";
+          try {
+            const raw = await fs15.readFile(`${PROJECT_DIRS.CHARACTERS}/${meta.id}.md`);
+            body = this.fmParser.extractBody(raw);
+          } catch {
+          }
+          cards.push({ meta, body });
+        }
+        const nameToId = /* @__PURE__ */ new Map();
+        for (const c of cards) {
+          nameToId.set(c.meta.name, c.meta.id);
+          if (c.meta.aliases) {
+            for (const a of c.meta.aliases) {
+              if (a)
+                nameToId.set(a, c.meta.id);
+            }
+          }
+        }
+        const nodes = cards.map((c) => ({
+          id: c.meta.id,
+          name: c.meta.name,
+          role: c.meta.role,
+          status: c.meta.status
+        }));
+        const edges = [];
+        const seen = /* @__PURE__ */ new Set();
+        for (const c of cards) {
+          const relLines = this.extractRelationLines(c.body);
+          for (const line of relLines) {
+            const mentions = this.findMentions(line, nameToId, c.meta.id);
+            for (const targetId of mentions) {
+              const key = `${c.meta.id}->${targetId}`;
+              if (seen.has(key))
+                continue;
+              seen.add(key);
+              edges.push({ source: c.meta.id, target: targetId, label: this.cleanLabel(line) });
+            }
+          }
+        }
+        const connected = /* @__PURE__ */ new Set();
+        for (const e of edges) {
+          connected.add(e.source);
+          connected.add(e.target);
+        }
+        const filteredNodes = nodes.length > 40 ? nodes.filter((n) => connected.has(n.id)) : nodes;
+        return { nodes: filteredNodes, edges };
+      }
+      extractRelationLines(body) {
+        const m = body.match(RELATION_SECTION_RE);
+        if (!m || m.index === void 0)
+          return [];
+        const after = body.slice(m.index + m[0].length);
+        const nextSection = after.search(/^##\s/m);
+        const section = nextSection >= 0 ? after.slice(0, nextSection) : after;
+        const lines = [];
+        for (const raw of section.split(/\r?\n/)) {
+          const line = raw.trim();
+          if (!line)
+            continue;
+          if (line.startsWith("-") || line.startsWith("\u2022") || /^\d+[.、]/.test(line)) {
+            lines.push(line.replace(/^[-•]\s*/, "").replace(/^\d+[.、]\s*/, ""));
+          } else {
+            lines.push(line);
+          }
+        }
+        return lines;
+      }
+      findMentions(line, nameToId, selfId) {
+        const hits = /* @__PURE__ */ new Set();
+        for (const [name, id] of nameToId) {
+          if (id === selfId)
+            continue;
+          if (name.length < 2)
+            continue;
+          if (line.includes(name))
+            hits.add(id);
+        }
+        return Array.from(hits);
+      }
+      cleanLabel(line) {
+        let s = line.replace(/^[：:]\s*/, "");
+        if (s.length > 24)
+          s = s.slice(0, 24) + "\u2026";
+        return s;
+      }
+    };
+  }
+});
+
+// src/business/timeline/timelineVizService.ts
+var TimelineVizService;
+var init_timelineVizService = __esm({
+  "src/business/timeline/timelineVizService.ts"() {
+    "use strict";
+    init_timelineService();
+    TimelineVizService = class {
+      constructor(container) {
+        this.container = container;
+      }
+      async build() {
+        const entries = await new TimelineService(this.container).aggregateFromChapters();
+        if (entries.length === 0) {
+          return { events: [], hasStoryTime: false, conflictCount: 0 };
+        }
+        const sorted = [...entries].sort((a, b) => a.chapterNumber - b.chapterNumber);
+        const conflicts = detectTimelineConflicts(sorted);
+        const conflictIdx = /* @__PURE__ */ new Map();
+        for (const c of conflicts)
+          conflictIdx.set(c.index, c.type);
+        const events = sorted.map((e, i) => ({
+          chapterId: e.chapterId,
+          number: e.chapterNumber,
+          title: e.title,
+          storyTime: e.storyTime,
+          characters: e.characters,
+          location: e.location,
+          climax: e.climax,
+          isConflict: conflictIdx.has(i),
+          conflictType: conflictIdx.get(i)
+        }));
+        return { events, hasStoryTime: true, conflictCount: conflicts.length };
+      }
+    };
+  }
+});
+
+// src/business/mcp/mcpInstaller.ts
+var path14, fs13, McpInstaller;
+var init_mcpInstaller = __esm({
+  "src/business/mcp/mcpInstaller.ts"() {
+    "use strict";
+    path14 = __toESM(require("path"));
+    fs13 = __toESM(require("fs"));
+    init_constants();
+    McpInstaller = class {
+      constructor(container) {
+        this.container = container;
+      }
+      get fs() {
+        return this.container.get("fileSystem");
+      }
+      async install() {
+        const fsSvc = this.fs;
+        const context = this.container.context;
+        const srcPath = context.asAbsolutePath("resources/mcp/novel-mcp-server.js");
+        const scriptText = fs13.readFileSync(srcPath, "utf8");
+        const configDir = `${PROJECT_DIRS.NOVEL_AI}/mcp`;
+        const scriptRel = `${configDir}/novel-mcp-server.js`;
+        await fsSvc.createDir(configDir);
+        await fsSvc.writeFile(scriptRel, scriptText);
+        const projectRoot = fsSvc.getProjectRoot() ?? "";
+        const absScript = path14.join(projectRoot, scriptRel);
+        const configs = this.buildClientConfigs(absScript, projectRoot);
+        const readme = this.buildReadme(absScript, configs);
+        await fsSvc.writeFile(`${configDir}/README.md`, readme);
+        return { scriptPath: scriptRel, configDir };
+      }
+      buildClientConfigs(scriptAbs, projectRoot) {
+        const configs = [];
+        configs.push(
+          [
+            "## Kilo Code / Cline / Roo Code\uFF08mcp_settings.json\uFF09",
+            "```json",
+            JSON.stringify(
+              {
+                mcpServers: {
+                  "novel-companion": {
+                    command: "node",
+                    args: [scriptAbs, "--project", projectRoot],
+                    disabled: false,
+                    autoApprove: []
+                  }
+                }
+              },
+              null,
+              2
+            ),
+            "```"
+          ].join("\n")
+        );
+        configs.push(
+          [
+            "## Continue\uFF08~/.continue/config.json \u7684 experimental.modelContextProtocolServers\uFF09",
+            "```json",
+            JSON.stringify(
+              [
+                {
+                  name: "novel-companion",
+                  transport: { type: "stdio", command: "node", args: [scriptAbs, "--project", projectRoot] }
+                }
+              ],
+              null,
+              2
+            ),
+            "```"
+          ].join("\n")
+        );
+        return configs;
+      }
+      buildReadme(scriptAbs, configs) {
+        return [
+          "# \u7B14\u642D MCP Server \u63A5\u5165\u6307\u5F15",
+          "",
+          "> \u7531\u7B14\u642D\u81EA\u52A8\u751F\u6210\u3002\u811A\u672C\u53EA\u8BFB\u8BBF\u95EE\u672C\u9879\u76EE\u5C0F\u8BF4\u6570\u636E\uFF0C\u4E0D\u5199\u5165/\u5220\u9664\u6587\u4EF6\u3002",
+          "",
+          "## \u542F\u52A8\u65B9\u5F0F",
+          "",
+          "```bash",
+          `node "${scriptAbs}" --project "<\u9879\u76EE\u6839\u76EE\u5F55>"`,
+          "```",
+          "",
+          "## \u66B4\u9732\u5DE5\u5177",
+          "",
+          "- `get_novel_info` \u5C0F\u8BF4\u57FA\u672C\u4FE1\u606F",
+          "- `list_chapters` \u7AE0\u8282\u5217\u8868",
+          "- `get_chapter` \u8BFB\u53D6\u7AE0\u8282\u6B63\u6587/\u5927\u7EB2",
+          "- `list_characters` \u4EBA\u7269\u5217\u8868",
+          "- `get_character` \u8BFB\u53D6\u4EBA\u7269\u5361",
+          "- `list_foreshadowing` \u4F0F\u7B14\u5217\u8868",
+          "- `get_timeline` \u6545\u4E8B\u65F6\u95F4\u7EBF",
+          "- `search_drafts` \u6B63\u6587\u5173\u952E\u8BCD\u641C\u7D22",
+          "",
+          "## \u5BA2\u6237\u7AEF\u914D\u7F6E",
+          "",
+          configs.join("\n\n"),
+          "",
+          "## \u5B89\u5168\u8BF4\u660E",
+          "",
+          "MCP Server \u4EC5\u66B4\u9732\u53EA\u8BFB\u5DE5\u5177\uFF0CAI \u65E0\u6CD5\u901A\u8FC7\u5B83\u76F4\u63A5\u4FEE\u6539\u6B63\u6587\uFF0C\u9700\u4F5C\u8005\u5728\u7F16\u8F91\u5668\u4E2D\u786E\u8BA4\u540E\u624D\u843D\u7B14\u3002",
+          ""
+        ].join("\n");
+      }
+    };
+  }
+});
+
+// src/business/vault/vaultService.ts
+var crypto2, fsSync, vscode17, MANIFEST, VAULT_DIR, ALGO, SCRYPT_N, SCRYPT_MAXMEM, VaultService;
+var init_vaultService = __esm({
+  "src/business/vault/vaultService.ts"() {
+    "use strict";
+    crypto2 = __toESM(require("crypto"));
+    fsSync = __toESM(require("fs"));
+    vscode17 = __toESM(require("vscode"));
+    init_trashService();
+    init_constants();
+    init_utils();
+    MANIFEST = `${PROJECT_DIRS.NOVEL_AI_BACKUPS}/vault-manifest.json`;
+    VAULT_DIR = `${PROJECT_DIRS.NOVEL_AI_BACKUPS}/vault`;
+    ALGO = "aes-256-gcm";
+    SCRYPT_N = 1 << 17;
+    SCRYPT_MAXMEM = 64 * 1024 * 1024;
+    VaultService = class {
+      constructor(container) {
+        this.container = container;
+      }
+      get fs() {
+        return this.container.get("fileSystem");
+      }
+      deriveKey(passphrase, salt) {
+        return new Promise((resolve2, reject2) => {
+          crypto2.scrypt(passphrase, salt, 32, { N: SCRYPT_N, maxmem: SCRYPT_MAXMEM }, (err, key) => {
+            if (err)
+              reject2(err);
+            else
+              resolve2(key);
+          });
+        });
+      }
+      async lock(relativePath, passphrase) {
+        const fs15 = this.fs;
+        const plaintext = await fs15.readFile(relativePath);
+        const salt = crypto2.randomBytes(16);
+        const iv = crypto2.randomBytes(12);
+        const key = await this.deriveKey(passphrase, salt);
+        const cipher = crypto2.createCipheriv(ALGO, key, iv);
+        const enc = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
+        const tag = cipher.getAuthTag();
+        const id = crypto2.createHash("sha1").update(relativePath).digest("hex").slice(0, 12);
+        const vaultPath = `${VAULT_DIR}/${id}.enc`;
+        await fs15.createDir(VAULT_DIR);
+        const blob = Buffer.concat([enc, tag]);
+        const abs = fs15.resolvePath(vaultPath);
+        await vscode17.workspace.fs.writeFile(vscode17.Uri.file(abs), blob);
+        const entry = {
+          originalPath: relativePath.replace(/\\/g, "/"),
+          vaultPath,
+          salt: salt.toString("base64"),
+          iv: iv.toString("base64"),
+          tag: tag.toString("base64"),
+          algorithm: ALGO,
+          lockedAt: nowISO()
+        };
+        const trash = new TrashService(this.container);
+        await trash.moveToTrash(relativePath, "chapter", { vaultLocked: true });
+        await this.updateManifest((m) => {
+          m.entries = m.entries.filter((e) => e.originalPath !== entry.originalPath);
+          m.entries.push(entry);
+        });
+        return entry;
+      }
+      async unlock(relativePath, passphrase) {
+        const fs15 = this.fs;
+        const norm = relativePath.replace(/\\/g, "/");
+        const manifest = await this.readManifest();
+        const entry = manifest.entries.find((e) => e.originalPath === norm);
+        if (!entry)
+          throw new Error(`\u4FDD\u9669\u7BB1\u4E2D\u672A\u627E\u5230\uFF1A${norm}`);
+        const abs = fs15.resolvePath(entry.vaultPath);
+        const blob = await vscode17.workspace.fs.readFile(vscode17.Uri.file(abs));
+        const enc = Buffer.from(blob);
+        const tag = enc.subarray(enc.length - 16);
+        const ciphertext = enc.subarray(0, enc.length - 16);
+        const salt = Buffer.from(entry.salt, "base64");
+        const iv = Buffer.from(entry.iv, "base64");
+        const key = await this.deriveKey(passphrase, salt);
+        const decipher = crypto2.createDecipheriv(ALGO, key, iv);
+        decipher.setAuthTag(tag);
+        let plain;
+        try {
+          plain = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString("utf8");
+        } catch {
+          throw new Error("\u53E3\u4EE4\u9519\u8BEF\u6216\u6570\u636E\u5DF2\u635F\u574F");
+        }
+        await fs15.writeFile(norm, plain);
+        await this.updateManifest((m) => {
+          m.entries = m.entries.filter((e) => e.originalPath !== norm);
+        });
+        const vaultAbs = fs15.resolvePath(entry.vaultPath);
+        try {
+          fsSync.rmSync(vaultAbs, { force: true });
+        } catch {
+        }
+      }
+      async list() {
+        return (await this.readManifest()).entries;
+      }
+      async readManifest() {
+        const fs15 = this.fs;
+        try {
+          const text = await fs15.readFile(MANIFEST);
+          return JSON.parse(text);
+        } catch {
+          return { version: 1, entries: [], updatedAt: nowISO() };
+        }
+      }
+      async updateManifest(mutate) {
+        const manifest = await this.readManifest();
+        mutate(manifest);
+        manifest.updatedAt = nowISO();
+        await this.fs.writeFile(MANIFEST, JSON.stringify(manifest, null, 2) + "\n");
+      }
+    };
+  }
+});
+
+// src/business/aiDirect/directAiService.ts
+var API_KEY_SECRET, SYSTEM_PROMPT, DirectAiService;
+var init_directAiService = __esm({
+  "src/business/aiDirect/directAiService.ts"() {
+    "use strict";
+    init_contextPacker();
+    init_frontMatterParser();
+    init_constants();
+    init_utils();
+    API_KEY_SECRET = "novelCompanion.aiDirect.apiKey";
+    SYSTEM_PROMPT = `\u4F60\u662F\u4E2D\u6587\u5C0F\u8BF4\u5BA1\u7A3F\u7F16\u8F91\u3002\u8BF7\u5BA1\u9605\u7ED9\u5B9A\u7AE0\u8282\uFF0C\u627E\u51FA\u9519\u522B\u5B57\u3001\u6807\u70B9\u3001\u7528\u8BCD\u91CD\u590D\u3001\u957F\u53E5\u3001\u903B\u8F91/\u4EBA\u7269/\u8BBE\u5B9A\u77DB\u76FE\u3001\u8282\u594F\u7B49\u95EE\u9898\u3002
+\u53EA\u8F93\u51FA\u4E00\u4E2A JSON \u5BF9\u8C61\uFF0C\u4E0D\u8981\u4EFB\u4F55\u89E3\u91CA\u6216 markdown \u4EE3\u7801\u5757\u6807\u8BB0\uFF0C\u7ED3\u6784\u5982\u4E0B\uFF1A
+{
+  "suggestions": [
+    {
+      "type": "typo|grammar|punctuation|repetition|logic|character|setting|pacing|emotion|suggestion",
+      "severity": "critical|high|medium|low",
+      "original": "\u6B63\u6587\u4E2D\u9700\u8981\u4FEE\u6539\u7684\u539F\u6587\u7247\u6BB5\uFF08\u5FC5\u987B\u4E0E\u6B63\u6587\u9010\u5B57\u4E00\u81F4\uFF0C\u957F\u5EA6>=1\uFF09",
+      "replacement": "\u5EFA\u8BAE\u4FEE\u6539\u4E3A\u7684\u5185\u5BB9\uFF08\u53EF\u4E3A\u7A7A\u5B57\u7B26\u4E32\u8868\u793A\u5220\u9664\uFF09",
+      "reason": "\u7B80\u77ED\u7406\u7531",
+      "canAutoApply": true
+    }
+  ]
+}
+\u8981\u6C42\uFF1Aoriginal \u5FC5\u987B\u80FD\u5728\u6B63\u6587\u4E2D\u7CBE\u786E\u5339\u914D\u5230\uFF1B\u82E5\u65E0\u660E\u663E\u95EE\u9898\u8FD4\u56DE {"suggestions":[]}\u3002`;
+    DirectAiService = class {
+      constructor(container) {
+        this.container = container;
+      }
+      fmParser = new FrontMatterParser();
+      get fs() {
+        return this.container.get("fileSystem");
+      }
+      get indexManager() {
+        return this.container.get("indexManager");
+      }
+      get configManager() {
+        return this.container.get("configManager");
+      }
+      async proofreadChapter(chapterId) {
+        const enabled = this.configManager.get("aiDirect.enabled") ?? false;
+        if (!enabled) {
+          throw new Error("AI \u76F4\u8FDE\u672A\u542F\u7528\uFF0C\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u5F00\u542F novelCompanion.aiDirect.enabled \u5E76\u914D\u7F6E API");
+        }
+        const baseUrl = this.configManager.get("aiDirect.apiBaseUrl") ?? "https://api.openai.com/v1";
+        const model = this.configManager.get("aiDirect.apiModel") ?? "gpt-4o-mini";
+        const apiKey = await this.container.context.secrets.get(API_KEY_SECRET);
+        if (!apiKey) {
+          throw new Error("\u672A\u914D\u7F6E API Key\uFF0C\u8BF7\u5148\u8FD0\u884C\u300C\u7B14\u642D\uFF1A\u8BBE\u7F6E AI \u76F4\u8FDE API Key\u300D");
+        }
+        const chapters = await this.indexManager.getAllChapters();
+        const chapter = chapters.find((c) => c.id === chapterId);
+        if (!chapter)
+          throw new Error(`\u672A\u627E\u5230\u7AE0\u8282\uFF1A${chapterId}`);
+        const packer = new ContextPacker(this.container);
+        const context = await packer.pack(chapterId, [...FULL_CONTEXT_SCOPE]);
+        const userPrompt = `\u8BF7\u5BA1\u9605\u4EE5\u4E0B\u7AE0\u8282\u5E76\u6309\u8981\u6C42\u8F93\u51FA JSON\u3002
+
+${context}`;
+        const json = await this.callChat(baseUrl, apiKey, model, userPrompt);
+        const suggestions = this.parseSuggestions(json, chapter);
+        const taskId = await this.uniqueTaskId();
+        const file = {
+          schemaVersion: 1,
+          taskId,
+          chapterId,
+          generatedAt: nowISO(),
+          generator: "ai-direct",
+          sourceFiles: [`${PROJECT_DIRS.CHAPTERS}/${chapterId}/${CHAPTER_FILES.DRAFT}`],
+          suggestions
+        };
+        const outDir = `${PROJECT_DIRS.NOVEL_AI_RESULTS}/${taskId}`;
+        await this.fs.createDir(outDir);
+        await this.fs.writeJson(`${outDir}/suggestions.json`, file);
+        return { taskId, count: suggestions.length };
+      }
+      async setApiKey(key) {
+        await this.container.context.secrets.store(API_KEY_SECRET, key);
+      }
+      async uniqueTaskId() {
+        for (let seq = 0; ; seq = (seq + 1) % 1e3) {
+          const taskId = generateTaskId(seq);
+          const exists = await this.fs.exists(`${PROJECT_DIRS.NOVEL_AI_RESULTS}/${taskId}`);
+          if (!exists)
+            return taskId;
+        }
+      }
+      async callChat(baseUrl, apiKey, model, userPrompt) {
+        const url = baseUrl.replace(/\/$/, "") + "/chat/completions";
+        const body = {
+          model,
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: userPrompt }
+          ],
+          temperature: 0.2,
+          response_format: { type: "json_object" }
+        };
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`
+          },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+          const text = await res.text().catch(() => "");
+          throw new Error(`API \u8BF7\u6C42\u5931\u8D25 ${res.status}: ${text.slice(0, 200)}`);
+        }
+        const data = await res.json();
+        const content = data.choices?.[0]?.message?.content;
+        if (!content)
+          throw new Error("API \u8FD4\u56DE\u4E3A\u7A7A");
+        return JSON.parse(content);
+      }
+      parseSuggestions(json, chapter) {
+        const obj = json.suggestions;
+        if (!Array.isArray(obj))
+          return [];
+        const draftRel = `${PROJECT_DIRS.CHAPTERS}/${chapter.id}/${CHAPTER_FILES.DRAFT}`;
+        const out = [];
+        let i = 0;
+        for (const raw of obj) {
+          const r = raw;
+          const original = String(r.original ?? "");
+          const reason = String(r.reason ?? "");
+          if (!original || !reason)
+            continue;
+          const type = this.asType(r.type);
+          const severity = this.asSeverity(r.severity);
+          out.push({
+            id: generateSuggestionId(i++),
+            type,
+            severity,
+            file: draftRel,
+            original,
+            replacement: String(r.replacement ?? ""),
+            reason,
+            canAutoApply: Boolean(r.canAutoApply ?? true)
+          });
+        }
+        return out;
+      }
+      asType(v) {
+        const allowed = [
+          "typo",
+          "grammar",
+          "punctuation",
+          "repetition",
+          "logic",
+          "character",
+          "setting",
+          "power",
+          "pacing",
+          "emotion",
+          "suggestion"
+        ];
+        const s = String(v);
+        return allowed.includes(s) ? s : "suggestion";
+      }
+      asSeverity(v) {
+        const s = String(v);
+        return ["critical", "high", "medium", "low"].includes(s) ? s : "medium";
+      }
     };
   }
 });
@@ -21758,28 +24491,1139 @@ var init_business = __esm({
     init_localChecker();
     init_suggestionMerger();
     init_projectDetector();
+    init_exportEngine();
+    init_searchEngine();
+    init_foreshadowingService();
+    init_timelineService();
+    init_namingEngine();
+    init_snippetService();
+    init_continuationService();
+    init_snapshotService();
+    init_trashService();
+    init_gitWorkflowService();
+    init_calendarService();
+    init_consistencyService();
+    init_relationService();
+    init_timelineVizService();
+    init_mcpInstaller();
+    init_vaultService();
+    init_directAiService();
+  }
+});
+
+// src/presentation/commands/argUtils.ts
+function resolveChapterId(arg) {
+  if (typeof arg === "string") {
+    return arg;
+  }
+  if (arg && typeof arg === "object") {
+    const obj = arg;
+    if (typeof obj.id === "string") {
+      return obj.id;
+    }
+    if (obj.chapter && typeof obj.chapter.id === "string") {
+      return obj.chapter.id;
+    }
+    if (typeof obj.chapterId === "string") {
+      return obj.chapterId;
+    }
+  }
+  return void 0;
+}
+function resolveEntityId(arg) {
+  if (typeof arg === "string") {
+    return arg;
+  }
+  if (arg && typeof arg === "object") {
+    const obj = arg;
+    if (typeof obj.id === "string") {
+      return obj.id;
+    }
+    if (obj.entry && typeof obj.entry.id === "string") {
+      return obj.entry.id;
+    }
+  }
+  return void 0;
+}
+var init_argUtils = __esm({
+  "src/presentation/commands/argUtils.ts"() {
+    "use strict";
+  }
+});
+
+// src/presentation/commands/volumeCommands.ts
+var volumeCommands_exports = {};
+__export(volumeCommands_exports, {
+  createVolume: () => createVolume,
+  deleteVolume: () => deleteVolume,
+  getVolumes: () => getVolumes,
+  renameVolume: () => renameVolume
+});
+async function getVolumes(container) {
+  if (!container.has("fileSystem"))
+    return [];
+  const fs15 = container.get("fileSystem");
+  let novel;
+  try {
+    novel = await fs15.readYaml(PROJECT_FILES.NOVEL_YAML);
+  } catch {
+    return [];
+  }
+  const declared = novel.volumes ?? [];
+  if (container.has("indexManager")) {
+    const im = container.get("indexManager");
+    try {
+      const chapters = await im.getAllChapters();
+      const used = chapters.map((c) => c.volume).filter(Boolean);
+      const merged = /* @__PURE__ */ new Set([...declared, ...used]);
+      return Array.from(merged).filter((v) => v.length > 0);
+    } catch {
+    }
+  }
+  return declared.filter((v) => v.length > 0);
+}
+async function createVolume(container) {
+  if (!container.has("fileSystem")) {
+    vscode18.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return void 0;
+  }
+  const fs15 = container.get("fileSystem");
+  const existing = await getVolumes(container);
+  const name = await vscode18.window.showInputBox({
+    prompt: "\u5377\u540D\uFF08\u4F8B\u5982\uFF1A\u7B2C\u4E00\u5377 \u98CE\u8D77\uFF09",
+    placeHolder: "\u7B2C\u4E00\u5377",
+    validateInput: (v) => {
+      const t = v?.trim();
+      if (!t)
+        return "\u5377\u540D\u4E0D\u80FD\u4E3A\u7A7A";
+      if (existing.includes(t))
+        return "\u8BE5\u5377\u540D\u5DF2\u5B58\u5728";
+      return void 0;
+    }
+  });
+  if (!name)
+    return void 0;
+  const volume = name.trim();
+  try {
+    const novel = await fs15.readYaml(PROJECT_FILES.NOVEL_YAML);
+    const volumes = novel.volumes ?? [];
+    if (!volumes.includes(volume))
+      volumes.push(volume);
+    await fs15.writeYaml(PROJECT_FILES.NOVEL_YAML, {
+      ...novel,
+      volumes,
+      updated_at: nowISO()
+    });
+    container.eventBus.publish("config.changed", { keys: ["volumes"] });
+    vscode18.window.showInformationMessage(`\u5DF2\u521B\u5EFA\u5377\uFF1A${volume}`);
+    return volume;
+  } catch (e) {
+    vscode18.window.showErrorMessage(`\u521B\u5EFA\u5377\u5931\u8D25\uFF1A${e.message}`);
+    return void 0;
+  }
+}
+async function renameVolume(container, arg) {
+  if (!container.has("fileSystem")) {
+    vscode18.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  const fs15 = container.get("fileSystem");
+  const existing = await getVolumes(container);
+  if (!existing.length) {
+    vscode18.window.showWarningMessage("\u5F53\u524D\u6CA1\u6709\u4EFB\u4F55\u5377");
+    return;
+  }
+  const oldName = typeof arg === "string" && existing.includes(arg) ? arg : await vscode18.window.showQuickPick(existing, { placeHolder: "\u9009\u62E9\u8981\u91CD\u547D\u540D\u7684\u5377" });
+  if (!oldName)
+    return;
+  const newName = await vscode18.window.showInputBox({
+    prompt: `\u91CD\u547D\u540D\u5377\u300C${oldName}\u300D`,
+    value: oldName,
+    validateInput: (v) => {
+      const t = v?.trim();
+      if (!t)
+        return "\u5377\u540D\u4E0D\u80FD\u4E3A\u7A7A";
+      if (t !== oldName && existing.includes(t))
+        return "\u8BE5\u5377\u540D\u5DF2\u5B58\u5728";
+      return void 0;
+    }
+  });
+  if (!newName || newName.trim() === oldName)
+    return;
+  const target = newName.trim();
+  try {
+    const novel = await fs15.readYaml(PROJECT_FILES.NOVEL_YAML);
+    const volumes = (novel.volumes ?? []).map((v) => v === oldName ? target : v);
+    await fs15.writeYaml(PROJECT_FILES.NOVEL_YAML, { ...novel, volumes, updated_at: nowISO() });
+    await reassignVolume(container, oldName, target);
+    container.eventBus.publish("config.changed", { keys: ["volumes"] });
+    container.eventBus.publish("chapter.renamed", { chapterId: "", newTitle: "" });
+    vscode18.window.showInformationMessage(`\u5DF2\u91CD\u547D\u540D\u5377\uFF1A${oldName} \u2192 ${target}`);
+  } catch (e) {
+    vscode18.window.showErrorMessage(`\u91CD\u547D\u540D\u5377\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function deleteVolume(container, arg) {
+  if (!container.has("fileSystem")) {
+    vscode18.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  const fs15 = container.get("fileSystem");
+  const existing = await getVolumes(container);
+  if (!existing.length) {
+    vscode18.window.showWarningMessage("\u5F53\u524D\u6CA1\u6709\u4EFB\u4F55\u5377");
+    return;
+  }
+  const name = typeof arg === "string" && existing.includes(arg) ? arg : await vscode18.window.showQuickPick(existing, { placeHolder: "\u9009\u62E9\u8981\u5220\u9664\u7684\u5377" });
+  if (!name)
+    return;
+  const im = container.get("indexManager");
+  const chapters = await im.getAllChapters();
+  const count = chapters.filter((c) => c.volume === name).length;
+  const choice = await vscode18.window.showWarningMessage(
+    `\u5220\u9664\u5377\u300C${name}\u300D\uFF1F${count > 0 ? `\u5176\u4E2D ${count} \u7AE0\u5C06\u53D8\u4E3A\u300C\u65E0\u5377\u300D\u3002` : ""}\uFF08\u7AE0\u8282\u4E0D\u4F1A\u88AB\u5220\u9664\uFF09`,
+    { modal: true },
+    "\u5220\u9664",
+    "\u53D6\u6D88"
+  );
+  if (choice !== "\u5220\u9664")
+    return;
+  try {
+    const novel = await fs15.readYaml(PROJECT_FILES.NOVEL_YAML);
+    const volumes = (novel.volumes ?? []).filter((v) => v !== name);
+    await fs15.writeYaml(PROJECT_FILES.NOVEL_YAML, { ...novel, volumes, updated_at: nowISO() });
+    if (count > 0)
+      await reassignVolume(container, name, "");
+    container.eventBus.publish("config.changed", { keys: ["volumes"] });
+    container.eventBus.publish("chapter.renamed", { chapterId: "", newTitle: "" });
+    vscode18.window.showInformationMessage(`\u5DF2\u5220\u9664\u5377\uFF1A${name}`);
+  } catch (e) {
+    vscode18.window.showErrorMessage(`\u5220\u9664\u5377\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function reassignVolume(container, from, to) {
+  const fs15 = container.get("fileSystem");
+  const im = container.get("indexManager");
+  const chapters = await im.getAllChapters();
+  for (const ch of chapters) {
+    if (ch.volume !== from)
+      continue;
+    const rel = `${PROJECT_DIRS.CHAPTERS}/${ch.id}/${CHAPTER_FILES.YAML}`;
+    const yaml2 = await fs15.readYaml(rel);
+    yaml2.volume = to || void 0;
+    yaml2.updated_at = nowISO();
+    await fs15.writeYaml(rel, yaml2);
+    im.updateChapter(ch.id, { volume: to, updatedAt: yaml2.updated_at });
+  }
+}
+var vscode18;
+var init_volumeCommands = __esm({
+  "src/presentation/commands/volumeCommands.ts"() {
+    "use strict";
+    vscode18 = __toESM(require("vscode"));
+    init_constants();
+    init_utils();
+  }
+});
+
+// src/presentation/commands/chapterCommands.ts
+async function createChapter(container) {
+  const workflow = container.get("workflow");
+  let volumes = [];
+  try {
+    volumes = await getVolumes(container);
+  } catch {
+    volumes = [];
+  }
+  const volumeItems = [NO_VOLUME, ...volumes, NEW_VOLUME];
+  const volumePicked = await vscode19.window.showQuickPick(volumeItems, {
+    placeHolder: "\u6240\u5C5E\u5377"
+  });
+  if (volumePicked === void 0)
+    return;
+  let volume = "";
+  if (volumePicked === NO_VOLUME) {
+    volume = "";
+  } else if (volumePicked === NEW_VOLUME) {
+    const created = await createVolume(container);
+    if (!created)
+      return;
+    volume = created;
+  } else {
+    volume = volumePicked;
+  }
+  const nextNumber = await workflow.peekNextChapterNumber();
+  const title = await vscode19.window.showInputBox({
+    prompt: `\u7AE0\u8282\u6807\u9898\uFF08\u7559\u7A7A\u81EA\u52A8\u547D\u540D\u4E3A\u300C\u7B2C${nextNumber}\u7AE0\u300D\uFF09`,
+    placeHolder: `\u4F8B\u5982\uFF1A\u521D\u5165\u6C5F\u6E56\uFF08\u5C06\u521B\u5EFA\u7B2C ${nextNumber} \u7AE0\uFF09`
+  });
+  if (title === void 0)
+    return;
+  const finalTitle = title.trim() || `\u7B2C${nextNumber}\u7AE0`;
+  try {
+    const chapterId = await workflow.createChapter(volume, finalTitle);
+    vscode19.window.showInformationMessage(`\u5DF2\u521B\u5EFA\u7AE0\u8282\uFF1A${finalTitle}\uFF08${chapterId}\uFF09`);
+    await openDraft(container, chapterId);
+  } catch (e) {
+    vscode19.window.showErrorMessage(`\u521B\u5EFA\u7AE0\u8282\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function openDraft(container, arg) {
+  const chapterId = resolveChapterId(arg);
+  if (!chapterId) {
+    vscode19.window.showWarningMessage("\u8BF7\u4ECE\u7AE0\u8282\u5217\u8868\u4E2D\u9009\u62E9\u4E00\u4E2A\u7AE0\u8282");
+    return;
+  }
+  await openChapterFile(container, chapterId, CHAPTER_FILES.DRAFT);
+}
+async function openOutline(container, arg) {
+  const chapterId = resolveChapterId(arg);
+  if (!chapterId) {
+    vscode19.window.showWarningMessage("\u8BF7\u4ECE\u7AE0\u8282\u5217\u8868\u4E2D\u9009\u62E9\u4E00\u4E2A\u7AE0\u8282");
+    return;
+  }
+  await openChapterFile(container, chapterId, CHAPTER_FILES.OUTLINE);
+}
+async function openChapterFile(container, chapterId, fileName) {
+  if (!container.has("fileSystem")) {
+    vscode19.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  const fs15 = container.get("fileSystem");
+  const rel = `${PROJECT_DIRS.CHAPTERS}/${chapterId}/${fileName}`;
+  try {
+    const abs = fs15.resolvePath(rel);
+    await vscode19.commands.executeCommand("vscode.open", vscode19.Uri.file(abs));
+  } catch (e) {
+    vscode19.window.showErrorMessage(`\u6253\u5F00\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function archive(container, arg) {
+  const chapterId = resolveChapterId(arg);
+  if (!chapterId) {
+    vscode19.window.showWarningMessage("\u8BF7\u4ECE\u7AE0\u8282\u5217\u8868\u4E2D\u9009\u62E9\u4E00\u4E2A\u7AE0\u8282");
+    return;
+  }
+  const confirm = await vscode19.window.showWarningMessage(
+    `\u786E\u5B9A\u5F52\u6863\u7AE0\u8282 ${chapterId} \u5417\uFF1F\u5F52\u6863\u540E\u5C06\u6807\u8BB0\u4E3A\u5DF2\u5B8C\u6210\u3002`,
+    { modal: true },
+    "\u5F52\u6863",
+    "\u53D6\u6D88"
+  );
+  if (confirm !== "\u5F52\u6863") {
+    return;
+  }
+  const workflow = container.get("workflow");
+  try {
+    const foreshadow = new ForeshadowingService(container);
+    const pending = await foreshadow.findByChapter(chapterId);
+    if (pending.length > 0) {
+      const names = pending.map((f) => `\xB7 ${f.name}\uFF08${f.id}\uFF09`).join("\n");
+      const go = await vscode19.window.showWarningMessage(
+        `\u8BE5\u7AE0\u8282\u4ECD\u6709 ${pending.length} \u4E2A\u672A\u56DE\u6536\u4F0F\u7B14\uFF1A
+${names}
+
+\u53EF\u7EE7\u7EED\u5F52\u6863\uFF0C\u6216\u5148\u56DE\u6536\u4F0F\u7B14\u3002`,
+        { modal: true },
+        "\u7EE7\u7EED\u5F52\u6863",
+        "\u53D6\u6D88"
+      );
+      if (go !== "\u7EE7\u7EED\u5F52\u6863")
+        return;
+    }
+    await workflow.archive(chapterId);
+    try {
+      const timeline = new TimelineService(container);
+      await timeline.writeAggregatedTimeline();
+    } catch {
+    }
+    vscode19.window.showInformationMessage(`\u5DF2\u5F52\u6863\u7AE0\u8282\uFF1A${chapterId}`);
+  } catch (e) {
+    vscode19.window.showErrorMessage(`\u5F52\u6863\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function rename(container, arg) {
+  const chapterId = resolveChapterId(arg);
+  if (!chapterId) {
+    vscode19.window.showWarningMessage("\u8BF7\u4ECE\u7AE0\u8282\u5217\u8868\u4E2D\u9009\u62E9\u4E00\u4E2A\u7AE0\u8282");
+    return;
+  }
+  const newTitle = await vscode19.window.showInputBox({
+    prompt: `\u91CD\u547D\u540D\u7AE0\u8282 ${chapterId}`,
+    validateInput: (v) => v && v.trim() ? void 0 : "\u6807\u9898\u4E0D\u80FD\u4E3A\u7A7A"
+  });
+  if (!newTitle) {
+    return;
+  }
+  const workflow = container.get("workflow");
+  try {
+    await workflow.rename(chapterId, newTitle.trim());
+    vscode19.window.showInformationMessage(`\u5DF2\u91CD\u547D\u540D\u4E3A\uFF1A${newTitle}`);
+  } catch (e) {
+    vscode19.window.showErrorMessage(`\u91CD\u547D\u540D\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function deleteChapter(container, arg) {
+  const chapterId = resolveChapterId(arg);
+  if (!chapterId) {
+    vscode19.window.showWarningMessage("\u8BF7\u4ECE\u7AE0\u8282\u5217\u8868\u4E2D\u9009\u62E9\u4E00\u4E2A\u7AE0\u8282");
+    return;
+  }
+  const confirm = await vscode19.window.showWarningMessage(
+    `\u786E\u5B9A\u5220\u9664\u7AE0\u8282 ${chapterId} \u5417\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u6062\u590D\uFF0C\u7AE0\u8282\u6240\u6709\u6587\u4EF6\u5C06\u88AB\u5220\u9664\u3002`,
+    { modal: true },
+    "\u5220\u9664",
+    "\u53D6\u6D88"
+  );
+  if (confirm !== "\u5220\u9664") {
+    return;
+  }
+  const workflow = container.get("workflow");
+  try {
+    await workflow.deleteChapter(chapterId);
+    vscode19.window.showInformationMessage(`\u5DF2\u5220\u9664\u7AE0\u8282\uFF1A${chapterId}`);
+  } catch (e) {
+    vscode19.window.showErrorMessage(`\u5220\u9664\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function moveChapterUp(container, arg) {
+  const chapterId = resolveChapterId(arg);
+  if (!chapterId)
+    return;
+  const workflow = container.get("workflow");
+  try {
+    await workflow.moveChapter(chapterId, "up");
+    vscode19.window.showInformationMessage("\u5DF2\u4E0A\u79FB");
+  } catch (e) {
+    vscode19.window.showWarningMessage(e.message);
+  }
+}
+async function moveChapterDown(container, arg) {
+  const chapterId = resolveChapterId(arg);
+  if (!chapterId)
+    return;
+  const workflow = container.get("workflow");
+  try {
+    await workflow.moveChapter(chapterId, "down");
+    vscode19.window.showInformationMessage("\u5DF2\u4E0B\u79FB");
+  } catch (e) {
+    vscode19.window.showWarningMessage(e.message);
+  }
+}
+var vscode19, NO_VOLUME, NEW_VOLUME;
+var init_chapterCommands = __esm({
+  "src/presentation/commands/chapterCommands.ts"() {
+    "use strict";
+    vscode19 = __toESM(require("vscode"));
+    init_business();
+    init_constants();
+    init_argUtils();
+    init_volumeCommands();
+    NO_VOLUME = "\uFF08\u65E0\u5377\uFF09";
+    NEW_VOLUME = "\uFF08\u65B0\u5EFA\u5377\u2026\uFF09";
+  }
+});
+
+// src/presentation/commands/characterCommands.ts
+async function createCharacter(container) {
+  if (!container.has("fileSystem")) {
+    vscode20.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  const fs15 = container.get("fileSystem");
+  const indexManager = container.get("indexManager");
+  const name = await vscode20.window.showInputBox({
+    prompt: "\u4EBA\u7269\u59D3\u540D",
+    validateInput: (v) => v && v.trim() ? void 0 : "\u59D3\u540D\u4E0D\u80FD\u4E3A\u7A7A"
+  });
+  if (!name) {
+    return;
+  }
+  const rolePicked = await vscode20.window.showQuickPick(ROLE_ITEMS, {
+    placeHolder: "\u9009\u62E9\u89D2\u8272\u7C7B\u578B"
+  });
+  const role = rolePicked?.role ?? "supporting" /* Supporting */;
+  const id = await ensureUniqueId(fs15, pinyinFromChinese(name));
+  const now = nowISO();
+  const meta = {
+    id,
+    name: name.trim(),
+    role,
+    status: "alive" /* Alive */,
+    created_at: now,
+    updated_at: now
+  };
+  const body = [
+    `# ${name.trim()}`,
+    "",
+    "## \u57FA\u672C\u4FE1\u606F",
+    "",
+    "- \u522B\u540D\uFF1A",
+    "- \u5E74\u9F84\uFF1A",
+    "- \u6027\u522B\uFF1A",
+    "- \u9635\u8425\uFF1A",
+    "",
+    "## \u5916\u8C8C",
+    "",
+    "",
+    "",
+    "## \u6027\u683C",
+    "",
+    "",
+    "",
+    "## \u80CC\u666F",
+    "",
+    "",
+    "",
+    "## \u80FD\u529B",
+    "",
+    "",
+    "",
+    "## \u4EBA\u7269\u5173\u7CFB",
+    "",
+    ""
+  ].join("\n");
+  const content = `---
+${yamlString(meta)}---
+${body}
+`;
+  try {
+    await fs15.writeFile(`${PROJECT_DIRS.CHARACTERS}/${id}.md`, content);
+    await indexManager.refresh();
+    container.eventBus.publish("character.created", { id });
+    vscode20.window.showInformationMessage(`\u5DF2\u521B\u5EFA\u4EBA\u7269\u5361\uFF1A${name}\uFF08${id}\uFF09`);
+    await openCharacter(container, id);
+  } catch (e) {
+    vscode20.window.showErrorMessage(`\u521B\u5EFA\u4EBA\u7269\u5361\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function openCharacter(container, arg) {
+  const id = resolveEntityId(arg);
+  if (!id) {
+    vscode20.window.showWarningMessage("\u8BF7\u4ECE\u4EBA\u7269\u5217\u8868\u4E2D\u9009\u62E9\u4E00\u4E2A\u4EBA\u7269");
+    return;
+  }
+  if (!container.has("fileSystem")) {
+    vscode20.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  const fs15 = container.get("fileSystem");
+  try {
+    const abs = fs15.resolvePath(`${PROJECT_DIRS.CHARACTERS}/${id}.md`);
+    await vscode20.commands.executeCommand("vscode.open", vscode20.Uri.file(abs));
+  } catch (e) {
+    vscode20.window.showErrorMessage(`\u6253\u5F00\u4EBA\u7269\u5361\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function ensureUniqueId(fs15, base) {
+  let id = base || "character";
+  let seq = 1;
+  while (await fs15.exists(`${PROJECT_DIRS.CHARACTERS}/${id}.md`)) {
+    id = `${base}-${seq}`;
+    seq++;
+  }
+  return id;
+}
+function yamlString(meta) {
+  const lines = [];
+  const entries = [
+    ["\u7F16\u53F7", meta.id],
+    ["\u59D3\u540D", meta.name],
+    ["\u89D2\u8272\u7C7B\u578B", meta.role],
+    ["\u72B6\u6001", meta.status],
+    ["\u521B\u5EFA\u65F6\u95F4", meta.created_at],
+    ["\u66F4\u65B0\u65F6\u95F4", meta.updated_at]
+  ];
+  for (const [k, v] of entries) {
+    lines.push(`${k}: ${yamlValue(v)}`);
+  }
+  return lines.join("\n") + "\n";
+}
+function yamlValue(v) {
+  if (v === null || v === void 0) {
+    return "null";
+  }
+  if (typeof v === "string") {
+    return v;
+  }
+  return String(v);
+}
+var vscode20, ROLE_ITEMS;
+var init_characterCommands = __esm({
+  "src/presentation/commands/characterCommands.ts"() {
+    "use strict";
+    vscode20 = __toESM(require("vscode"));
+    init_types();
+    init_constants();
+    init_utils();
+    init_argUtils();
+    ROLE_ITEMS = [
+      { label: "\u4E3B\u89D2", role: "protagonist" /* Protagonist */ },
+      { label: "\u91CD\u8981\u89D2\u8272", role: "deuteragonist" /* Deuteragonist */ },
+      { label: "\u53CD\u6D3E", role: "antagonist" /* Antagonist */ },
+      { label: "\u914D\u89D2", role: "supporting" /* Supporting */ },
+      { label: "\u6B21\u8981", role: "minor" /* Minor */ },
+      { label: "\u63D0\u53CA", role: "mentioned" /* Mentioned */ }
+    ];
+  }
+});
+
+// src/presentation/commands/settingCommands.ts
+async function createSetting(container) {
+  if (!container.has("fileSystem")) {
+    vscode21.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  const fs15 = container.get("fileSystem");
+  const indexManager = container.get("indexManager");
+  const name = await vscode21.window.showInputBox({
+    prompt: "\u8BBE\u5B9A\u540D\u79F0",
+    validateInput: (v) => v && v.trim() ? void 0 : "\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A"
+  });
+  if (!name) {
+    return;
+  }
+  const catPicked = await vscode21.window.showQuickPick(CATEGORY_ITEMS, {
+    placeHolder: "\u9009\u62E9\u5206\u7C7B"
+  });
+  const category = catPicked?.category ?? "other" /* Other */;
+  const impPicked = await vscode21.window.showQuickPick(IMPORTANCE_ITEMS, {
+    placeHolder: "\u9009\u62E9\u91CD\u8981\u7A0B\u5EA6\uFF08\u53EF\u8DF3\u8FC7\uFF09",
+    canPickMany: false
+  });
+  const importance = impPicked?.importance;
+  const id = await ensureUniqueId2(fs15, pinyinFromChinese(name));
+  const now = nowISO();
+  const meta = {
+    id,
+    name: name.trim(),
+    category,
+    importance,
+    created_at: now,
+    updated_at: now
+  };
+  const body = [
+    `# ${name.trim()}`,
+    "",
+    "## \u6982\u8FF0",
+    "",
+    "",
+    "",
+    "## \u8BE6\u7EC6\u8BF4\u660E",
+    "",
+    "",
+    "",
+    "## \u76F8\u5173\u4EBA\u7269",
+    "",
+    "",
+    "## \u76F8\u5173\u7AE0\u8282",
+    "",
+    "",
+    "## \u5907\u6CE8",
+    ""
+  ].join("\n");
+  const content = `---
+${yamlString2(meta)}---
+${body}
+`;
+  try {
+    await fs15.writeFile(`${PROJECT_DIRS.WORLD}/${id}.md`, content);
+    await indexManager.refresh();
+    container.eventBus.publish("setting.created", { id });
+    vscode21.window.showInformationMessage(`\u5DF2\u521B\u5EFA\u8BBE\u5B9A\u5361\uFF1A${name}\uFF08${id}\uFF09`);
+    await openSetting(container, id);
+  } catch (e) {
+    vscode21.window.showErrorMessage(`\u521B\u5EFA\u8BBE\u5B9A\u5361\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function openSetting(container, arg) {
+  const id = resolveEntityId(arg);
+  if (!id) {
+    vscode21.window.showWarningMessage("\u8BF7\u4ECE\u8BBE\u5B9A\u5217\u8868\u4E2D\u9009\u62E9\u4E00\u4E2A\u8BBE\u5B9A");
+    return;
+  }
+  if (!container.has("fileSystem")) {
+    vscode21.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  const fs15 = container.get("fileSystem");
+  try {
+    const abs = fs15.resolvePath(`${PROJECT_DIRS.WORLD}/${id}.md`);
+    await vscode21.commands.executeCommand("vscode.open", vscode21.Uri.file(abs));
+  } catch (e) {
+    vscode21.window.showErrorMessage(`\u6253\u5F00\u8BBE\u5B9A\u5361\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function ensureUniqueId2(fs15, base) {
+  let id = base || "setting";
+  let seq = 1;
+  while (await fs15.exists(`${PROJECT_DIRS.WORLD}/${id}.md`)) {
+    id = `${base}-${seq}`;
+    seq++;
+  }
+  return id;
+}
+function yamlString2(meta) {
+  const lines = [];
+  const entries = [
+    ["\u7F16\u53F7", meta.id],
+    ["\u540D\u79F0", meta.name],
+    ["\u5206\u7C7B", meta.category],
+    ["\u91CD\u8981\u7A0B\u5EA6", meta.importance],
+    ["\u521B\u5EFA\u65F6\u95F4", meta.created_at],
+    ["\u66F4\u65B0\u65F6\u95F4", meta.updated_at]
+  ];
+  for (const [k, v] of entries) {
+    lines.push(`${k}: ${yamlValue2(v)}`);
+  }
+  return lines.join("\n") + "\n";
+}
+function yamlValue2(v) {
+  if (v === null || v === void 0) {
+    return "null";
+  }
+  if (typeof v === "string") {
+    return v;
+  }
+  return String(v);
+}
+var vscode21, CATEGORY_ITEMS, IMPORTANCE_ITEMS;
+var init_settingCommands = __esm({
+  "src/presentation/commands/settingCommands.ts"() {
+    "use strict";
+    vscode21 = __toESM(require("vscode"));
+    init_types();
+    init_constants();
+    init_utils();
+    init_argUtils();
+    CATEGORY_ITEMS = [
+      { label: "\u89C4\u5219", category: "rule" /* Rule */ },
+      { label: "\u529B\u91CF\u4F53\u7CFB", category: "power" /* Power */ },
+      { label: "\u5730\u70B9", category: "location" /* Location */ },
+      { label: "\u7EC4\u7EC7", category: "organization" /* Organization */ },
+      { label: "\u7269\u54C1", category: "item" /* Item */ },
+      { label: "\u5386\u53F2", category: "history" /* History */ },
+      { label: "\u5176\u4ED6", category: "other" /* Other */ }
+    ];
+    IMPORTANCE_ITEMS = [
+      { label: "\u5173\u952E", importance: "critical" /* Critical */ },
+      { label: "\u9AD8", importance: "high" /* High */ },
+      { label: "\u4E2D", importance: "medium" /* Medium */ },
+      { label: "\u4F4E", importance: "low" /* Low */ }
+    ];
+  }
+});
+
+// src/presentation/commands/foreshadowingCommands.ts
+async function createForeshadowing(container) {
+  if (!container.has("fileSystem")) {
+    vscode22.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  const fs15 = container.get("fileSystem");
+  const title = await vscode22.window.showInputBox({
+    prompt: "\u4F0F\u7B14\u6807\u9898",
+    placeHolder: "\u4F8B\u5982\uFF1A\u94DC\u94C3\u58F0",
+    validateInput: (v) => v && v.trim() ? void 0 : "\u6807\u9898\u4E0D\u80FD\u4E3A\u7A7A"
+  });
+  if (!title)
+    return;
+  const desc = await vscode22.window.showInputBox({
+    prompt: "\u4F0F\u7B14\u63CF\u8FF0\uFF08\u9009\u586B\uFF09",
+    placeHolder: "\u4F8B\u5982\uFF1A\u6797\u6F88\u6BCF\u6B21\u8FDB\u5165\u65E7\u5B85\u90FD\u542C\u5230\u94DC\u94C3\u58F0"
+  });
+  const chapter = await vscode22.window.showInputBox({
+    prompt: "\u57CB\u8BBE\u7AE0\u8282\uFF08\u9009\u586B\uFF09",
+    placeHolder: "\u4F8B\u5982\uFF1Ach008"
+  });
+  const impPicked = await vscode22.window.showQuickPick(IMPORTANCE_ITEMS2, {
+    placeHolder: "\u9009\u62E9\u91CD\u8981\u7A0B\u5EA6"
+  });
+  const id = await ensureUniqueId3(fs15, pinyinFromChinese(title));
+  const meta = {
+    \u7F16\u53F7: id,
+    \u540D\u79F0: title.trim(),
+    \u72B6\u6001: "pending",
+    \u91CD\u8981\u7A0B\u5EA6: impPicked?.value || "medium",
+    \u57CB\u8BBE\u7AE0\u8282: chapter || "\u2014",
+    \u56DE\u6536\u7AE0\u8282: "",
+    \u521B\u5EFA\u65F6\u95F4: nowISO(),
+    \u66F4\u65B0\u65F6\u95F4: nowISO()
+  };
+  const body = [
+    `# ${title.trim()}`,
+    "",
+    "## \u63CF\u8FF0",
+    "",
+    desc || "\uFF08\u5F85\u8865\u5145\uFF09",
+    "",
+    "## \u76F8\u5173\u4EBA\u7269",
+    "",
+    "\uFF08\u5F85\u8865\u5145\uFF09",
+    "",
+    "## \u9884\u671F\u56DE\u6536",
+    "",
+    "\uFF08\u5F85\u8865\u5145\uFF09",
+    "",
+    "## \u56DE\u6536\u60C5\u51B5",
+    "",
+    "\uFF08\u672A\u56DE\u6536\uFF09"
+  ].join("\n");
+  const content = FM.stringify(meta, body);
+  const dir = `${PROJECT_DIRS.FORESHADOWING}/unresolved`;
+  try {
+    await fs15.createDir(dir);
+    await fs15.writeFile(`${dir}/${id}.md`, content);
+    container.eventBus.publish("foreshadowing.changed", {});
+    vscode22.window.showInformationMessage(`\u5DF2\u6DFB\u52A0\u4F0F\u7B14\uFF1A${title}\uFF08${id}\uFF09`);
+  } catch (e) {
+    vscode22.window.showErrorMessage(`\u6DFB\u52A0\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function openForeshadowingFile(container, arg) {
+  if (!container.has("fileSystem"))
+    return;
+  const fs15 = container.get("fileSystem");
+  const id = resolveId(arg);
+  if (id) {
+    try {
+      const dir = await findForeshadowingDir(fs15, id);
+      if (dir) {
+        const abs = fs15.resolvePath(`${dir}/${id}.md`);
+        await vscode22.commands.executeCommand("vscode.open", vscode22.Uri.file(abs));
+      }
+    } catch (e) {
+      vscode22.window.showErrorMessage(`\u6253\u5F00\u5931\u8D25\uFF1A${e.message}`);
+    }
+  }
+}
+async function resolveForeshadowing(container, arg) {
+  if (!container.has("fileSystem"))
+    return;
+  const fs15 = container.get("fileSystem");
+  const id = resolveId(arg);
+  if (!id)
+    return;
+  const dir = await findForeshadowingDir(fs15, id);
+  if (!dir) {
+    vscode22.window.showWarningMessage("\u627E\u4E0D\u5230\u4F0F\u7B14\u6587\u4EF6");
+    return;
+  }
+  const resolveChapter = await vscode22.window.showInputBox({
+    prompt: "\u56DE\u6536\u7AE0\u8282",
+    placeHolder: "\u4F8B\u5982\uFF1Ach020"
+  });
+  if (resolveChapter === void 0)
+    return;
+  try {
+    const relPath = `${dir}/${id}.md`;
+    const content = await fs15.readFile(relPath);
+    const parsed = FM.parse(content);
+    parsed.data["\u72B6\u6001"] = "resolved";
+    parsed.data["\u56DE\u6536\u7AE0\u8282"] = resolveChapter || "\u2014";
+    parsed.data["\u66F4\u65B0\u65F6\u95F4"] = nowISO();
+    const updated = FM.stringify(parsed.data, parsed.content);
+    await fs15.writeFile(relPath, updated);
+    const resolvedDir = `${PROJECT_DIRS.FORESHADOWING}/resolved`;
+    await fs15.createDir(resolvedDir);
+    await fs15.copy(relPath, `${resolvedDir}/${id}.md`);
+    await fs15.delete(relPath);
+    container.eventBus.publish("foreshadowing.changed", {});
+    vscode22.window.showInformationMessage(`\u4F0F\u7B14\u5DF2\u56DE\u6536\uFF1A${id}`);
+  } catch (e) {
+    vscode22.window.showErrorMessage(`\u56DE\u6536\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function ensureUniqueId3(fs15, base) {
+  let id = base || "foreshadowing";
+  let seq = 1;
+  while (await fs15.exists(`${PROJECT_DIRS.FORESHADOWING}/unresolved/${id}.md`)) {
+    id = `${base}-${seq}`;
+    seq++;
+  }
+  return id;
+}
+async function findForeshadowingDir(fs15, id) {
+  const unresolved = `${PROJECT_DIRS.FORESHADOWING}/unresolved`;
+  if (await fs15.exists(`${unresolved}/${id}.md`))
+    return unresolved;
+  const resolved = `${PROJECT_DIRS.FORESHADOWING}/resolved`;
+  if (await fs15.exists(`${resolved}/${id}.md`))
+    return resolved;
+  return void 0;
+}
+function resolveId(arg) {
+  if (typeof arg === "string")
+    return arg;
+  if (arg && typeof arg === "object") {
+    const obj = arg;
+    if (obj.id)
+      return obj.id;
+    if (obj.item?.id)
+      return obj.item.id;
+  }
+  return void 0;
+}
+async function openChapterForeshadowings(container, arg) {
+  if (!container.has("fileSystem"))
+    return;
+  const chapterId = typeof arg === "string" ? arg : resolveId(arg);
+  if (!chapterId)
+    return;
+  const service2 = new ForeshadowingService(container);
+  const pending = await service2.findByChapter(chapterId);
+  if (!pending.length) {
+    vscode22.window.showInformationMessage("\u8BE5\u7AE0\u8282\u6CA1\u6709\u5173\u8054\u7684\u672A\u56DE\u6536\u4F0F\u7B14");
+    return;
+  }
+  const pick2 = await vscode22.window.showQuickPick(
+    pending.map((f) => ({ label: f.name, description: f.id, detail: f.summary.split("\n")[0], id: f.id })),
+    { placeHolder: `\u672C\u7AE0\u672A\u56DE\u6536\u4F0F\u7B14\uFF08${pending.length}\uFF09\u2014 \u9009\u62E9\u6253\u5F00` }
+  );
+  if (!pick2)
+    return;
+  await openForeshadowingFile(container, { id: pick2.id });
+}
+async function showForeshadowingReferences(container, arg) {
+  if (!container.has("fileSystem"))
+    return;
+  const id = resolveId(arg);
+  if (!id)
+    return;
+  const service2 = new ForeshadowingService(container);
+  const refs = await service2.findReferences(id);
+  if (!refs.length) {
+    vscode22.window.showInformationMessage(`\u4F0F\u7B14 ${id} \u6682\u672A\u88AB\u4EFB\u4F55\u7AE0\u8282\u6B63\u6587\u5F15\u7528`);
+    return;
+  }
+  const pick2 = await vscode22.window.showQuickPick(
+    refs.map((r) => ({
+      label: r.chapterId,
+      description: r.title,
+      detail: `\u547D\u4E2D\u884C\uFF1A${r.lines.join(", ")}`,
+      chapterId: r.chapterId,
+      line: r.lines[0]
+    })),
+    { placeHolder: `\u4F0F\u7B14 ${id} \u88AB\u4EE5\u4E0B ${refs.length} \u7AE0\u5F15\u7528 \u2014 \u9009\u62E9\u6253\u5F00` }
+  );
+  if (!pick2)
+    return;
+  const fs15 = container.get("fileSystem");
+  try {
+    const abs = fs15.resolvePath(`chapters/${pick2.chapterId}/draft.md`);
+    const doc = await vscode22.workspace.openTextDocument(vscode22.Uri.file(abs));
+    const editor = await vscode22.window.showTextDocument(doc, vscode22.ViewColumn.One);
+    const range = doc.lineAt(Math.max(0, pick2.line - 1)).range;
+    editor.revealRange(range, vscode22.TextEditorRevealType.InCenter);
+    editor.selection = new vscode22.Selection(range.start, range.end);
+  } catch (e) {
+    vscode22.window.showErrorMessage(`\u6253\u5F00\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+var vscode22, FM, IMPORTANCE_ITEMS2;
+var init_foreshadowingCommands = __esm({
+  "src/presentation/commands/foreshadowingCommands.ts"() {
+    "use strict";
+    vscode22 = __toESM(require("vscode"));
+    init_frontMatterParser();
+    init_foreshadowingService();
+    init_constants();
+    init_utils();
+    FM = new FrontMatterParser();
+    IMPORTANCE_ITEMS2 = [
+      { label: "\u9AD8", value: "high" },
+      { label: "\u4E2D", value: "medium" },
+      { label: "\u4F4E", value: "low" }
+    ];
+  }
+});
+
+// src/presentation/commands/timelineCommands.ts
+async function createTimelineEvent(container) {
+  if (!container.has("fileSystem")) {
+    vscode23.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  const fs15 = container.get("fileSystem");
+  const name = await vscode23.window.showInputBox({
+    prompt: "\u65F6\u95F4\u7EBF\u540D\u79F0",
+    placeHolder: "\u4F8B\u5982\uFF1A\u7B2C\u4E00\u5377\u4E3B\u7EBF \u6216 ch012 \u65F6\u95F4\u7EBF",
+    validateInput: (v) => v && v.trim() ? void 0 : "\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A"
+  });
+  if (!name)
+    return;
+  const nodeCountInput = await vscode23.window.showInputBox({
+    prompt: "\u8282\u70B9\u6570\u91CF",
+    placeHolder: "\u4F8B\u5982\uFF1A3",
+    validateInput: (v) => !v || /^\d+$/.test(v) ? void 0 : "\u8BF7\u8F93\u5165\u6570\u5B57"
+  });
+  const nodeCount = nodeCountInput ? parseInt(nodeCountInput, 10) : 3;
+  const nodes = [];
+  for (let i = 1; i <= nodeCount; i++) {
+    const nodeName = await vscode23.window.showInputBox({
+      prompt: `\u8282\u70B9 ${i} \u540D\u79F0`,
+      placeHolder: `\u4F8B\u5982\uFF1A\u8282\u70B9${i} \u6216 \u4E8B\u4EF6${i}`,
+      validateInput: (v) => v && v.trim() ? void 0 : "\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A"
+    });
+    if (!nodeName)
+      return;
+    const time = await vscode23.window.showInputBox({
+      prompt: `\u8282\u70B9 ${i} \u6545\u4E8B\u65F6\u95F4`,
+      placeHolder: "\u4F8B\u5982\uFF1A\u6C38\u5B81\u4E09\u5E74\u4E09\u6708\u521D\u4E03\u591C"
+    });
+    const event = await vscode23.window.showInputBox({
+      prompt: `\u8282\u70B9 ${i} \u4E8B\u4EF6`,
+      placeHolder: "\u4F8B\u5982\uFF1A\u6797\u6F88\u53D1\u73B0\u65CF\u5FBD"
+    });
+    const characters = await vscode23.window.showInputBox({
+      prompt: `\u8282\u70B9 ${i} \u4EBA\u7269\uFF08\u9009\u586B\uFF09`,
+      placeHolder: "\u4F8B\u5982\uFF1A\u6797\u6F88,\u82CF\u665A"
+    });
+    const location = await vscode23.window.showInputBox({
+      prompt: `\u8282\u70B9 ${i} \u5730\u70B9\uFF08\u9009\u586B\uFF09`,
+      placeHolder: "\u4F8B\u5982\uFF1A\u85CF\u4E66\u9601"
+    });
+    nodes.push({ name: nodeName, time: time || "", event: event || "", characters: characters || "", location: location || "" });
+  }
+  const id = await ensureUniqueId4(fs15, pinyinFromChinese(name));
+  const meta = {
+    \u7F16\u53F7: id,
+    \u540D\u79F0: name.trim(),
+    \u521B\u5EFA\u65F6\u95F4: nowISO(),
+    \u66F4\u65B0\u65F6\u95F4: nowISO()
+  };
+  const mermaidLines = ["```mermaid", "graph LR"];
+  const detailLines = [];
+  for (let i = 0; i < nodes.length; i++) {
+    const n = nodes[i];
+    const nodeId = `N${i + 1}`;
+    const label = `${n.name}${n.time ? `\\n${n.time}` : ""}`;
+    mermaidLines.push(`  ${nodeId}["${label}"]`);
+    if (i > 0) {
+      const prevId = `N${i}`;
+      mermaidLines.push(`  ${prevId} --> ${nodeId}`);
+    }
+    detailLines.push(`### ${n.name}`);
+    detailLines.push("");
+    detailLines.push(`- \u6545\u4E8B\u65F6\u95F4\uFF1A${n.time || "\u2014"}`);
+    detailLines.push(`- \u4E8B\u4EF6\uFF1A${n.event || "\u2014"}`);
+    detailLines.push(`- \u4EBA\u7269\uFF1A${n.characters || "\u2014"}`);
+    detailLines.push(`- \u5730\u70B9\uFF1A${n.location || "\u2014"}`);
+    detailLines.push("");
+  }
+  mermaidLines.push("```");
+  const body = [
+    `# ${name.trim()}`,
+    "",
+    "## \u65F6\u95F4\u7EBF\u56FE",
+    "",
+    ...mermaidLines,
+    "",
+    "## \u8282\u70B9\u8BE6\u60C5",
+    "",
+    ...detailLines
+  ].join("\n");
+  const content = FM2.stringify(meta, body);
+  const dir = PROJECT_DIRS.TIMELINE;
+  try {
+    await fs15.createDir(dir);
+    await fs15.writeFile(`${dir}/${id}.md`, content);
+    container.eventBus.publish("timeline.changed", {});
+    vscode23.window.showInformationMessage(`\u5DF2\u521B\u5EFA\u65F6\u95F4\u7EBF\uFF1A${name}\uFF08${id}\uFF09`);
+  } catch (e) {
+    vscode23.window.showErrorMessage(`\u521B\u5EFA\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function openTimelineFile(container, arg) {
+  if (!container.has("fileSystem")) {
+    vscode23.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  const fs15 = container.get("fileSystem");
+  const id = resolveId2(arg);
+  if (id) {
+    try {
+      const abs = fs15.resolvePath(`${PROJECT_DIRS.TIMELINE}/${id}.md`);
+      await vscode23.commands.executeCommand("vscode.open", vscode23.Uri.file(abs));
+    } catch (e) {
+      vscode23.window.showErrorMessage(`\u6253\u5F00\u5931\u8D25\uFF1A${e.message}`);
+    }
+    return;
+  }
+  try {
+    await fs15.createDir(PROJECT_DIRS.TIMELINE);
+    const abs = fs15.resolvePath(PROJECT_DIRS.TIMELINE);
+    await vscode23.commands.executeCommand("revealFileInOS", vscode23.Uri.file(abs));
+  } catch (e) {
+    vscode23.window.showErrorMessage(`\u6253\u5F00\u76EE\u5F55\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function ensureUniqueId4(fs15, base) {
+  let id = base || "timeline";
+  let seq = 1;
+  while (await fs15.exists(`${PROJECT_DIRS.TIMELINE}/${id}.md`)) {
+    id = `${base}-${seq}`;
+    seq++;
+  }
+  return id;
+}
+function resolveId2(arg) {
+  if (typeof arg === "string")
+    return arg;
+  if (arg && typeof arg === "object") {
+    const obj = arg;
+    if (obj.id)
+      return obj.id;
+    if (obj.item?.id)
+      return obj.item.id;
+  }
+  return void 0;
+}
+async function regenerateAggregatedTimeline(container) {
+  if (!container.has("fileSystem")) {
+    vscode23.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  const service2 = new TimelineService(container);
+  try {
+    const rel = await service2.writeAggregatedTimeline();
+    container.eventBus.publish("timeline.changed", {});
+    vscode23.window.showInformationMessage(`\u5DF2\u91CD\u65B0\u6C47\u603B\u6545\u4E8B\u65F6\u95F4\u7EBF\uFF1A${rel}`);
+  } catch (e) {
+    vscode23.window.showErrorMessage(`\u6C47\u603B\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+var vscode23, FM2;
+var init_timelineCommands = __esm({
+  "src/presentation/commands/timelineCommands.ts"() {
+    "use strict";
+    vscode23 = __toESM(require("vscode"));
+    init_frontMatterParser();
+    init_timelineService();
+    init_constants();
+    init_utils();
+    FM2 = new FrontMatterParser();
   }
 });
 
 // src/presentation/commands/aiCommands.ts
 async function generateTask(container) {
   if (!container.has("fileSystem")) {
-    vscode18.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    vscode24.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
     return;
   }
   const aiTask = container.get("aiTask");
-  const indexManager = container.get("indexManager");
-  const fs10 = container.get("fileSystem");
+  const fs15 = container.get("fileSystem");
   const chapterId = await resolveCurrentChapter(container);
   if (!chapterId) {
-    vscode18.window.showWarningMessage("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A\u7AE0\u8282\u6B63\u6587\u6216\u4ECE\u5217\u8868\u4E2D\u9009\u62E9\u7AE0\u8282");
+    vscode24.window.showWarningMessage("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A\u7AE0\u8282\u6B63\u6587\u6216\u4ECE\u5217\u8868\u4E2D\u9009\u62E9\u7AE0\u8282");
     return;
   }
   const template = await selectTemplate(container);
   if (!template) {
     return;
   }
-  const permPicked = await vscode18.window.showQuickPick(PERMISSION_ITEMS, {
+  const permPicked = await vscode24.window.showQuickPick(PERMISSION_ITEMS, {
     placeHolder: "\u9009\u62E9 AI \u4EFB\u52A1\u6743\u9650\u7EA7\u522B"
   });
   const permission = permPicked?.mode;
@@ -21791,9 +25635,9 @@ async function generateTask(container) {
       trigger: "manual" /* Manual */
     });
     const taskDir = `${PROJECT_DIRS.NOVEL_AI_TASKS}/${taskId}`;
-    const absDir = fs10.resolvePath(taskDir);
-    const instructionPath = fs10.resolvePath(`${taskDir}/instruction.md`);
-    const action = await vscode18.window.showInformationMessage(
+    const absDir = fs15.resolvePath(taskDir);
+    const instructionPath = fs15.resolvePath(`${taskDir}/instruction.md`);
+    const action = await vscode24.window.showInformationMessage(
       `AI \u5BA1\u7A3F\u4EFB\u52A1\u5DF2\u751F\u6210\uFF1A${taskId}`,
       { detail: `\u4EFB\u52A1\u8DEF\u5F84\uFF1A${absDir}
 
@@ -21802,22 +25646,22 @@ async function generateTask(container) {
       "\u6253\u5F00\u6307\u4EE4\u6587\u4EF6"
     );
     if (action === "\u590D\u5236\u8DEF\u5F84\u7ED9 Kilo Code") {
-      await vscode18.env.clipboard.writeText(absDir);
-      vscode18.window.showInformationMessage(
+      await vscode24.env.clipboard.writeText(absDir);
+      vscode24.window.showInformationMessage(
         `\u5DF2\u590D\u5236\u8DEF\u5F84\u5230\u526A\u8D34\u677F\u3002
 \u8BF7\u5728 Kilo Code \u4E2D\u8F93\u5165\uFF1A
 \u8BF7\u9605\u8BFB ${absDir}/ \u4E0B\u7684\u4EFB\u52A1\u6587\u4EF6\u5E76\u6267\u884C\u5BA1\u7A3F`,
         "\u6211\u5DF2\u77E5\u6653"
       );
     } else if (action === "\u6253\u5F00\u6307\u4EE4\u6587\u4EF6") {
-      await vscode18.commands.executeCommand("vscode.open", vscode18.Uri.file(instructionPath));
+      await vscode24.commands.executeCommand("vscode.open", vscode24.Uri.file(instructionPath));
     }
   } catch (e) {
-    vscode18.window.showErrorMessage(`\u751F\u6210\u4EFB\u52A1\u5931\u8D25\uFF1A${e.message}`);
+    vscode24.window.showErrorMessage(`\u751F\u6210\u4EFB\u52A1\u5931\u8D25\uFF1A${e.message}`);
   }
 }
 async function resolveCurrentChapter(container) {
-  const editor = vscode18.window.activeTextEditor;
+  const editor = vscode24.window.activeTextEditor;
   if (editor) {
     const id = extractChapterId(editor.document.uri.fsPath);
     if (id) {
@@ -21839,7 +25683,7 @@ async function resolveCurrentChapter(container) {
     description: c.status,
     chapterId: c.id
   }));
-  const picked = await vscode18.window.showQuickPick(items, {
+  const picked = await vscode24.window.showQuickPick(items, {
     placeHolder: "\u9009\u62E9\u7AE0\u8282"
   });
   return picked?.chapterId;
@@ -21848,58 +25692,58 @@ async function selectTemplate(container) {
   const engine = new TemplateEngine(container);
   const templates = engine.listTemplates();
   if (templates.length === 0) {
-    vscode18.window.showWarningMessage("\u672A\u627E\u5230\u4EFB\u52A1\u6A21\u677F");
+    vscode24.window.showWarningMessage("\u672A\u627E\u5230\u4EFB\u52A1\u6A21\u677F");
     return void 0;
   }
-  const picked = await vscode18.window.showQuickPick(templates, {
+  const picked = await vscode24.window.showQuickPick(templates, {
     placeHolder: "\u9009\u62E9\u4EFB\u52A1\u6A21\u677F"
   });
   return picked;
 }
 async function installSkills(container) {
   const extRoot = container.context.extensionPath;
-  const skillsSrc = path7.join(extRoot, "resources", "skills");
-  if (!fs9.existsSync(skillsSrc)) {
-    vscode18.window.showErrorMessage("\u6280\u80FD\u6587\u4EF6\u76EE\u5F55\u4E0D\u5B58\u5728");
+  const skillsSrc = path15.join(extRoot, "resources", "skills");
+  if (!fs14.existsSync(skillsSrc)) {
+    vscode24.window.showErrorMessage("\u6280\u80FD\u6587\u4EF6\u76EE\u5F55\u4E0D\u5B58\u5728");
     return;
   }
-  const skillFiles = fs9.readdirSync(skillsSrc).filter((f) => f.endsWith(".md"));
+  const skillFiles = fs14.readdirSync(skillsSrc).filter((f) => f.endsWith(".md"));
   if (skillFiles.length === 0) {
-    vscode18.window.showWarningMessage("\u672A\u627E\u5230\u6280\u80FD\u6587\u4EF6");
+    vscode24.window.showWarningMessage("\u672A\u627E\u5230\u6280\u80FD\u6587\u4EF6");
     return;
   }
-  const targetDir = await vscode18.window.showInputBox({
+  const targetDir = await vscode24.window.showInputBox({
     prompt: "\u8BF7\u8F93\u5165 Kilo Code \u7684 skills \u76EE\u5F55\u8DEF\u5F84\uFF08\u4F8B\u5982 ~/.kilo/skills\uFF09",
     placeHolder: "~/.kilo/skills",
     value: "~/.kilo/skills"
   });
   if (!targetDir)
     return;
-  const resolvedDir = targetDir.replace(/^~/, require("os").homedir());
+  const resolvedDir = targetDir.replace(/^~/, os2.homedir());
   try {
-    fs9.mkdirSync(resolvedDir, { recursive: true });
+    fs14.mkdirSync(resolvedDir, { recursive: true });
     let count = 0;
     for (const file of skillFiles) {
-      const src = path7.join(skillsSrc, file);
-      const dest = path7.join(resolvedDir, file);
-      fs9.copyFileSync(src, dest);
+      const src = path15.join(skillsSrc, file);
+      const dest = path15.join(resolvedDir, file);
+      fs14.copyFileSync(src, dest);
       count++;
     }
-    vscode18.window.showInformationMessage(
+    vscode24.window.showInformationMessage(
       `\u5DF2\u590D\u5236 ${count} \u4E2A\u6280\u80FD\u6587\u4EF6\u5230 ${resolvedDir}
 \u8BF7\u91CD\u542F Kilo Code \u4F7F\u6280\u80FD\u751F\u6548\u3002`
     );
   } catch (e) {
-    vscode18.window.showErrorMessage(`\u5B89\u88C5\u5931\u8D25\uFF1A${e.message}`);
+    vscode24.window.showErrorMessage(`\u5B89\u88C5\u5931\u8D25\uFF1A${e.message}`);
   }
 }
 async function copyTaskPath(container, taskId) {
   if (!container.has("fileSystem")) {
-    vscode18.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    vscode24.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
     return;
   }
-  const fs10 = container.get("fileSystem");
-  const tid = taskId ?? await vscode18.window.showInputBox({
+  const fs15 = container.get("fileSystem");
+  const tid = taskId ?? await vscode24.window.showInputBox({
     prompt: "\u8BF7\u8F93\u5165\u4EFB\u52A1 ID",
     placeHolder: "task-YYYYMMDD-NNN"
   });
@@ -21907,20 +25751,20 @@ async function copyTaskPath(container, taskId) {
     return;
   }
   try {
-    const abs = fs10.resolvePath(`${PROJECT_DIRS.NOVEL_AI_TASKS}/${tid}`);
-    await vscode18.env.clipboard.writeText(abs);
-    vscode18.window.showInformationMessage("\u5DF2\u590D\u5236\u4EFB\u52A1\u8DEF\u5F84\u5230\u526A\u8D34\u677F");
+    const abs = fs15.resolvePath(`${PROJECT_DIRS.NOVEL_AI_TASKS}/${tid}`);
+    await vscode24.env.clipboard.writeText(abs);
+    vscode24.window.showInformationMessage("\u5DF2\u590D\u5236\u4EFB\u52A1\u8DEF\u5F84\u5230\u526A\u8D34\u677F");
   } catch (e) {
-    vscode18.window.showErrorMessage(`\u590D\u5236\u5931\u8D25\uFF1A${e.message}`);
+    vscode24.window.showErrorMessage(`\u590D\u5236\u5931\u8D25\uFF1A${e.message}`);
   }
 }
 async function openTask(container, taskId) {
   if (!container.has("fileSystem")) {
-    vscode18.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    vscode24.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
     return;
   }
-  const fs10 = container.get("fileSystem");
-  const tid = taskId ?? await vscode18.window.showInputBox({
+  const fs15 = container.get("fileSystem");
+  const tid = taskId ?? await vscode24.window.showInputBox({
     prompt: "\u8BF7\u8F93\u5165\u4EFB\u52A1 ID",
     placeHolder: "task-YYYYMMDD-NNN"
   });
@@ -21928,19 +25772,19 @@ async function openTask(container, taskId) {
     return;
   }
   try {
-    const abs = fs10.resolvePath(`${PROJECT_DIRS.NOVEL_AI_TASKS}/${tid}/instruction.md`);
-    await vscode18.commands.executeCommand("vscode.open", vscode18.Uri.file(abs));
+    const abs = fs15.resolvePath(`${PROJECT_DIRS.NOVEL_AI_TASKS}/${tid}/instruction.md`);
+    await vscode24.commands.executeCommand("vscode.open", vscode24.Uri.file(abs));
   } catch (e) {
-    vscode18.window.showErrorMessage(`\u6253\u5F00\u4EFB\u52A1\u5931\u8D25\uFF1A${e.message}`);
+    vscode24.window.showErrorMessage(`\u6253\u5F00\u4EFB\u52A1\u5931\u8D25\uFF1A${e.message}`);
   }
 }
 async function importResult(container) {
   if (!container.has("fileSystem")) {
-    vscode18.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    vscode24.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
     return;
   }
   const aiTask = container.get("aiTask");
-  const uris = await vscode18.window.showOpenDialog({
+  const uris = await vscode24.window.showOpenDialog({
     canSelectMany: false,
     filters: { "Suggestions JSON": ["json"] },
     title: "\u9009\u62E9\u8981\u5BFC\u5165\u7684 suggestions.json"
@@ -21951,19 +25795,20 @@ async function importResult(container) {
   try {
     const result = await aiTask.importResult(uris[0]);
     if (result.validCount > 0) {
-      await vscode18.commands.executeCommand("novelCompanion.review.openPanel", result.taskId);
+      await vscode24.commands.executeCommand("novelCompanion.review.openPanel", result.taskId);
     }
   } catch (e) {
-    vscode18.window.showErrorMessage(`\u5BFC\u5165\u5931\u8D25\uFF1A${e.message}`);
+    vscode24.window.showErrorMessage(`\u5BFC\u5165\u5931\u8D25\uFF1A${e.message}`);
   }
 }
-var vscode18, fs9, path7, PERMISSION_ITEMS;
+var vscode24, fs14, path15, os2, PERMISSION_ITEMS;
 var init_aiCommands = __esm({
   "src/presentation/commands/aiCommands.ts"() {
     "use strict";
-    vscode18 = __toESM(require("vscode"));
-    fs9 = __toESM(require("fs"));
-    path7 = __toESM(require("path"));
+    vscode24 = __toESM(require("vscode"));
+    fs14 = __toESM(require("fs"));
+    path15 = __toESM(require("path"));
+    os2 = __toESM(require("os"));
     init_business();
     init_types();
     init_constants();
@@ -21990,7 +25835,7 @@ async function accept(container, taskId, suggestionId) {
   const merger = container.get("merger");
   const res = await merger.accept(taskId, suggestionId);
   if (!res.success) {
-    vscode19.window.showWarningMessage(`\u63A5\u53D7\u5931\u8D25\uFF1A${res.reason ?? "\u672A\u77E5\u539F\u56E0"}`);
+    vscode25.window.showWarningMessage(`\u63A5\u53D7\u5931\u8D25\uFF1A${res.reason ?? "\u672A\u77E5\u539F\u56E0"}`);
   }
 }
 async function reject(container, taskId, suggestionId) {
@@ -22016,7 +25861,7 @@ async function acceptAll(container, taskId) {
   }
   const merger = container.get("merger");
   const res = await merger.acceptAll(taskId);
-  vscode19.window.showInformationMessage(
+  vscode25.window.showInformationMessage(
     `\u6279\u91CF\u63A5\u53D7\u5B8C\u6210\uFF1A\u6210\u529F ${res.accepted} \u6761\uFF0C\u5931\u8D25 ${res.failed} \u6761`
   );
 }
@@ -22028,18 +25873,18 @@ async function rejectAll(container, taskId) {
   const merger = container.get("merger");
   await merger.rejectAll(taskId);
 }
-var vscode19;
+var vscode25;
 var init_reviewCommands = __esm({
   "src/presentation/commands/reviewCommands.ts"() {
     "use strict";
-    vscode19 = __toESM(require("vscode"));
+    vscode25 = __toESM(require("vscode"));
   }
 });
 
 // src/presentation/commands/statsCommands.ts
 async function refresh(container) {
   if (!container.has("stats") || !container.has("indexManager")) {
-    vscode20.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    vscode26.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
     return;
   }
   const stats = container.get("stats");
@@ -22060,13 +25905,3190 @@ async function refresh(container) {
     const tree = container.get("chapterTree");
     tree.refresh();
   }
-  vscode20.window.showInformationMessage("\u7EDF\u8BA1\u5DF2\u5237\u65B0");
+  vscode26.window.showInformationMessage("\u7EDF\u8BA1\u5DF2\u5237\u65B0");
 }
-var vscode20;
+var vscode26;
 var init_statsCommands = __esm({
   "src/presentation/commands/statsCommands.ts"() {
     "use strict";
-    vscode20 = __toESM(require("vscode"));
+    vscode26 = __toESM(require("vscode"));
+  }
+});
+
+// src/presentation/commands/bookshelfCommands.ts
+async function openBook(container, arg) {
+  const root = resolveRoot(arg);
+  if (!root) {
+    vscode27.window.showWarningMessage("\u8BF7\u4ECE\u4F5C\u54C1\u67B6\u4E2D\u9009\u62E9\u4E00\u4E2A\u4E66\u7C4D");
+    return;
+  }
+  const detector = container.get("projectDetector");
+  try {
+    await detector.openProject(root);
+    vscode27.window.showInformationMessage(`\u5DF2\u5207\u6362\u4E66\u7C4D\uFF1A${root}`);
+  } catch (e) {
+    vscode27.window.showErrorMessage(`\u5207\u6362\u4E66\u7C4D\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function refreshBookshelf(container) {
+  const detector = container.get("projectDetector");
+  await detector.detect();
+}
+function resolveRoot(arg) {
+  if (typeof arg === "string" && arg.length > 0)
+    return arg;
+  if (arg && typeof arg === "object") {
+    const obj = arg;
+    if (typeof obj.root === "string")
+      return obj.root;
+    if (obj.info && typeof obj.info.root === "string")
+      return obj.info.root;
+    if (typeof obj.path === "string")
+      return obj.path;
+  }
+  return void 0;
+}
+var vscode27;
+var init_bookshelfCommands = __esm({
+  "src/presentation/commands/bookshelfCommands.ts"() {
+    "use strict";
+    vscode27 = __toESM(require("vscode"));
+  }
+});
+
+// src/presentation/commands/exportCommands.ts
+async function exportNovel(container) {
+  if (!container.has("fileSystem")) {
+    vscode28.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  const engine = new ExportEngine(container);
+  let preview;
+  try {
+    preview = await engine.preview();
+  } catch (e) {
+    vscode28.window.showErrorMessage(`\u5BFC\u51FA\u9884\u89C8\u5931\u8D25\uFF1A${e.message}`);
+    return;
+  }
+  if (preview.chapterCount === 0) {
+    vscode28.window.showWarningMessage("\u5F53\u524D\u6CA1\u6709\u53EF\u5BFC\u51FA\u7684\u7AE0\u8282");
+    return;
+  }
+  const format = await vscode28.window.showQuickPick(FORMAT_ITEMS, { placeHolder: "\u5BFC\u51FA\u683C\u5F0F" });
+  if (!format)
+    return;
+  const status = await vscode28.window.showQuickPick(STATUS_ITEMS, {
+    placeHolder: `\u7AE0\u8282\u8303\u56F4\uFF08\u5171 ${preview.chapterCount} \u7AE0 / ${preview.volumeCount} \u5377\uFF09`
+  });
+  if (!status)
+    return;
+  const heading = await vscode28.window.showQuickPick(HEADING_ITEMS, { placeHolder: "\u7AE0\u8282\u6807\u9898\u683C\u5F0F" });
+  if (!heading)
+    return;
+  const includeOutline = await vscode28.window.showQuickPick(
+    [
+      { label: "\u5426\uFF08\u4EC5\u6B63\u6587\uFF09", value: false },
+      { label: "\u662F\uFF08\u542B\u7AE0\u8282\u5927\u7EB2\uFF09", value: true }
+    ],
+    { placeHolder: "\u662F\u5426\u5305\u542B\u7AE0\u8282\u5927\u7EB2" }
+  );
+  const options2 = {
+    format: format.value,
+    statusFilter: status.value,
+    chapterTitleTemplate: heading.value,
+    includeOutline: includeOutline?.value ?? false
+  };
+  try {
+    const result = await engine.export(options2);
+    const abs = await engine.resolveExportPath(result.path);
+    const open = await vscode28.window.showInformationMessage(
+      `\u5DF2\u5BFC\u51FA ${result.chapterCount} \u7AE0\uFF08\u7EA6 ${result.wordCount} \u5B57\uFF09\u5230 ${result.path}`,
+      "\u6253\u5F00\u6587\u4EF6",
+      "\u6253\u5F00\u6240\u5728\u76EE\u5F55"
+    );
+    if (open === "\u6253\u5F00\u6587\u4EF6") {
+      if (format.value === "epub" || format.value === "docx") {
+        await vscode28.env.openExternal(vscode28.Uri.file(abs));
+      } else {
+        await vscode28.commands.executeCommand("vscode.open", vscode28.Uri.file(abs));
+      }
+    } else if (open === "\u6253\u5F00\u6240\u5728\u76EE\u5F55") {
+      await vscode28.commands.executeCommand("revealFileInOS", vscode28.Uri.file(abs));
+    }
+  } catch (e) {
+    vscode28.window.showErrorMessage(`\u5BFC\u51FA\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+var vscode28, FORMAT_ITEMS, STATUS_ITEMS, HEADING_ITEMS;
+var init_exportCommands = __esm({
+  "src/presentation/commands/exportCommands.ts"() {
+    "use strict";
+    vscode28 = __toESM(require("vscode"));
+    init_exportEngine();
+    FORMAT_ITEMS = [
+      { label: "Markdown\uFF08.md\uFF0C\u4FDD\u7559\u6807\u9898\u5C42\u7EA7\uFF09", value: "markdown" },
+      { label: "\u7EAF\u6587\u672C\uFF08.txt\uFF0C\u53BB Markdown \u7B26\u53F7\uFF09", value: "txt" },
+      { label: "EPUB\uFF08.epub\uFF0C\u7535\u5B50\u4E66\u6392\u7248\uFF09", value: "epub" },
+      { label: "Word\uFF08.docx\uFF0C\u53EF\u7F16\u8F91\u6587\u6863\uFF09", value: "docx" }
+    ];
+    STATUS_ITEMS = [
+      { label: "\u5168\u90E8\u7AE0\u8282", value: "all" },
+      { label: "\u4EC5\u5DF2\u5F52\u6863\u7AE0\u8282", value: "archived" },
+      { label: "\u6392\u9664\u89C4\u5212\u4E2D", value: "nonPlanning" }
+    ];
+    HEADING_ITEMS = [
+      { label: "\u7B2C N \u7AE0 \u6807\u9898", value: "volumeNumber" },
+      { label: "\u7B2C N \u7AE0", value: "number" },
+      { label: "\u4EC5\u6807\u9898", value: "titleOnly" }
+    ];
+  }
+});
+
+// src/presentation/webview/searchPanelProvider.ts
+var vscode29, SearchPanelProvider;
+var init_searchPanelProvider = __esm({
+  "src/presentation/webview/searchPanelProvider.ts"() {
+    "use strict";
+    vscode29 = __toESM(require("vscode"));
+    init_business();
+    SearchPanelProvider = class {
+      constructor(container) {
+        this.container = container;
+      }
+      panel;
+      state = {};
+      async open() {
+        if (!this.container.has("fileSystem")) {
+          vscode29.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+          return;
+        }
+        if (!this.panel) {
+          this.panel = vscode29.window.createWebviewPanel(
+            "novelCompanion.searchPanel",
+            "\u5168\u4E66\u67E5\u627E\u66FF\u6362",
+            vscode29.ViewColumn.Active,
+            {
+              enableScripts: true,
+              retainContextWhenHidden: true,
+              localResourceRoots: []
+            }
+          );
+          this.panel.iconPath = new vscode29.ThemeIcon("replace-all");
+          this.panel.webview.html = this.getHtml();
+          this.panel.webview.onDidReceiveMessage(
+            (msg) => {
+              this.handleMessage(msg).catch((e) => {
+                vscode29.window.showErrorMessage(`\u67E5\u627E\u66FF\u6362\u5931\u8D25\uFF1A${e.message}`);
+              });
+            },
+            void 0,
+            this.container.context.subscriptions
+          );
+          this.panel.onDidDispose(
+            () => {
+              this.panel = void 0;
+              this.state = {};
+            },
+            void 0,
+            this.container.context.subscriptions
+          );
+        } else {
+          this.panel.reveal(vscode29.ViewColumn.Active, true);
+        }
+      }
+      async handleMessage(msg) {
+        switch (msg.type) {
+          case "search":
+            await this.doSearch(msg);
+            break;
+          case "previewReplace":
+            await this.doPreviewReplace(msg);
+            break;
+          case "applyReplace":
+            await this.doApplyReplace(msg);
+            break;
+          case "rollback":
+            await this.doRollback();
+            break;
+          case "openFile":
+            if (typeof msg.file === "string") {
+              await this.openFile(msg.file, typeof msg.line === "number" ? msg.line : 1);
+            }
+            break;
+        }
+      }
+      parseScope(msg) {
+        const b = (k) => !!msg[k];
+        return {
+          drafts: b("drafts"),
+          outlines: b("outlines"),
+          characters: b("characters"),
+          settings: b("settings"),
+          bible: b("bible")
+        };
+      }
+      async doSearch(msg) {
+        const engine = new SearchEngine(this.container);
+        const query = String(msg.query ?? "");
+        if (!query) {
+          this.post({ type: "error", message: "\u8BF7\u8F93\u5165\u67E5\u627E\u5185\u5BB9" });
+          return;
+        }
+        if (!this.hasScope(msg)) {
+          this.post({ type: "error", message: "\u8BF7\u81F3\u5C11\u9009\u62E9\u4E00\u4E2A\u67E5\u627E\u8303\u56F4" });
+          return;
+        }
+        const result = await engine.search(query, this.parseScope(msg), {
+          isRegex: !!msg.isRegex,
+          caseSensitive: !!msg.caseSensitive,
+          wholeWord: !!msg.wholeWord
+        });
+        this.post({ type: "searchResult", result });
+      }
+      async doPreviewReplace(msg) {
+        const engine = new SearchEngine(this.container);
+        const query = String(msg.query ?? "");
+        const replacement = String(msg.replacement ?? "");
+        if (!query) {
+          this.post({ type: "error", message: "\u8BF7\u8F93\u5165\u67E5\u627E\u5185\u5BB9" });
+          return;
+        }
+        if (!this.hasScope(msg)) {
+          this.post({ type: "error", message: "\u8BF7\u81F3\u5C11\u9009\u62E9\u4E00\u4E2A\u67E5\u627E\u8303\u56F4" });
+          return;
+        }
+        const plans = await engine.planReplace(query, replacement, this.parseScope(msg), {
+          isRegex: !!msg.isRegex,
+          caseSensitive: !!msg.caseSensitive,
+          wholeWord: !!msg.wholeWord
+        });
+        this.post({ type: "replacePreview", plans, replacement });
+      }
+      async doApplyReplace(msg) {
+        const engine = new SearchEngine(this.container);
+        const query = String(msg.query ?? "");
+        const replacement = String(msg.replacement ?? "");
+        if (!this.hasScope(msg)) {
+          this.post({ type: "error", message: "\u8BF7\u81F3\u5C11\u9009\u62E9\u4E00\u4E2A\u67E5\u627E\u8303\u56F4" });
+          return;
+        }
+        const plans = msg.plans ?? await engine.planReplace(query, replacement, this.parseScope(msg), {
+          isRegex: !!msg.isRegex,
+          caseSensitive: !!msg.caseSensitive,
+          wholeWord: !!msg.wholeWord
+        });
+        if (!plans.length) {
+          this.post({ type: "error", message: "\u6CA1\u6709\u9700\u8981\u66FF\u6362\u7684\u547D\u4E2D" });
+          return;
+        }
+        const result = await engine.applyReplace(plans);
+        this.state.lastResult = result;
+        this.container.eventBus.publish("chapter.renamed", { chapterId: "", newTitle: "" });
+        this.post({ type: "applied", result });
+        vscode29.window.showInformationMessage(`\u5DF2\u66FF\u6362 ${result.applied} \u5904\uFF08${result.files} \u4E2A\u6587\u4EF6\uFF09\u3002\u53EF\u70B9\u51FB"\u64A4\u9500"\u56DE\u6EDA\u3002`);
+      }
+      async doRollback() {
+        if (!this.state.lastResult) {
+          this.post({ type: "error", message: "\u6CA1\u6709\u53EF\u64A4\u9500\u7684\u66FF\u6362" });
+          return;
+        }
+        const engine = new SearchEngine(this.container);
+        const restored = await engine.rollback(this.state.lastResult);
+        this.state.lastResult = void 0;
+        this.post({ type: "rolledBack", restored });
+        vscode29.window.showInformationMessage(`\u5DF2\u56DE\u6EDA ${restored} \u4E2A\u6587\u4EF6`);
+      }
+      hasScope(msg) {
+        return ["drafts", "outlines", "characters", "settings", "bible"].some((k) => msg[k]);
+      }
+      async openFile(file, line) {
+        const fs15 = this.container.get("fileSystem");
+        try {
+          const abs = fs15.resolvePath(file);
+          const doc = await vscode29.workspace.openTextDocument(vscode29.Uri.file(abs));
+          const editor = await vscode29.window.showTextDocument(doc, vscode29.ViewColumn.One, true);
+          const pos = doc.lineAt(Math.max(0, line - 1)).range;
+          editor.revealRange(pos, vscode29.TextEditorRevealType.InCenter);
+          editor.selection = new vscode29.Selection(pos.start, pos.end);
+        } catch (e) {
+          vscode29.window.showErrorMessage(`\u6253\u5F00\u5931\u8D25\uFF1A${e.message}`);
+        }
+      }
+      post(msg) {
+        this.panel?.webview.postMessage(msg);
+      }
+      getHtml() {
+        return (
+          /* html */
+          `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';" />
+<title>\u5168\u4E66\u67E5\u627E\u66FF\u6362</title>
+<style>
+  body{font-family:var(--vscode-font-family);color:var(--vscode-foreground);padding:12px;margin:0}
+  .row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+  input[type=text]{flex:1;min-width:160px;padding:4px 6px;background:var(--vscode-input-background);color:var(--vscode-input-foreground);border:1px solid var(--vscode-input-border)}
+  button{padding:4px 12px;background:var(--vscode-button-background);color:var(--vscode-button-foreground);border:none;cursor:pointer}
+  button.secondary{background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground)}
+  button:disabled{opacity:.5;cursor:default}
+  .opts{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:8px}
+  .opts label{display:flex;align-items:center;gap:4px}
+  .summary{margin:8px 0;padding:6px 10px;background:var(--vscode-list-hoverBackground);border-radius:3px}
+  .file-group{margin:6px 0}
+  .file-name{font-weight:bold;cursor:pointer;color:var(--vscode-textLink)}
+  .match{font-family:var(--vscode-editor-font-family);font-size:12px;padding:2px 6px;margin:2px 0;border-left:2px solid var(--vscode-input-border)}
+  .match .num{color:var(--vscode-descriptionForeground);margin-right:6px}
+  .warn{color:var(--vscode-editorWarning-foreground)}
+  .ok{color:var(--vscode-terminal-ansiGreen)}
+  .hint{color:var(--vscode-descriptionForeground);font-size:12px}
+</style>
+</head>
+<body>
+<h3>\u5168\u4E66\u67E5\u627E\u66FF\u6362</h3>
+<div class="row">
+  <input id="query" type="text" placeholder="\u67E5\u627E\u5185\u5BB9\uFF08\u4EBA\u7269\u540D/\u8BBE\u5B9A\u540D/\u4EFB\u610F\u8BCD\uFF09" />
+  <input id="replacement" type="text" placeholder="\u66FF\u6362\u4E3A" />
+</div>
+<div class="opts">
+  <label><input type="checkbox" id="drafts" checked />\u6B63\u6587</label>
+  <label><input type="checkbox" id="outlines" />\u5927\u7EB2</label>
+  <label><input type="checkbox" id="characters" />\u4EBA\u7269\u5361</label>
+  <label><input type="checkbox" id="settings" />\u8BBE\u5B9A\u5361</label>
+  <label><input type="checkbox" id="bible" />\u5723\u7ECF</label>
+</div>
+<div class="opts">
+  <label><input type="checkbox" id="isRegex" />\u6B63\u5219</label>
+  <label><input type="checkbox" id="caseSensitive" />\u533A\u5206\u5927\u5C0F\u5199</label>
+  <label><input type="checkbox" id="wholeWord" />\u6574\u8BCD</label>
+</div>
+<div class="row">
+  <button id="btnSearch" class="secondary">\u67E5\u627E</button>
+  <button id="btnPreview">\u66FF\u6362\u9884\u89C8</button>
+  <button id="btnApply" disabled>\u6267\u884C\u66FF\u6362</button>
+  <button id="btnRollback" class="secondary" disabled>\u64A4\u9500</button>
+</div>
+<div id="summary"></div>
+<div id="results"></div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const collect = () => ({
+    type:'search', query:$('query').value, replacement:$('replacement').value,
+    drafts:$('drafts').checked, outlines:$('outlines').checked, characters:$('characters').checked,
+    settings:$('settings').checked, bible:$('bible').checked,
+    isRegex:$('isRegex').checked, caseSensitive:$('caseSensitive').checked, wholeWord:$('wholeWord').checked,
+  });
+  let pendingPlans = null;
+  $('btnSearch').onclick = () => post({ ...collect(), type:'search' });
+  $('btnPreview').onclick = () => post({ ...collect(), type:'previewReplace' });
+  $('btnApply').onclick = () => { if(pendingPlans) post({ type:'applyReplace', plans:pendingPlans, query:$('query').value, replacement:$('replacement').value }); };
+  $('btnRollback').onclick = () => post({ type:'rollback' });
+
+  function post(m){ const vscode = acquireVsCodeApi(); vscode.postMessage(m); }
+  window.addEventListener('message', (e) => {
+    const m = e.data;
+    if(m.type==='error'){ $('summary').innerHTML = '<div class="warn">'+esc(m.message)+'</div>'; return; }
+    if(m.type==='searchResult'){ renderSearch(m.result); }
+    if(m.type==='replacePreview'){ renderPreview(m.plans, m.replacement); }
+    if(m.type==='applied'){ $('btnApply').disabled=true; $('btnRollback').disabled=false; pendingPlans=null; $('summary').innerHTML = '<div class="ok">\u5DF2\u66FF\u6362 '+m.result.applied+' \u5904 / '+m.result.files+' \u4E2A\u6587\u4EF6\u3002\u5907\u4EFD\u76EE\u5F55\uFF1A'+esc(m.result.backupDir)+'</div>'; }
+    if(m.type==='rolledBack'){ $('btnRollback').disabled=true; $('summary').innerHTML = '<div class="ok">\u5DF2\u56DE\u6EDA '+m.restored+' \u4E2A\u6587\u4EF6</div>'; }
+  });
+  function renderSearch(r){
+    $('btnApply').disabled = true; pendingPlans = null;
+    let html = '<div class="summary">\u5171 '+r.totalMatches+' \u5904\u547D\u4E2D / '+r.files+' \u4E2A\u6587\u4EF6</div>';
+    for(const g of r.groups){
+      html += '<div class="file-group"><div class="file-name" data-file="'+esc(g.file)+'" data-line="1">'+esc(g.file)+' ('+g.matches.length+')</div>';
+      for(const mt of g.matches){
+        html += '<div class="match" data-file="'+esc(g.file)+'" data-line="'+mt.line+'"><span class="num">L'+mt.line+':'+mt.column+'</span>'+esc(mt.preview)+'</div>';
+      }
+      html += '</div>';
+    }
+    $('results').innerHTML = html;
+  }
+  function renderPreview(plans, replacement){
+    pendingPlans = plans;
+    let total = 0, files = plans.length;
+    for(const p of plans) total += p.matchCount;
+    $('btnApply').disabled = plans.length===0;
+    let html = '<div class="summary">\u5C06\u66FF\u6362 <b>'+total+'</b> \u5904 / '+files+' \u4E2A\u6587\u4EF6\uFF0C\u66FF\u6362\u4E3A\u300C'+esc(replacement)+'\u300D</div>';
+    for(const p of plans){
+      html += '<div class="file-group"><div class="file-name" data-file="'+esc(p.file)+'" data-line="1">'+esc(p.file)+' \u2192 '+p.matchCount+' \u5904</div></div>';
+    }
+    $('results').innerHTML = html;
+  }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  $('results').addEventListener('click', (e) => {
+    const t = e.target.closest('[data-file]');
+    if(t){ post({ type:'openFile', file:t.getAttribute('data-file'), line:parseInt(t.getAttribute('data-line')||'1',10) }); }
+  });
+</script>
+</body>
+</html>`
+        );
+      }
+    };
+  }
+});
+
+// src/presentation/commands/searchCommands.ts
+async function openSearchPanel(container) {
+  const provider = new SearchPanelProvider(container);
+  await provider.open();
+}
+var init_searchCommands = __esm({
+  "src/presentation/commands/searchCommands.ts"() {
+    "use strict";
+    init_searchPanelProvider();
+  }
+});
+
+// src/presentation/commands/snippetCommands.ts
+async function createSnippet(container) {
+  if (!container.has("fileSystem")) {
+    vscode30.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  const svc = new SnippetService(container);
+  const categories = await svc.listCategories();
+  const categoryPick = await vscode30.window.showQuickPick(
+    [...categories, "\uFF08\u65B0\u5EFA\u5206\u7C7B\u2026\uFF09"],
+    { placeHolder: "\u9009\u62E9\u5206\u7C7B\u6216\u65B0\u5EFA" }
+  );
+  if (categoryPick === void 0)
+    return;
+  let category;
+  if (categoryPick === "\uFF08\u65B0\u5EFA\u5206\u7C7B\u2026\uFF09") {
+    const c = await vscode30.window.showInputBox({ prompt: "\u5206\u7C7B\u540D" });
+    if (!c)
+      return;
+    category = c.trim();
+  } else {
+    category = categoryPick;
+  }
+  const title = await vscode30.window.showInputBox({
+    prompt: "\u7247\u6BB5\u6807\u9898",
+    validateInput: (v) => v && v.trim() ? void 0 : "\u6807\u9898\u4E0D\u80FD\u4E3A\u7A7A"
+  });
+  if (!title)
+    return;
+  const body = await vscode30.window.showInputBox({
+    prompt: "\u7247\u6BB5\u5185\u5BB9\uFF08\u7559\u7A7A\u7528\u6A21\u677F\uFF0C\u7A0D\u540E\u53EF\u5728\u6587\u4EF6\u4E2D\u7F16\u8F91\uFF09",
+    placeHolder: "\u5982\uFF1A\u4ED6\u731B\u5730\u6525\u7D27\u4E86\u62F3\u5934\uFF0C\u6307\u8282\u6CDB\u767D\u3002"
+  });
+  try {
+    const rel = await svc.create(category, title.trim(), body && body.trim() ? body : void 0);
+    vscode30.window.showInformationMessage(`\u5DF2\u521B\u5EFA\u7247\u6BB5\uFF1A${title}`, "\u6253\u5F00");
+    await svc.openSnippet(rel);
+  } catch (e) {
+    vscode30.window.showErrorMessage(`\u521B\u5EFA\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function openSnippet(container, arg) {
+  if (!container.has("fileSystem")) {
+    vscode30.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  const relPath = typeof arg === "string" ? arg : resolvePathFromNode(arg);
+  if (!relPath) {
+    vscode30.window.showWarningMessage("\u8BF7\u4ECE\u7247\u6BB5\u5217\u8868\u4E2D\u9009\u62E9");
+    return;
+  }
+  await new SnippetService(container).openSnippet(relPath);
+}
+async function insertSnippet(container, arg) {
+  if (!container.has("fileSystem")) {
+    vscode30.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  const relPath = typeof arg === "string" ? arg : resolvePathFromNode(arg);
+  if (!relPath) {
+    vscode30.window.showWarningMessage("\u8BF7\u4ECE\u7247\u6BB5\u5217\u8868\u4E2D\u9009\u62E9");
+    return;
+  }
+  const ok = await new SnippetService(container).insertAtCursor(relPath);
+  if (ok) {
+    vscode30.window.showInformationMessage("\u5DF2\u63D2\u5165\u5230\u5F53\u524D\u5149\u6807");
+  } else {
+    vscode30.window.showWarningMessage("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A\u6B63\u6587\u6587\u4EF6\u518D\u63D2\u5165");
+  }
+}
+async function deleteSnippet(container, arg) {
+  if (!container.has("fileSystem"))
+    return;
+  const relPath = typeof arg === "string" ? arg : resolvePathFromNode(arg);
+  if (!relPath)
+    return;
+  const confirm = await vscode30.window.showWarningMessage(
+    "\u5220\u9664\u7247\u6BB5\uFF1F",
+    { modal: true },
+    "\u5220\u9664",
+    "\u53D6\u6D88"
+  );
+  if (confirm !== "\u5220\u9664")
+    return;
+  await new SnippetService(container).delete(relPath);
+  vscode30.window.showInformationMessage("\u5DF2\u5220\u9664\u7247\u6BB5");
+}
+async function searchSnippets(container) {
+  if (!container.has("fileSystem")) {
+    vscode30.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  const svc = new SnippetService(container);
+  const kw = await vscode30.window.showInputBox({ prompt: "\u641C\u7D22\u7247\u6BB5\uFF08\u6807\u9898/\u5185\u5BB9/\u5206\u7C7B/\u6807\u7B7E\uFF09" });
+  if (kw === void 0)
+    return;
+  const results = await svc.search(kw);
+  if (results.length === 0) {
+    vscode30.window.showInformationMessage("\u672A\u627E\u5230\u5339\u914D\u7247\u6BB5");
+    return;
+  }
+  const picked = await vscode30.window.showQuickPick(
+    results.map((s) => ({ label: s.title, description: s.category, detail: s.body.slice(0, 60), path: s.path })),
+    { placeHolder: `${results.length} \u4E2A\u7247\u6BB5\uFF0C\u9009\u62E9\u63D2\u5165` }
+  );
+  if (!picked)
+    return;
+  const ok = await svc.insertAtCursor(picked.path);
+  vscode30.window.showInformationMessage(ok ? "\u5DF2\u63D2\u5165" : "\u8BF7\u5148\u6253\u5F00\u6B63\u6587\u6587\u4EF6");
+}
+function resolvePathFromNode(arg) {
+  if (arg && typeof arg === "object") {
+    const node = arg;
+    return node.snippet?.path ?? node.path;
+  }
+  return void 0;
+}
+var vscode30;
+var init_snippetCommands = __esm({
+  "src/presentation/commands/snippetCommands.ts"() {
+    "use strict";
+    vscode30 = __toESM(require("vscode"));
+    init_snippetService();
+  }
+});
+
+// src/presentation/webview/continuationPanelProvider.ts
+var continuationPanelProvider_exports = {};
+__export(continuationPanelProvider_exports, {
+  ContinuationPanelProvider: () => ContinuationPanelProvider
+});
+function esc(s) {
+  return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+var vscode31, ContinuationPanelProvider;
+var init_continuationPanelProvider = __esm({
+  "src/presentation/webview/continuationPanelProvider.ts"() {
+    "use strict";
+    vscode31 = __toESM(require("vscode"));
+    init_continuationService();
+    ContinuationPanelProvider = class {
+      constructor(container) {
+        this.container = container;
+      }
+      panel;
+      chapterId;
+      async open(chapterId) {
+        this.chapterId = chapterId;
+        if (!this.panel) {
+          this.panel = vscode31.window.createWebviewPanel(
+            "novelCompanion.continuationPanel",
+            "\u7EED\u5199\u8349\u7A3F",
+            vscode31.ViewColumn.Beside,
+            { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [] }
+          );
+          this.panel.iconPath = new vscode31.ThemeIcon("diff");
+          this.panel.webview.onDidReceiveMessage(
+            (msg) => {
+              this.handleMessage(msg).catch((e) => {
+                vscode31.window.showErrorMessage(`\u7EED\u5199\u5904\u7406\u5931\u8D25\uFF1A${e.message}`);
+              });
+            },
+            void 0,
+            this.container.context.subscriptions
+          );
+          this.panel.onDidDispose(
+            () => {
+              this.panel = void 0;
+            },
+            void 0,
+            this.container.context.subscriptions
+          );
+        } else {
+          this.panel.reveal(vscode31.ViewColumn.Beside, true);
+        }
+        await this.refresh();
+      }
+      async refresh() {
+        if (!this.panel || !this.chapterId)
+          return;
+        const svc = new ContinuationService(this.container);
+        const buffer = await svc.readBuffer(this.chapterId);
+        this.panel.title = `\u7EED\u5199\u8349\u7A3F \xB7 ${this.chapterId}`;
+        this.panel.webview.html = this.getHtml(buffer, this.chapterId);
+      }
+      async handleMessage(msg) {
+        if (!this.chapterId)
+          return;
+        const svc = new ContinuationService(this.container);
+        switch (msg.type) {
+          case "adoptAll": {
+            const len = await svc.adoptAll(this.chapterId);
+            vscode31.window.showInformationMessage(len > 0 ? `\u5DF2\u91C7\u7EB3\u7EED\u5199\uFF08${len} \u5B57\u7B26\uFF09` : "\u8349\u7A3F\u7F13\u51B2\u4E3A\u7A7A");
+            await this.refresh();
+            break;
+          }
+          case "adoptLines": {
+            const indices = msg.indices ?? [];
+            const len = await svc.adoptLines(this.chapterId, indices);
+            vscode31.window.showInformationMessage(len > 0 ? `\u5DF2\u91C7\u7EB3 ${indices.length} \u884C` : "\u672A\u9009\u62E9\u6709\u6548\u884C");
+            break;
+          }
+          case "clear": {
+            await svc.clearBuffer(this.chapterId);
+            vscode31.window.showInformationMessage("\u5DF2\u6E05\u7A7A\u7EED\u5199\u8349\u7A3F");
+            await this.refresh();
+            break;
+          }
+          case "showDiff": {
+            const fs15 = this.container.get("fileSystem");
+            const bufferPath = svc.bufferPath(this.chapterId);
+            const draftRel = `chapters/${this.chapterId}/draft.md`;
+            await vscode31.commands.executeCommand(
+              "vscode.diff",
+              vscode31.Uri.file(fs15.resolvePath(draftRel)),
+              vscode31.Uri.file(fs15.resolvePath(bufferPath)),
+              "\u6B63\u6587 \u2194 \u7EED\u5199\u8349\u7A3F"
+            );
+            break;
+          }
+          case "refresh": {
+            await this.refresh();
+            break;
+          }
+        }
+      }
+      getHtml(buffer, chapterId) {
+        const lines = buffer.split(/\r?\n/);
+        const rows = lines.map(
+          (ln, i) => `<div class="line"><label><input type="checkbox" data-i="${i}" /><span class="ln">${esc(
+            ln || "\xA0"
+          )}</span></label></div>`
+        ).join("");
+        return (
+          /* html */
+          `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';" />
+<title>\u7EED\u5199\u8349\u7A3F</title>
+<style>
+  body{font-family:var(--vscode-font-family);color:var(--vscode-foreground);padding:12px;margin:0}
+  .row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  button{padding:4px 12px;background:var(--vscode-button-background);color:var(--vscode-button-foreground);border:none;cursor:pointer}
+  button.secondary{background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground)}
+  .line{padding:3px 6px;border-bottom:1px solid var(--vscode-input-border)}
+  .line .ln{white-space:pre-wrap;font-family:var(--vscode-editor-font-family)}
+  .empty{color:var(--vscode-descriptionForeground)}
+  .hint{color:var(--vscode-descriptionForeground);font-size:12px}
+</style>
+</head>
+<body>
+<h3>\u7EED\u5199\u8349\u7A3F \xB7 ${esc(chapterId)}</h3>
+<div class="row">
+  <button id="btnAdoptLines">\u91C7\u7EB3\u9009\u4E2D\u884C</button>
+  <button id="btnAdoptAll">\u5168\u90E8\u91C7\u7EB3</button>
+  <button id="btnDiff" class="secondary">\u5BF9\u7167\u67E5\u770B</button>
+  <button id="btnClear" class="secondary">\u6E05\u7A7A\u8349\u7A3F</button>
+</div>
+<div id="body">${buffer.trim() ? rows : '<div class="empty">\u6682\u65E0\u7EED\u5199\u8349\u7A3F\u3002\u751F\u6210\u7EED\u5199\u4EFB\u52A1\u540E\uFF0CAI \u4F1A\u5C06\u7ED3\u679C\u5199\u5165\u6B64\u5904\u7F13\u51B2\uFF0C\u4E0D\u6539\u6B63\u6587\u3002</div>'}</div>
+<div class="hint">\u8349\u7A3F\u5199\u5165 .novel-ai/ai-drafts/${esc(chapterId)}.md\uFF0C\u4E0D\u76F4\u63A5\u4FEE\u6539\u6B63\u6587\u3002\u9010\u53E5\u52FE\u9009\u91C7\u7EB3\u6216\u5168\u90E8\u91C7\u7EB3\u540E\u843D\u7B14\u5230\u6B63\u6587\u3002</div>
+<script>
+  const vscode = acquireVsCodeApi();
+  const $ = (id) => document.getElementById(id);
+  $('btnAdoptAll').onclick = () => post({type:'adoptAll'});
+  $('btnDiff').onclick = () => post({type:'showDiff'});
+  $('btnClear').onclick = () => post({type:'clear'});
+  $('btnAdoptLines').onclick = () => {
+    const idx = [];
+    document.querySelectorAll('input[type=checkbox]:checked').forEach(c => idx.push(parseInt(c.getAttribute('data-i'),10)));
+    post({type:'adoptLines', indices:idx});
+  };
+  function post(m){ vscode.postMessage(m); }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+</body>
+</html>`
+        );
+      }
+    };
+  }
+});
+
+// src/presentation/commands/continuationCommands.ts
+function activeChapterId() {
+  const editor = vscode32.window.activeTextEditor;
+  if (!editor)
+    return void 0;
+  return extractChapterId(editor.document.uri.fsPath);
+}
+async function generateContinuation(container) {
+  if (!container.has("fileSystem")) {
+    vscode32.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  let chapterId = activeChapterId();
+  if (!chapterId) {
+    const im = container.get("indexManager");
+    const chapters = await im.getAllChapters();
+    if (chapters.length === 0) {
+      vscode32.window.showWarningMessage("\u5F53\u524D\u6CA1\u6709\u7AE0\u8282");
+      return;
+    }
+    const picked = await vscode32.window.showQuickPick(
+      chapters.map((c) => ({ label: c.title, description: c.id, id: c.id })),
+      { placeHolder: "\u9009\u62E9\u8981\u7EED\u5199\u7684\u7AE0\u8282" }
+    );
+    if (!picked)
+      return;
+    chapterId = picked.id;
+  }
+  const svc = new ContinuationService(container);
+  try {
+    const result = await svc.generateAiTask({ chapterId });
+    const open = await vscode32.window.showInformationMessage(
+      "\u5DF2\u751F\u6210\u7EED\u5199\u4EFB\u52A1\uFF0C\u4EA4\u7ED9 AI \u63D2\u4EF6\u6267\u884C\u540E\u7ED3\u679C\u5C06\u5199\u5165\u8349\u7A3F\u7F13\u51B2",
+      "\u6253\u5F00\u4EFB\u52A1"
+    );
+    if (open === "\u6253\u5F00\u4EFB\u52A1") {
+      const fs15 = container.get("fileSystem");
+      await vscode32.commands.executeCommand("vscode.open", vscode32.Uri.file(fs15.resolvePath(result.instructionPath)));
+    }
+  } catch (e) {
+    vscode32.window.showErrorMessage(`\u751F\u6210\u7EED\u5199\u4EFB\u52A1\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function openContinuationPanel(container, arg) {
+  if (!container.has("fileSystem")) {
+    vscode32.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  let chapterId;
+  if (typeof arg === "string" && arg.startsWith("ch")) {
+    chapterId = arg;
+  } else {
+    chapterId = activeChapterId();
+  }
+  if (!chapterId) {
+    const im = container.get("indexManager");
+    const chapters = await im.getAllChapters();
+    const picked = await vscode32.window.showQuickPick(
+      chapters.map((c) => ({ label: c.title, description: c.id, id: c.id })),
+      { placeHolder: "\u9009\u62E9\u7AE0\u8282\u67E5\u770B\u7EED\u5199\u8349\u7A3F" }
+    );
+    if (!picked)
+      return;
+    chapterId = picked.id;
+  }
+  const { ContinuationPanelProvider: ContinuationPanelProvider2 } = await Promise.resolve().then(() => (init_continuationPanelProvider(), continuationPanelProvider_exports));
+  const provider = new ContinuationPanelProvider2(container);
+  await provider.open(chapterId);
+}
+async function insertContinuationAll(container) {
+  if (!container.has("fileSystem"))
+    return;
+  const chapterId = activeChapterId();
+  if (!chapterId) {
+    vscode32.window.showWarningMessage("\u8BF7\u5148\u6253\u5F00\u7AE0\u8282\u6B63\u6587");
+    return;
+  }
+  const svc = new ContinuationService(container);
+  const len = await svc.adoptAll(chapterId);
+  vscode32.window.showInformationMessage(len > 0 ? `\u5DF2\u91C7\u7EB3\u7EED\u5199\u5230\u6B63\u6587\uFF08${len} \u5B57\u7B26\uFF09` : "\u8349\u7A3F\u7F13\u51B2\u4E3A\u7A7A");
+}
+async function clearContinuation(container) {
+  if (!container.has("fileSystem"))
+    return;
+  const chapterId = activeChapterId();
+  if (!chapterId)
+    return;
+  const confirm = await vscode32.window.showWarningMessage(
+    "\u6E05\u7A7A\u5F53\u524D\u7AE0\u8282\u7684\u7EED\u5199\u8349\u7A3F\u7F13\u51B2\uFF1F",
+    { modal: true },
+    "\u6E05\u7A7A",
+    "\u53D6\u6D88"
+  );
+  if (confirm !== "\u6E05\u7A7A")
+    return;
+  await new ContinuationService(container).clearBuffer(chapterId);
+  vscode32.window.showInformationMessage("\u5DF2\u6E05\u7A7A\u7EED\u5199\u8349\u7A3F\u7F13\u51B2");
+}
+var vscode32;
+var init_continuationCommands = __esm({
+  "src/presentation/commands/continuationCommands.ts"() {
+    "use strict";
+    vscode32 = __toESM(require("vscode"));
+    init_continuationService();
+    init_utils();
+  }
+});
+
+// src/presentation/webview/snapshotPanelProvider.ts
+var snapshotPanelProvider_exports = {};
+__export(snapshotPanelProvider_exports, {
+  SnapshotPanelProvider: () => SnapshotPanelProvider
+});
+function esc2(s) {
+  return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+var vscode33, SnapshotPanelProvider;
+var init_snapshotPanelProvider = __esm({
+  "src/presentation/webview/snapshotPanelProvider.ts"() {
+    "use strict";
+    vscode33 = __toESM(require("vscode"));
+    init_snapshotService();
+    SnapshotPanelProvider = class {
+      constructor(container) {
+        this.container = container;
+      }
+      panel;
+      chapterId;
+      async open(chapterId) {
+        this.chapterId = chapterId;
+        if (!this.panel) {
+          this.panel = vscode33.window.createWebviewPanel(
+            "novelCompanion.snapshotPanel",
+            "\u5FEB\u7167\u5386\u53F2",
+            vscode33.ViewColumn.Beside,
+            { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [] }
+          );
+          this.panel.iconPath = new vscode33.ThemeIcon("history");
+          this.panel.webview.onDidReceiveMessage(
+            (msg) => {
+              this.handleMessage(msg).catch((e) => {
+                vscode33.window.showErrorMessage(`\u5FEB\u7167\u64CD\u4F5C\u5931\u8D25\uFF1A${e.message}`);
+              });
+            },
+            void 0,
+            this.container.context.subscriptions
+          );
+          this.panel.onDidDispose(
+            () => {
+              this.panel = void 0;
+            },
+            void 0,
+            this.container.context.subscriptions
+          );
+        } else {
+          this.panel.reveal(vscode33.ViewColumn.Beside, true);
+        }
+        await this.refresh();
+      }
+      async refresh() {
+        if (!this.panel || !this.chapterId)
+          return;
+        const svc = new SnapshotService(this.container);
+        const list = await svc.list(this.chapterId);
+        const isGit = await svc.isGitRepo();
+        this.panel.title = `\u5FEB\u7167\u5386\u53F2 \xB7 ${this.chapterId}`;
+        this.panel.webview.html = this.getHtml(list, this.chapterId, isGit);
+      }
+      async handleMessage(msg) {
+        if (!this.chapterId)
+          return;
+        const svc = new SnapshotService(this.container);
+        const path18 = String(msg.path ?? "");
+        switch (msg.type) {
+          case "diff": {
+            if (!path18)
+              return;
+            try {
+              await svc.showDiff(this.chapterId, path18);
+            } catch (e) {
+              vscode33.window.showErrorMessage(`\u5BF9\u6BD4\u5931\u8D25\uFF1A${e.message}`);
+            }
+            break;
+          }
+          case "rollback": {
+            if (!path18)
+              return;
+            const confirm = await vscode33.window.showWarningMessage(
+              "\u56DE\u6EDA\u5C06\u7528\u5FEB\u7167\u5185\u5BB9\u66FF\u6362\u5F53\u524D\u6B63\u6587\uFF08\u5F53\u524D\u6B63\u6587\u4F1A\u53E6\u5B58\u4E00\u4EFD\u5FEB\u7167\uFF09",
+              { modal: true },
+              "\u56DE\u6EDA",
+              "\u53D6\u6D88"
+            );
+            if (confirm !== "\u56DE\u6EDA")
+              return;
+            try {
+              await svc.rollback(this.chapterId, path18);
+              vscode33.window.showInformationMessage("\u5DF2\u56DE\u6EDA\u6B63\u6587");
+              await this.refresh();
+            } catch (e) {
+              vscode33.window.showErrorMessage(`\u56DE\u6EDA\u5931\u8D25\uFF1A${e.message}`);
+            }
+            break;
+          }
+          case "refresh": {
+            await this.refresh();
+            break;
+          }
+        }
+      }
+      getHtml(list, chapterId, isGit) {
+        const rows = list.length ? list.map(
+          (s) => `<div class="row"><span class="time">${esc2(s.createdAt)}</span><span class="id">${esc2(
+            s.id
+          )}</span><button data-act="diff" data-path="${esc2(s.path)}">\u5BF9\u6BD4</button><button class="secondary" data-act="rollback" data-path="${esc2(
+            s.path
+          )}">\u56DE\u6EDA</button></div>`
+        ).join("") : '<div class="empty">\u6682\u65E0\u5FEB\u7167\u3002\u4FDD\u5B58\u6B63\u6587\u65F6\u4F1A\u81EA\u52A8\u751F\u6210\u5FEB\u7167\u3002</div>';
+        const gitHint = isGit ? '<div class="hint">\u68C0\u6D4B\u5230 Git \u4ED3\u5E93\uFF0C\u53EF\u7ED3\u5408 Git \u8FDB\u884C\u7248\u672C\u7BA1\u7406\u3002\u672C\u5730\u5FEB\u7167\u4F5C\u4E3A\u5FEB\u901F\u56DE\u6EDA\u8865\u5145\u3002</div>' : '<div class="hint">\u672A\u68C0\u6D4B\u5230 Git\uFF0C\u672C\u5730\u5FEB\u7167\u662F\u4E3B\u8981\u7684\u7248\u672C\u56DE\u9000\u624B\u6BB5\u3002</div>';
+        return (
+          /* html */
+          `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';" />
+<title>\u5FEB\u7167\u5386\u53F2</title>
+<style>
+  body{font-family:var(--vscode-font-family);color:var(--vscode-foreground);padding:12px;margin:0}
+  .row{display:flex;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--vscode-input-border)}
+  .row .time{font-family:var(--vscode-editor-font-family);min-width:200px}
+  .row .id{color:var(--vscode-descriptionForeground);flex:1;font-size:12px}
+  button{padding:3px 10px;background:var(--vscode-button-background);color:var(--vscode-button-foreground);border:none;cursor:pointer}
+  button.secondary{background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground)}
+  .empty,.hint{color:var(--vscode-descriptionForeground)}
+</style>
+</head>
+<body>
+<h3>\u5FEB\u7167\u5386\u53F2 \xB7 ${esc2(chapterId)}</h3>
+${gitHint}
+<button id="btnRefresh" class="secondary" style="margin:8px 0">\u5237\u65B0</button>
+<div id="body">${rows}</div>
+<script>
+  const vscode = acquireVsCodeApi();
+  document.getElementById('btnRefresh').onclick = () => vscode.postMessage({type:'refresh'});
+  document.getElementById('body').addEventListener('click', (e) => {
+    const t = e.target.closest('button'); if(!t) return;
+    vscode.postMessage({type:t.getAttribute('data-act'), path:t.getAttribute('data-path')});
+  });
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+</script>
+</body>
+</html>`
+        );
+      }
+    };
+  }
+});
+
+// src/presentation/commands/snapshotCommands.ts
+async function openSnapshotPanel(container, arg) {
+  if (!container.has("fileSystem")) {
+    vscode34.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  let chapterId;
+  if (typeof arg === "string" && arg.startsWith("ch")) {
+    chapterId = arg;
+  } else {
+    const editor = vscode34.window.activeTextEditor;
+    if (editor)
+      chapterId = extractChapterId(editor.document.uri.fsPath);
+  }
+  if (!chapterId) {
+    const im = container.get("indexManager");
+    const chapters = await im.getAllChapters();
+    const picked = await vscode34.window.showQuickPick(
+      chapters.map((c) => ({ label: c.title, description: c.id, id: c.id })),
+      { placeHolder: "\u9009\u62E9\u7AE0\u8282\u67E5\u770B\u5FEB\u7167\u5386\u53F2" }
+    );
+    if (!picked)
+      return;
+    chapterId = picked.id;
+  }
+  const { SnapshotPanelProvider: SnapshotPanelProvider2 } = await Promise.resolve().then(() => (init_snapshotPanelProvider(), snapshotPanelProvider_exports));
+  await new SnapshotPanelProvider2(container).open(chapterId);
+}
+async function createSnapshotNow(container) {
+  if (!container.has("fileSystem"))
+    return;
+  const editor = vscode34.window.activeTextEditor;
+  if (!editor) {
+    vscode34.window.showWarningMessage("\u8BF7\u5148\u6253\u5F00\u7AE0\u8282\u6B63\u6587");
+    return;
+  }
+  const svc = new SnapshotService(container);
+  const meta = await svc.snapshot(editor.document.uri, editor.document.getText());
+  if (meta)
+    vscode34.window.showInformationMessage(`\u5DF2\u521B\u5EFA\u5FEB\u7167\uFF1A${meta.id}`);
+}
+var vscode34;
+var init_snapshotCommands = __esm({
+  "src/presentation/commands/snapshotCommands.ts"() {
+    "use strict";
+    vscode34 = __toESM(require("vscode"));
+    init_snapshotService();
+    init_utils();
+  }
+});
+
+// src/presentation/commands/trashCommands.ts
+function resolveId3(arg) {
+  if (typeof arg === "string")
+    return arg;
+  if (arg && typeof arg === "object") {
+    const e = arg;
+    return e.id;
+  }
+  return void 0;
+}
+async function restoreTrash(container, arg) {
+  if (!container.has("fileSystem")) {
+    vscode35.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  const svc = new TrashService(container);
+  const id = resolveId3(arg);
+  if (!id) {
+    vscode35.window.showWarningMessage("\u8BF7\u4ECE\u56DE\u6536\u7AD9\u5217\u8868\u4E2D\u9009\u62E9");
+    return;
+  }
+  const result = await svc.restore(id);
+  if (result.conflict) {
+    const choice = await vscode35.window.showWarningMessage(
+      "\u539F\u4F4D\u7F6E\u5DF2\u5B58\u5728\u540C\u540D\u6587\u4EF6\uFF0C\u662F\u5426\u8986\u76D6\u6062\u590D\uFF1F",
+      { modal: true },
+      "\u8986\u76D6\u6062\u590D",
+      "\u53D6\u6D88"
+    );
+    if (choice !== "\u8986\u76D6\u6062\u590D")
+      return;
+    await svc.restore(id, true);
+  }
+  if (result.restored) {
+    vscode35.window.showInformationMessage("\u5DF2\u6062\u590D");
+    container.eventBus.publish("chapter.created", { chapterId: "" });
+  }
+}
+async function purgeTrash(container, arg) {
+  if (!container.has("fileSystem"))
+    return;
+  const svc = new TrashService(container);
+  const id = resolveId3(arg);
+  if (!id) {
+    vscode35.window.showWarningMessage("\u8BF7\u4ECE\u56DE\u6536\u7AD9\u5217\u8868\u4E2D\u9009\u62E9");
+    return;
+  }
+  const confirm = await vscode35.window.showWarningMessage("\u5F7B\u5E95\u5220\u9664\u8BE5\u9879\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u6062\u590D", {
+    modal: true
+  }, "\u5F7B\u5E95\u5220\u9664", "\u53D6\u6D88");
+  if (confirm !== "\u5F7B\u5E95\u5220\u9664")
+    return;
+  await svc.purge(id);
+  vscode35.window.showInformationMessage("\u5DF2\u5F7B\u5E95\u5220\u9664");
+}
+async function purgeAllTrash(container) {
+  if (!container.has("fileSystem"))
+    return;
+  const svc = new TrashService(container);
+  const confirm = await vscode35.window.showWarningMessage("\u6E05\u7A7A\u56DE\u6536\u7AD9\uFF1F\u6240\u6709\u5DF2\u5220\u9664\u9879\u5C06\u5F7B\u5E95\u5220\u9664", {
+    modal: true
+  }, "\u6E05\u7A7A", "\u53D6\u6D88");
+  if (confirm !== "\u6E05\u7A7A")
+    return;
+  const count = await svc.purgeAll();
+  vscode35.window.showInformationMessage(`\u5DF2\u6E05\u7A7A\u56DE\u6536\u7AD9\uFF08${count} \u9879\uFF09`);
+}
+async function cleanupTrash(container) {
+  if (!container.has("fileSystem"))
+    return;
+  const svc = new TrashService(container);
+  const n = await svc.autoCleanup();
+  vscode35.window.showInformationMessage(n > 0 ? `\u5DF2\u81EA\u52A8\u6E05\u7406 ${n} \u9879\u8FC7\u671F\u56DE\u6536\u7AD9\u5185\u5BB9` : "\u56DE\u6536\u7AD9\u65E0\u9700\u6E05\u7406");
+}
+var vscode35;
+var init_trashCommands = __esm({
+  "src/presentation/commands/trashCommands.ts"() {
+    "use strict";
+    vscode35 = __toESM(require("vscode"));
+    init_trashService();
+  }
+});
+
+// src/presentation/commands/gitCommands.ts
+async function openGitWizard(container) {
+  if (!container.has("fileSystem")) {
+    vscode36.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  const svc = new GitWorkflowService(container);
+  const isRepo = await svc.isGitRepo();
+  if (!isRepo) {
+    const init = await vscode36.window.showInformationMessage(
+      "\u5F53\u524D\u9879\u76EE\u672A\u521D\u59CB\u5316 Git\u3002\u5EFA\u8BAE\u7528 Git \u8FDB\u884C\u7248\u672C\u7BA1\u7406\uFF0C\u53EF\u83B7\u5F97\u5B8C\u6574\u7684\u5386\u53F2\u4E0E\u56DE\u6EDA\u80FD\u529B\u3002",
+      "\u521D\u59CB\u5316 Git \u4ED3\u5E93",
+      "\u4F7F\u7528\u672C\u5730\u5FEB\u7167"
+    );
+    if (init === "\u521D\u59CB\u5316 Git \u4ED3\u5E93") {
+      await vscode36.commands.executeCommand("git.init");
+    } else if (init === "\u4F7F\u7528\u672C\u5730\u5FEB\u7167") {
+      vscode36.commands.executeCommand("novelCompanion.snapshot.openPanel");
+    }
+    return;
+  }
+  const status = await svc.getStatus();
+  if (!status.isRepo) {
+    vscode36.window.showWarningMessage("\u65E0\u6CD5\u83B7\u53D6 Git \u72B6\u6001\uFF0C\u8BF7\u786E\u8BA4 VS Code \u5DF2\u8BC6\u522B\u8BE5\u4ED3\u5E93");
+    return;
+  }
+  const items = [];
+  items.push({ label: "\u63D0\u4EA4\u5F53\u524D\u7AE0\u8282", description: "\u6682\u5B58\u5E76\u63D0\u4EA4\u6253\u5F00\u7684\u7AE0\u8282", action: "commitChapter" });
+  items.push({ label: "\u63D0\u4EA4\u6574\u5377", description: "\u6682\u5B58\u5E76\u63D0\u4EA4\u67D0\u5377\u6240\u6709\u7AE0\u8282", action: "commitVolume" });
+  items.push({ label: "\u63D0\u4EA4\u5168\u90E8\u53D8\u66F4", description: `\u6682\u5B58\u5168\u90E8\u5E76\u63D0\u4EA4\uFF08${status.modified + status.added + status.deleted} \u9879\u53D8\u66F4\uFF09`, action: "commitAll" });
+  items.push({ label: "\u67E5\u770B\u53D8\u66F4", description: "\u6253\u5F00 Source Control \u89C6\u56FE", action: "openChanges" });
+  items.push({ label: "\u67E5\u770B\u5386\u53F2", description: "Git \u63D0\u4EA4\u5386\u53F2", action: "history" });
+  items.push({ label: "\u4E3A\u5377/\u91CC\u7A0B\u7891\u6253\u6807\u7B7E", description: "\u521B\u5EFA Git Tag", action: "tag" });
+  const picked = await vscode36.window.showQuickPick(items, { placeHolder: `Git \u5DE5\u4F5C\u6D41\uFF08\u5206\u652F ${status.branch ?? "-"}\uFF09` });
+  if (!picked)
+    return;
+  switch (picked.action) {
+    case "commitChapter": {
+      await commitChapter(container, svc);
+      break;
+    }
+    case "commitVolume": {
+      await commitVolume(container, svc);
+      break;
+    }
+    case "commitAll": {
+      await commitAll(svc);
+      break;
+    }
+    case "openChanges": {
+      svc.openChanges("");
+      vscode36.commands.executeCommand("workbench.view.scm");
+      break;
+    }
+    case "history": {
+      svc.viewHistory();
+      break;
+    }
+    case "tag": {
+      await createTag(container, svc);
+      break;
+    }
+  }
+}
+async function commitChapter(container, svc) {
+  let chapterId;
+  const editor = vscode36.window.activeTextEditor;
+  const { extractChapterId: extractChapterId2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
+  if (editor)
+    chapterId = extractChapterId2(editor.document.uri.fsPath);
+  if (!chapterId) {
+    const im = container.get("indexManager");
+    const chapters = await im.getAllChapters();
+    const picked = await vscode36.window.showQuickPick(
+      chapters.map((c) => ({ label: c.title, description: c.id, id: c.id })),
+      { placeHolder: "\u9009\u62E9\u8981\u63D0\u4EA4\u7684\u7AE0\u8282" }
+    );
+    if (!picked)
+      return;
+    chapterId = picked.id;
+  }
+  const staged = await svc.stageChapter(chapterId);
+  if (staged === 0) {
+    vscode36.window.showInformationMessage("\u8BE5\u7AE0\u8282\u65E0\u672A\u8DDF\u8E2A\u53D8\u66F4");
+    return;
+  }
+  const message = await vscode36.window.showInputBox({
+    prompt: "\u63D0\u4EA4\u4FE1\u606F",
+    value: `chore(chapter): ${chapterId}`,
+    validateInput: (v) => v && v.trim() ? void 0 : "\u63D0\u4EA4\u4FE1\u606F\u4E0D\u80FD\u4E3A\u7A7A"
+  });
+  if (!message)
+    return;
+  await svc.commit(message.trim());
+  vscode36.window.showInformationMessage(`\u5DF2\u63D0\u4EA4\u7AE0\u8282 ${chapterId}`);
+}
+async function commitVolume(container, svc) {
+  const { getVolumes: getVolumes2 } = await Promise.resolve().then(() => (init_volumeCommands(), volumeCommands_exports));
+  const volumes = await getVolumes2(container);
+  if (volumes.length === 0) {
+    vscode36.window.showWarningMessage("\u5F53\u524D\u6CA1\u6709\u5377");
+    return;
+  }
+  const volume = await vscode36.window.showQuickPick(volumes, { placeHolder: "\u9009\u62E9\u8981\u63D0\u4EA4\u7684\u5377" });
+  if (!volume)
+    return;
+  const staged = await svc.stageVolume(volume);
+  if (staged === 0) {
+    vscode36.window.showInformationMessage("\u8BE5\u5377\u65E0\u672A\u8DDF\u8E2A\u53D8\u66F4");
+    return;
+  }
+  const message = await vscode36.window.showInputBox({
+    prompt: "\u63D0\u4EA4\u4FE1\u606F",
+    value: `chore(volume): ${volume}`,
+    validateInput: (v) => v && v.trim() ? void 0 : "\u63D0\u4EA4\u4FE1\u606F\u4E0D\u80FD\u4E3A\u7A7A"
+  });
+  if (!message)
+    return;
+  await svc.commit(message.trim());
+  vscode36.window.showInformationMessage(`\u5DF2\u63D0\u4EA4\u5377\u300C${volume}\u300D`);
+}
+async function commitAll(svc) {
+  const message = await vscode36.window.showInputBox({
+    prompt: "\u63D0\u4EA4\u4FE1\u606F",
+    validateInput: (v) => v && v.trim() ? void 0 : "\u63D0\u4EA4\u4FE1\u606F\u4E0D\u80FD\u4E3A\u7A7A"
+  });
+  if (!message)
+    return;
+  await svc.stageAll();
+  await svc.commit(message.trim());
+  vscode36.window.showInformationMessage("\u5DF2\u63D0\u4EA4\u5168\u90E8\u53D8\u66F4");
+}
+async function createTag(container, svc) {
+  const name = await vscode36.window.showInputBox({
+    prompt: "\u6807\u7B7E\u540D\uFF08\u5982\uFF1Avol1-final\u3001milestone-100k\uFF09",
+    validateInput: (v) => v && v.trim() ? void 0 : "\u6807\u7B7E\u540D\u4E0D\u80FD\u4E3A\u7A7A"
+  });
+  if (!name)
+    return;
+  const message = await vscode36.window.showInputBox({ prompt: "\u6807\u7B7E\u8BF4\u660E\uFF08\u53EF\u9009\uFF09" });
+  const ok = await svc.createTag(name.trim(), message || void 0);
+  vscode36.window.showInformationMessage(ok ? `\u5DF2\u521B\u5EFA\u6807\u7B7E ${name}` : "\u521B\u5EFA\u6807\u7B7E\u5931\u8D25\uFF08Git API \u9650\u5236\uFF09\uFF0C\u8BF7\u624B\u52A8\u521B\u5EFA");
+}
+var vscode36;
+var init_gitCommands = __esm({
+  "src/presentation/commands/gitCommands.ts"() {
+    "use strict";
+    vscode36 = __toESM(require("vscode"));
+    init_gitWorkflowService();
+  }
+});
+
+// src/presentation/webview/consistencyPanelProvider.ts
+function esc3(text) {
+  return String(text ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function escAttr(text) {
+  return esc3(text).replace(/\n/g, "&#10;");
+}
+var vscode37, CATEGORY_LABELS, SEVERITY_LABELS, ConsistencyPanelProvider;
+var init_consistencyPanelProvider = __esm({
+  "src/presentation/webview/consistencyPanelProvider.ts"() {
+    "use strict";
+    vscode37 = __toESM(require("vscode"));
+    init_consistencyService();
+    CATEGORY_LABELS = {
+      foreshadowing: "\u4F0F\u7B14",
+      timeline: "\u65F6\u95F4\u7EBF",
+      character: "\u4EBA\u7269",
+      setting: "\u8BBE\u5B9A",
+      power: "\u6218\u529B"
+    };
+    SEVERITY_LABELS = {
+      critical: "\u4E25\u91CD",
+      high: "\u9AD8",
+      medium: "\u4E2D",
+      low: "\u4F4E"
+    };
+    ConsistencyPanelProvider = class {
+      constructor(container) {
+        this.container = container;
+      }
+      panel;
+      report;
+      scanSub;
+      async loadAndRefresh(issueCount) {
+        const report = await new ConsistencyService(this.container).loadLastReport();
+        if (report)
+          this.refresh(report);
+        else
+          vscode37.window.setStatusBarMessage(`\u4E00\u81F4\u6027\u68C0\u67E5\u5B8C\u6210\uFF1A${issueCount} \u9879\u95EE\u9898`, 3e3);
+      }
+      async open(report) {
+        if (!this.container.has("fileSystem")) {
+          vscode37.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+          return;
+        }
+        this.report = report ?? this.report;
+        if (!this.panel) {
+          this.panel = vscode37.window.createWebviewPanel(
+            "novelCompanion.consistencyPanel",
+            "\u4E00\u81F4\u6027\u68C0\u67E5\u62A5\u544A",
+            vscode37.ViewColumn.Active,
+            {
+              enableScripts: true,
+              retainContextWhenHidden: true,
+              localResourceRoots: []
+            }
+          );
+          this.panel.iconPath = new vscode37.ThemeIcon("check-all");
+          this.panel.webview.onDidReceiveMessage(
+            (msg) => {
+              this.handleMessage(msg).catch((e) => {
+                vscode37.window.showErrorMessage(`\u4E00\u81F4\u6027\u62A5\u544A\u64CD\u4F5C\u5931\u8D25\uFF1A${e.message}`);
+              });
+            },
+            void 0,
+            this.container.context.subscriptions
+          );
+          this.scanSub = this.container.eventBus.on("consistency.scanned", (p) => {
+            if (!this.panel)
+              return;
+            this.loadAndRefresh(p.issueCount);
+          });
+          this.panel.onDidDispose(
+            () => {
+              this.panel = void 0;
+              this.scanSub?.dispose();
+              this.scanSub = void 0;
+            },
+            void 0,
+            this.container.context.subscriptions
+          );
+        } else {
+          this.panel.reveal(vscode37.ViewColumn.Active, true);
+        }
+        if (!this.report) {
+          this.report = await new ConsistencyService(this.container).loadLastReport();
+        }
+        if (!this.report) {
+          this.report = await this.rescan();
+        }
+        this.render();
+      }
+      async rescan() {
+        return new ConsistencyService(this.container).scan();
+      }
+      refresh(report) {
+        this.report = report;
+        this.render();
+      }
+      render() {
+        if (!this.panel)
+          return;
+        const report = this.report;
+        this.panel.webview.html = this.getHtml(report);
+        const count = report?.issues.length ?? 0;
+        this.panel.title = `\u4E00\u81F4\u6027\u68C0\u67E5\u62A5\u544A${report ? `\uFF08${count} \u9879\u95EE\u9898\uFF09` : ""}`;
+      }
+      async handleMessage(msg) {
+        switch (msg.cmd) {
+          case "rescan": {
+            this.post({ cmd: "scanning" });
+            const r = await this.rescan();
+            this.report = r;
+            this.render();
+            vscode37.window.showInformationMessage(`\u4E00\u81F4\u6027\u68C0\u67E5\u5B8C\u6210\uFF1A\u53D1\u73B0 ${r.issues.length} \u9879\u95EE\u9898`);
+            break;
+          }
+          case "openIssue": {
+            const file = typeof msg.file === "string" ? msg.file : "";
+            const line = typeof msg.line === "number" ? msg.line : 1;
+            if (!file)
+              return;
+            await this.openFile(file, line);
+            break;
+          }
+        }
+      }
+      async openFile(file, line) {
+        const fs15 = this.container.get("fileSystem");
+        try {
+          const abs = fs15.resolvePath(file);
+          const doc = await vscode37.workspace.openTextDocument(vscode37.Uri.file(abs));
+          const editor = await vscode37.window.showTextDocument(doc, vscode37.ViewColumn.One, true);
+          const ln = Math.max(0, Math.min(line - 1, doc.lineCount - 1));
+          const range = doc.lineAt(ln).range;
+          editor.revealRange(range, vscode37.TextEditorRevealType.InCenter);
+          editor.selection = new vscode37.Selection(range.start, range.end);
+        } catch (e) {
+          vscode37.window.showErrorMessage(`\u6253\u5F00\u5931\u8D25\uFF1A${e.message}`);
+        }
+      }
+      post(msg) {
+        this.panel?.webview.postMessage(msg);
+      }
+      getHtml(report) {
+        const issues = report?.issues ?? [];
+        const chapterCount = report?.chapterCount ?? 0;
+        const scannedAt = report?.scannedAt ?? "";
+        const byCat = this.groupByCategory(issues);
+        const cards = issues.map((i) => this.renderCard(i)).join("\n");
+        const summary = issues.length === 0 ? `<div class="empty">\u672A\u53D1\u73B0\u4E00\u81F4\u6027\u95EE\u9898${chapterCount ? `\uFF08\u5DF2\u626B\u63CF ${chapterCount} \u7AE0\uFF09` : ""}</div>` : "";
+        return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';" />
+<title>\u4E00\u81F4\u6027\u68C0\u67E5\u62A5\u544A</title>
+<style>
+  body { font-family: var(--vscode-font-family, sans-serif); color: var(--vscode-foreground, #333); background: var(--vscode-editor-background, #fff); margin: 0; padding: 12px; }
+  .toolbar { position: sticky; top: 0; background: var(--vscode-editor-background, #fff); padding: 8px 0; border-bottom: 1px solid var(--vscode-panel-border, #ddd); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; z-index: 10; }
+  .toolbar .summary { font-size: 12px; opacity: 0.85; }
+  .toolbar .spacer { flex: 1; }
+  .btn { border: 1px solid var(--vscode-button-border, transparent); background: var(--vscode-button-background, #0e639c); color: var(--vscode-button-foreground, #fff); padding: 4px 12px; border-radius: 2px; cursor: pointer; font-size: 12px; }
+  .btn:hover { background: var(--vscode-button-hoverBackground, #1177bb); }
+  .btn.secondary { background: var(--vscode-button-secondaryBackground, #3a3d41); color: var(--vscode-button-secondaryForeground, #fff); }
+  .cat-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+  .cat-filters .chip { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: var(--vscode-badge-background, #4d4d4d); color: var(--vscode-badge-foreground, #fff); cursor: pointer; }
+  .cat-filters .chip.active { outline: 1px solid var(--vscode-focusBorder, #007fd4); }
+  .card { border: 1px solid var(--vscode-panel-border, #ddd); border-left-width: 4px; border-radius: 4px; padding: 10px 12px; margin-bottom: 10px; background: var(--vscode-editor-background, #fff); }
+  .card.severity-critical { border-left-color: #ff3030; }
+  .card.severity-high { border-left-color: #ff8c00; }
+  .card.severity-medium { border-left-color: #d4a017; }
+  .card.severity-low { border-left-color: #2a8c2a; }
+  .card-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .tag { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 2px; background: var(--vscode-badge-background, #4d4d4d); color: var(--vscode-badge-foreground, #fff); }
+  .tag.cat { background: #2a6f9e; }
+  .tag.sev-critical { background: #ff3030; }
+  .tag.sev-high { background: #ff8c00; }
+  .tag.sev-medium { background: #d4a017; }
+  .tag.sev-low { background: #2a8c2a; }
+  .title { font-weight: bold; flex: 1; min-width: 200px; }
+  .file { margin-left: auto; font-size: 11px; opacity: 0.7; cursor: pointer; text-decoration: underline; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .desc { font-size: 13px; margin-bottom: 6px; }
+  .evidence { font-size: 12px; opacity: 0.85; }
+  .evidence ul { margin: 4px 0 0 16px; padding: 0; }
+  .empty { text-align: center; padding: 40px; opacity: 0.6; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <span class="summary">\u4E00\u81F4\u6027\u68C0\u67E5${scannedAt ? ` \xB7 \u626B\u63CF\u65F6\u95F4 ${scannedAt}` : ""}${chapterCount ? ` \xB7 \u5DF2\u626B\u63CF ${chapterCount} \u7AE0` : ""} \xB7 \u5171 <strong>${issues.length}</strong> \u9879\u95EE\u9898</span>
+    <span class="spacer"></span>
+    <button class="btn" id="rescan">\u91CD\u65B0\u626B\u63CF</button>
+  </div>
+  <div class="cat-filters" id="filters">${this.renderFilters(byCat)}</div>
+  <div id="list">${summary}${cards}</div>
+  <script>
+    const vscode = acquireVsCodeApi();
+    let activeCat = 'all';
+    document.getElementById('rescan').onclick = () => vscode.postMessage({ cmd: 'rescan' });
+    document.getElementById('filters').addEventListener('click', (e) => {
+      const t = e.target.closest('.chip');
+      if (!t) return;
+      activeCat = t.dataset.cat;
+      document.querySelectorAll('.chip').forEach((c) => c.classList.toggle('active', c.dataset.cat === activeCat));
+      document.querySelectorAll('.card').forEach((card) => {
+        card.classList.toggle('hidden', activeCat !== 'all' && card.dataset.cat !== activeCat);
+      });
+    });
+    document.getElementById('list').addEventListener('click', (e) => {
+      const t = e.target.closest('.file');
+      if (t) vscode.postMessage({ cmd: 'openIssue', file: t.dataset.file, line: parseInt(t.dataset.line || '1', 10) });
+    });
+  </script>
+</body>
+</html>`;
+      }
+      groupByCategory(issues) {
+        const map = /* @__PURE__ */ new Map();
+        for (const i of issues) {
+          map.set(i.category, (map.get(i.category) ?? 0) + 1);
+        }
+        return map;
+      }
+      renderFilters(byCat) {
+        const total = Array.from(byCat.values()).reduce((a, b) => a + b, 0);
+        const chips = [`<span class="chip active" data-cat="all">\u5168\u90E8 ${total}</span>`];
+        for (const [cat, count] of byCat) {
+          const label = CATEGORY_LABELS[cat] ?? cat;
+          chips.push(`<span class="chip" data-cat="${esc3(cat)}">${esc3(label)} ${count}</span>`);
+        }
+        return chips.join("");
+      }
+      renderCard(i) {
+        const catLabel = CATEGORY_LABELS[i.category] ?? i.category;
+        const sevLabel = SEVERITY_LABELS[i.severity] ?? i.severity;
+        const evidence = i.evidence && i.evidence.length ? `<div class="evidence"><ul>${i.evidence.map((e) => `<li>${esc3(e)}</li>`).join("")}</ul></div>` : "";
+        return `
+    <div class="card severity-${esc3(i.severity)}" data-cat="${esc3(i.category)}">
+      <div class="card-head">
+        <span class="tag cat">${esc3(catLabel)}</span>
+        <span class="tag sev-${esc3(i.severity)}">${esc3(sevLabel)}</span>
+        <span class="title">${esc3(i.title)}</span>
+        <span class="file" data-file="${escAttr(i.file)}" data-line="${escAttr(String(i.line ?? 1))}" title="${escAttr(i.file)}">${esc3(i.file)}</span>
+      </div>
+      <div class="desc">${esc3(i.description)}</div>
+      ${evidence}
+    </div>`;
+      }
+      dispose() {
+        this.panel?.dispose();
+        this.panel = void 0;
+      }
+    };
+  }
+});
+
+// src/presentation/commands/consistencyCommands.ts
+function service(container) {
+  if (container.has("consistency")) {
+    return container.get("consistency");
+  }
+  return new ConsistencyService(container);
+}
+async function runConsistencyCheck(container) {
+  if (!container.has("fileSystem")) {
+    vscode38.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  await vscode38.window.withProgress(
+    { location: vscode38.ProgressLocation.Notification, title: "\u6B63\u5728\u626B\u63CF\u5168\u4E66\u4E00\u81F4\u6027\u2026" },
+    async () => {
+      const report = await service(container).scan();
+      const panel = new ConsistencyPanelProvider(container);
+      await panel.open(report);
+      vscode38.window.showInformationMessage(
+        report.issues.length > 0 ? `\u4E00\u81F4\u6027\u68C0\u67E5\u5B8C\u6210\uFF1A\u53D1\u73B0 ${report.issues.length} \u9879\u95EE\u9898` : "\u4E00\u81F4\u6027\u68C0\u67E5\u5B8C\u6210\uFF1A\u672A\u53D1\u73B0\u4E00\u81F4\u6027\u95EE\u9898"
+      );
+    }
+  );
+}
+async function openConsistencyReport(container) {
+  if (!container.has("fileSystem")) {
+    vscode38.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  const panel = new ConsistencyPanelProvider(container);
+  await panel.open();
+}
+var vscode38;
+var init_consistencyCommands = __esm({
+  "src/presentation/commands/consistencyCommands.ts"() {
+    "use strict";
+    vscode38 = __toESM(require("vscode"));
+    init_consistencyService();
+    init_consistencyPanelProvider();
+  }
+});
+
+// src/presentation/webview/readthroughPanelProvider.ts
+var vscode39, NOTES_FILE, ReadThroughPanelProvider;
+var init_readthroughPanelProvider = __esm({
+  "src/presentation/webview/readthroughPanelProvider.ts"() {
+    "use strict";
+    vscode39 = __toESM(require("vscode"));
+    init_constants();
+    init_utils();
+    NOTES_FILE = `${PROJECT_DIRS.NOTES}/readthrough-notes.md`;
+    ReadThroughPanelProvider = class {
+      constructor(container, volume) {
+        this.container = container;
+        this.volume = volume;
+      }
+      panel;
+      volume;
+      async open() {
+        if (!this.container.has("fileSystem")) {
+          vscode39.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+          return;
+        }
+        if (!this.panel) {
+          this.panel = vscode39.window.createWebviewPanel(
+            "novelCompanion.readthroughPanel",
+            "\u901A\u8BFB\u89C6\u56FE",
+            vscode39.ViewColumn.Active,
+            {
+              enableScripts: true,
+              retainContextWhenHidden: true,
+              localResourceRoots: []
+            }
+          );
+          this.panel.iconPath = new vscode39.ThemeIcon("book-open");
+          this.panel.webview.html = this.getHtml();
+          this.panel.webview.onDidReceiveMessage(
+            (msg) => {
+              this.handleMessage(msg).catch((e) => {
+                vscode39.window.showErrorMessage(`\u901A\u8BFB\u89C6\u56FE\u64CD\u4F5C\u5931\u8D25\uFF1A${e.message}`);
+              });
+            },
+            void 0,
+            this.container.context.subscriptions
+          );
+          this.panel.onDidDispose(
+            () => {
+              this.panel = void 0;
+            },
+            void 0,
+            this.container.context.subscriptions
+          );
+        } else {
+          this.panel.reveal(vscode39.ViewColumn.Active, true);
+        }
+        const content = await this.loadContent(this.volume);
+        this.post({ cmd: "content", content });
+      }
+      async handleMessage(msg) {
+        switch (msg.cmd) {
+          case "load": {
+            this.volume = typeof msg.volume === "string" ? msg.volume : "all";
+            const content = await this.loadContent(this.volume);
+            this.post({ cmd: "content", content });
+            break;
+          }
+          case "addNote": {
+            const chapterId = typeof msg.chapterId === "string" ? msg.chapterId : "";
+            const title = typeof msg.title === "string" ? msg.title : "";
+            const quote = typeof msg.quote === "string" ? msg.quote : "";
+            const note = typeof msg.note === "string" ? msg.note : "";
+            if (!chapterId || !note) {
+              this.post({ cmd: "noteError", message: "\u7F3A\u5C11\u7AE0\u8282\u6216\u6279\u6CE8\u5185\u5BB9" });
+              return;
+            }
+            await this.appendNote(chapterId, title, quote, note);
+            this.post({ cmd: "noteSaved" });
+            vscode39.window.showInformationMessage("\u5DF2\u4FDD\u5B58\u6279\u6CE8\u5230 notes/readthrough-notes.md", "\u6253\u5F00\u7B14\u8BB0").then((a) => {
+              if (a === "\u6253\u5F00\u7B14\u8BB0") {
+                this.openNotesFile();
+              }
+            });
+            break;
+          }
+          case "openNotes": {
+            await this.openNotesFile();
+            break;
+          }
+        }
+      }
+      async loadContent(volume) {
+        const im = this.container.get("indexManager");
+        const fs15 = this.container.get("fileSystem");
+        const chapters = await im.getAllChapters();
+        const toc = [];
+        const bodies = [];
+        for (const ch of chapters) {
+          if (volume && volume !== "all" && (ch.volume || "") !== volume)
+            continue;
+          toc.push({ volume: ch.volume || "", chapterId: ch.id, title: ch.title, number: ch.number });
+          let body = "";
+          try {
+            const raw = await fs15.readFile(`${PROJECT_DIRS.CHAPTERS}/${ch.id}/${CHAPTER_FILES.DRAFT}`);
+            body = this.stripFrontMatter(raw);
+          } catch {
+            body = "";
+          }
+          bodies.push({ chapterId: ch.id, title: ch.title, number: ch.number, volume: ch.volume || "", body });
+        }
+        return { toc, chapters: bodies };
+      }
+      stripFrontMatter(raw) {
+        if (raw.startsWith("---")) {
+          const end = raw.indexOf("\n---", 3);
+          if (end >= 0) {
+            return raw.slice(end + 4).replace(/^\r?\n/, "");
+          }
+        }
+        return raw;
+      }
+      async appendNote(chapterId, title, quote, note) {
+        const fs15 = this.container.get("fileSystem");
+        const entry = { chapterId, title, quote, note, createdAt: nowISO() };
+        const lines = [
+          "",
+          `## ${entry.chapterId}\u300A${entry.title}\u300B`,
+          `> \u65F6\u95F4\uFF1A${entry.createdAt}`,
+          ""
+        ];
+        if (entry.quote) {
+          lines.push("> \u5F15\u7528\uFF1A", `> ${entry.quote.split(/\r?\n/).join("\n> ")}`, "");
+        }
+        lines.push(entry.note, "");
+        const block = lines.join("\n");
+        let existing = "";
+        try {
+          existing = await fs15.readFile(NOTES_FILE);
+        } catch {
+          existing = "# \u901A\u8BFB\u6279\u6CE8\u7B14\u8BB0\n\n> \u7531\u901A\u8BFB\u89C6\u56FE\u81EA\u52A8\u8BB0\u5F55\uFF0C\u72EC\u7ACB\u4E8E\u6B63\u6587\uFF0C\u53EF\u81EA\u7531\u7F16\u8F91/\u5220\u9664\u3002\n";
+        }
+        const sep = existing.endsWith("\n") ? "" : "\n";
+        await fs15.writeFile(NOTES_FILE, existing + sep + block);
+      }
+      async openNotesFile() {
+        const fs15 = this.container.get("fileSystem");
+        try {
+          const abs = fs15.resolvePath(NOTES_FILE);
+          await vscode39.commands.executeCommand("vscode.open", vscode39.Uri.file(abs));
+        } catch (e) {
+          vscode39.window.showErrorMessage(`\u6253\u5F00\u7B14\u8BB0\u5931\u8D25\uFF1A${e.message}`);
+        }
+      }
+      post(msg) {
+        this.panel?.webview.postMessage(msg);
+      }
+      getHtml() {
+        return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';" />
+<title>\u901A\u8BFB\u89C6\u56FE</title>
+<style>
+  html, body { height: 100%; margin: 0; }
+  body { font-family: var(--vscode-font-family, sans-serif); color: var(--vscode-foreground, #333); background: var(--vscode-editor-background, #fff); display: flex; }
+  #toc { width: 240px; flex-shrink: 0; border-right: 1px solid var(--vscode-panel-border, #ddd); overflow-y: auto; padding: 8px; font-size: 13px; }
+  #toc .vol { font-weight: bold; margin: 8px 0 4px; opacity: 0.7; font-size: 12px; }
+  #toc a { display: block; padding: 3px 6px; border-radius: 3px; cursor: pointer; text-decoration: none; color: var(--vscode-foreground); }
+  #toc a:hover { background: var(--vscode-list-hoverBackground); }
+  #reader { flex: 1; overflow-y: auto; padding: 24px 40px; line-height: 1.9; }
+  #reader .ch-title { font-size: 20px; font-weight: bold; margin: 32px 0 16px; padding-bottom: 6px; border-bottom: 1px solid var(--vscode-panel-border, #ddd); scroll-margin-top: 16px; }
+  #reader p { margin: 0 0 1em; }
+  #reader .empty { text-align: center; padding: 60px; opacity: 0.6; }
+  #toolbar { position: fixed; top: 4px; right: 16px; display: flex; gap: 6px; z-index: 10; }
+  #toolbar .btn { border: 1px solid var(--vscode-button-border, transparent); background: var(--vscode-button-secondaryBackground, #3a3d41); color: var(--vscode-button-secondaryForeground, #fff); padding: 3px 10px; border-radius: 2px; cursor: pointer; font-size: 12px; }
+  #toolbar .btn:hover { filter: brightness(1.15); }
+  #noteModal { display: none; position: fixed; bottom: 16px; right: 16px; width: 360px; background: var(--vscode-editor-background, #2d2d2d); border: 1px solid var(--vscode-panel-border, #ddd); border-radius: 4px; padding: 10px; box-shadow: 0 4px 12px rgba(0,0,0,.3); z-index: 20; }
+  #noteModal .q { font-size: 12px; opacity: 0.75; margin-bottom: 6px; max-height: 80px; overflow: auto; }
+  #noteModal textarea { width: 100%; height: 80px; resize: vertical; background: var(--vscode-input-background, #3c3c3c); color: var(--vscode-input-foreground, #fff); border: 1px solid var(--vscode-input-border, #3c3c3c); box-sizing: border-box; }
+  #noteModal .actions { text-align: right; margin-top: 6px; }
+  #noteModal .actions button { margin-left: 6px; padding: 3px 10px; cursor: pointer; border: 1px solid var(--vscode-button-border, transparent); background: var(--vscode-button-background, #0e639c); color: var(--vscode-button-foreground, #fff); }
+  #noteModal .actions .cancel { background: var(--vscode-button-secondaryBackground, #3a3d41); color: var(--vscode-button-secondaryForeground, #fff); }
+</style>
+</head>
+<body>
+<div id="toc"></div>
+<div id="reader"><div class="empty">\u52A0\u8F7D\u4E2D\u2026</div></div>
+<div id="toolbar">
+  <button class="btn" id="btnNote" title="\u4E3A\u5F53\u524D\u7AE0\u8282\u6DFB\u52A0\u6279\u6CE8\uFF08\u53EF\u9009\u4E2D\u6B63\u6587\u7247\u6BB5\u4F5C\u4E3A\u5F15\u7528\uFF09">\u6DFB\u52A0\u6279\u6CE8</button>
+  <button class="btn" id="btnNotes" title="\u6253\u5F00\u6279\u6CE8\u7B14\u8BB0\u6587\u4EF6">\u6253\u5F00\u7B14\u8BB0</button>
+</div>
+<div id="noteModal">
+  <div class="q" id="noteQuote"></div>
+  <textarea id="noteText" placeholder="\u6279\u6CE8\u5185\u5BB9\u2026"></textarea>
+  <div class="actions">
+    <button class="cancel" id="noteCancel">\u53D6\u6D88</button>
+    <button id="noteSave">\u4FDD\u5B58</button>
+  </div>
+</div>
+<script>
+  const vscode = acquireVsCodeApi();
+  let toc = [];
+  let currentChapterId = '';
+  let currentTitle = '';
+
+  function renderContent(content) {
+    toc = content.toc || [];
+    const tocEl = document.getElementById('toc');
+    tocEl.innerHTML = '';
+    let lastVol = null;
+    for (const t of toc) {
+      if (t.volume !== lastVol) {
+        const vol = document.createElement('div');
+        vol.className = 'vol';
+        vol.textContent = t.volume || '\uFF08\u672A\u5206\u5377\uFF09';
+        tocEl.appendChild(vol);
+        lastVol = t.volume;
+      }
+      const a = document.createElement('a');
+      a.textContent = '\u7B2C' + t.number + '\u7AE0 ' + t.title;
+      a.dataset.id = t.chapterId;
+      a.onclick = () => jumpTo(t.chapterId);
+      tocEl.appendChild(a);
+    }
+    const reader = document.getElementById('reader');
+    if (!content.chapters || !content.chapters.length) {
+      reader.innerHTML = '<div class="empty">\u6CA1\u6709\u53EF\u901A\u8BFB\u7684\u7AE0\u8282\u6B63\u6587</div>';
+      return;
+    }
+    reader.innerHTML = content.chapters.map((c) => {
+      const body = mdToHtml(c.body);
+      return '<div class="ch-title" id="ch-' + c.chapterId + '">\u7B2C' + c.number + '\u7AE0 ' + esc(c.title) + '</div>' + body;
+    }).join('\\n');
+    if (toc.length) jumpTo(toc[0].chapterId);
+  }
+
+  function jumpTo(id) {
+    currentChapterId = id;
+    const t = toc.find((x) => x.chapterId === id);
+    currentTitle = t ? t.title : '';
+    const el = document.getElementById('ch-' + id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function mdToHtml(text) {
+    const lines = (text || '').split(/\\r?\\n/);
+    let html = '';
+    let inPara = false;
+    const flush = () => { if (inPara) { html += '</p>'; inPara = false; } };
+    for (let raw of lines) {
+      let line = raw.replace(/\\s+$/, '');
+      if (!line) { flush(); continue; }
+      let heading = line.match(/^(#{1,6})\\s+(.*)$/);
+      if (heading) {
+        flush();
+        const lvl = heading[1].length;
+        html += '<h' + lvl + '>' + inline(heading[2]) + '</h' + lvl + '>';
+        continue;
+      }
+      if (line.startsWith('> ')) {
+        flush();
+        html += '<blockquote>' + inline(line.slice(2)) + '</blockquote>';
+        continue;
+      }
+      if (!inPara) { html += '<p>'; inPara = true; }
+      else html += ' ';
+      html += inline(line);
+    }
+    flush();
+    return html;
+  }
+  function inline(s) {
+    return esc(s).replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>').replace(/\\*(.+?)\\*/g, '<em>$1</em>');
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  const modal = document.getElementById('noteModal');
+  document.getElementById('btnNote').onclick = () => {
+    if (!currentChapterId) return;
+    const sel = window.getSelection ? window.getSelection().toString().trim() : '';
+    document.getElementById('noteQuote').textContent = sel ? '\u5F15\u7528\uFF1A' + sel : '';
+    document.getElementById('noteText').value = '';
+    modal.style.display = 'block';
+    document.getElementById('noteText').focus();
+  };
+  document.getElementById('noteCancel').onclick = () => { modal.style.display = 'none'; };
+  document.getElementById('noteSave').onclick = () => {
+    const quote = (document.getElementById('noteQuote').textContent || '').replace(/^\u5F15\u7528\uFF1A/, '');
+    const note = document.getElementById('noteText').value.trim();
+    if (!note) return;
+    vscode.postMessage({ cmd: 'addNote', chapterId: currentChapterId, title: currentTitle, quote, note });
+    modal.style.display = 'none';
+  };
+  document.getElementById('btnNotes').onclick = () => vscode.postMessage({ cmd: 'openNotes' });
+
+  window.addEventListener('message', (e) => {
+    const m = e.data;
+    if (m.cmd === 'content') renderContent(m.content);
+    if (m.cmd === 'noteSaved') { /* noop */ }
+    if (m.cmd === 'noteError') { alert(m.message); }
+  });
+</script>
+</body>
+</html>`;
+      }
+      dispose() {
+        this.panel?.dispose();
+        this.panel = void 0;
+      }
+    };
+  }
+});
+
+// src/presentation/commands/readthroughCommands.ts
+async function openReadThrough(container, arg) {
+  if (!container.has("fileSystem")) {
+    vscode40.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  let volume = "all";
+  if (typeof arg === "string") {
+    volume = arg;
+  } else {
+    const im = container.get("indexManager");
+    const chapters = await im.getAllChapters();
+    const volumes = /* @__PURE__ */ new Set();
+    for (const ch of chapters)
+      volumes.add(ch.volume || "");
+    if (volumes.size > 1) {
+      const items = [
+        { label: "\u5168\u4E66", value: "all" },
+        ...Array.from(volumes).sort().map((v) => ({ label: v || "\uFF08\u672A\u5206\u5377\uFF09", value: v }))
+      ];
+      const picked = await vscode40.window.showQuickPick(
+        items.map((i) => ({ label: i.label, value: i.value })),
+        { placeHolder: "\u9009\u62E9\u901A\u8BFB\u8303\u56F4" }
+      );
+      if (!picked)
+        return;
+      volume = picked.value;
+    }
+  }
+  const provider = new ReadThroughPanelProvider(container, volume);
+  await provider.open();
+}
+var vscode40;
+var init_readthroughCommands = __esm({
+  "src/presentation/commands/readthroughCommands.ts"() {
+    "use strict";
+    vscode40 = __toESM(require("vscode"));
+    init_readthroughPanelProvider();
+  }
+});
+
+// src/presentation/webview/relationGraphProvider.ts
+var vscode41, RelationGraphProvider;
+var init_relationGraphProvider = __esm({
+  "src/presentation/webview/relationGraphProvider.ts"() {
+    "use strict";
+    vscode41 = __toESM(require("vscode"));
+    init_relationService();
+    RelationGraphProvider = class {
+      constructor(container) {
+        this.container = container;
+      }
+      panel;
+      async open() {
+        if (!this.container.has("fileSystem")) {
+          vscode41.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+          return;
+        }
+        if (!this.panel) {
+          this.panel = vscode41.window.createWebviewPanel(
+            "novelCompanion.relationGraph",
+            "\u4EBA\u7269\u5173\u7CFB\u56FE",
+            vscode41.ViewColumn.Active,
+            { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [] }
+          );
+          this.panel.iconPath = new vscode41.ThemeIcon("references");
+          this.panel.webview.onDidReceiveMessage(
+            (msg) => {
+              this.handleMessage(msg).catch((e) => {
+                vscode41.window.showErrorMessage(`\u5173\u7CFB\u56FE\u64CD\u4F5C\u5931\u8D25\uFF1A${e.message}`);
+              });
+            },
+            void 0,
+            this.container.context.subscriptions
+          );
+          this.panel.onDidDispose(
+            () => {
+              this.panel = void 0;
+            },
+            void 0,
+            this.container.context.subscriptions
+          );
+        } else {
+          this.panel.reveal(vscode41.ViewColumn.Active, true);
+        }
+        this.panel.webview.html = this.getHtml();
+        const graph = await new RelationService(this.container).buildGraph();
+        this.post({ cmd: "graph", graph });
+      }
+      async handleMessage(msg) {
+        if (msg.cmd === "openCharacter" && typeof msg.id === "string" && this.isSafeEntityId(msg.id)) {
+          const fs15 = this.container.get("fileSystem");
+          try {
+            const abs = fs15.resolvePath(`characters/${msg.id}.md`);
+            await vscode41.commands.executeCommand("vscode.open", vscode41.Uri.file(abs));
+          } catch (e) {
+            vscode41.window.showErrorMessage(`\u6253\u5F00\u4EBA\u7269\u5361\u5931\u8D25\uFF1A${e.message}`);
+          }
+        }
+      }
+      isSafeEntityId(id) {
+        return !/[\s\\/]/.test(id) && !id.includes("..");
+      }
+      post(msg) {
+        this.panel?.webview.postMessage(msg);
+      }
+      getHtml() {
+        return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';" />
+<title>\u4EBA\u7269\u5173\u7CFB\u56FE</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{font-family:var(--vscode-font-family,sans-serif);color:var(--vscode-foreground,#333);background:var(--vscode-editor-background,#fff)}
+  #wrap{position:relative;width:100%;height:100vh}
+  svg{width:100%;height:100%;display:block}
+  .node circle{stroke:#fff;stroke-width:1.5px;cursor:pointer}
+  .node text{font-size:12px;pointer-events:none;text-anchor:middle}
+  .link{stroke:#888;stroke-opacity:.5;fill:none}
+  .link-label{font-size:9px;fill:var(--vscode-descriptionForeground,#888);text-anchor:middle;pointer-events:none}
+  #legend{position:absolute;left:8px;top:8px;font-size:11px;background:var(--vscode-editor-background,rgba(255,255,255,.8));padding:6px 8px;border:1px solid var(--vscode-panel-border,#ddd);border-radius:3px}
+  #legend .row{display:flex;align-items:center;gap:5px;margin:2px 0}
+  #legend .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  #hint{position:absolute;right:8px;top:8px;font-size:11px;color:var(--vscode-descriptionForeground,#888)}
+  .empty{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);opacity:.6}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <svg id="svg"></svg>
+  <div id="legend"></div>
+  <div id="hint">\u62D6\u62FD\u8282\u70B9\u91CD\u6392 \xB7 \u70B9\u51FB\u8282\u70B9\u6253\u5F00\u4EBA\u7269\u5361</div>
+  <div class="empty" id="empty" style="display:none">\u672A\u627E\u5230\u4EBA\u7269\u5173\u7CFB\u6570\u636E\uFF0C\u8BF7\u5728\u4EBA\u7269\u5361\u300C## \u4EBA\u7269\u5173\u7CFB\u300D\u4E2D\u586B\u5199\u5173\u7CFB</div>
+</div>
+<script>
+  const vscode = acquireVsCodeApi();
+  const svg = document.getElementById('svg');
+  const NS = 'http://www.w3.org/2000/svg';
+  let nodes=[], edges=[], width=0, height=0, byId={};
+
+  function resize(){ width=svg.clientWidth; height=svg.clientHeight; svg.setAttribute('viewBox','0 0 '+width+' '+height); }
+  window.addEventListener('resize', ()=>{ resize(); layout(); draw(); });
+  resize();
+
+  function render(graph){
+    byId={}; nodes=graph.nodes.map(n=>({id:n.id,name:n.name,role:n.role||'supporting',x:width/2,y:height/2,vx:0,vy:0,pinned:false}));
+    nodes.forEach(n=>byId[n.id]=n);
+    edges=graph.edges.map(e=>({source:byId[e.source],target:byId[e.target],label:e.label}));
+    renderLegend();
+    if(nodes.length===0){ document.getElementById('empty').style.display='block'; svg.innerHTML=''; return; }
+    document.getElementById('empty').style.display='none';
+    for(let i=0;i<nodes.length;i++){ const a=2*Math.PI*i/nodes.length; nodes[i].x=width/2+Math.cos(a)*Math.min(width,height)*0.3; nodes[i].y=height/2+Math.sin(a)*Math.min(width,height)*0.3; }
+    layout(); draw();
+  }
+
+  function renderLegend(){
+    const roles=[['protagonist','\u4E3B\u89D2'],['deuteragonist','\u6B21\u4E3B\u89D2'],['antagonist','\u53CD\u6D3E'],['supporting','\u914D\u89D2'],['minor','\u6B21\u8981'],['mentioned','\u63D0\u53CA']];
+    let html='';
+    for(const [k,label] of roles){ html+='<div class="row"><span class="dot" style="background:'+colorFor(k)+'"></span>'+label+'</div>'; }
+    document.getElementById('legend').innerHTML=html;
+  }
+  function colorFor(role){ const m={protagonist:'#2a8c2a',deuteragonist:'#2a6f9e',antagonist:'#c33',supporting:'#d4a017',minor:'#888',mentioned:'#aaa'}; return m[role]||'#888'; }
+
+  function layout(){
+    const k=120, iters=260;
+    for(let it=0;it<iters;it++){
+      const T=1-it/iters;
+      for(const n of nodes){ if(n.pinned) continue; n.vx=0; n.vy=0; }
+      for(let i=0;i<nodes.length;i++){
+        const a=nodes[i];
+        for(let j=i+1;j<nodes.length;j++){
+          const b=nodes[j];
+          let dx=a.x-b.x, dy=a.y-b.y; let d=Math.sqrt(dx*dx+dy*dy)||0.01;
+          const repel=k*k/d;
+          const fx=dx/d*repel, fy=dy/d*repel;
+          if(!a.pinned){a.vx+=fx;a.vy+=fy;}
+          if(!b.pinned){b.vx-=fx;b.vy-=fy;}
+        }
+      }
+      for(const e of edges){
+        const a=e.source, b=e.target;
+        let dx=b.x-a.x, dy=b.y-a.y; let d=Math.sqrt(dx*dx+dy*dy)||0.01;
+        const attract=d*d/k;
+        const fx=dx/d*attract, fy=dy/d*attract;
+        if(!a.pinned){a.vx-=fx;a.vy-=fy;}
+        if(!b.pinned){b.vx+=fx;b.vy+=fy;}
+      }
+      for(const n of nodes){
+        if(n.pinned) continue;
+        n.x+=n.vx*T*0.1; n.y+=n.vy*T*0.1;
+        n.x=Math.max(40,Math.min(width-40,n.x)); n.y=Math.max(30,Math.min(height-30,n.y));
+      }
+    }
+  }
+
+  function draw(){
+    svg.innerHTML='';
+    for(const e of edges){
+      const ln=document.createElementNS(NS,'line');
+      ln.setAttribute('x1',e.source.x);ln.setAttribute('y1',e.source.y);
+      ln.setAttribute('x2',e.target.x);ln.setAttribute('y2',e.target.y);
+      ln.setAttribute('class','link');
+      svg.appendChild(ln);
+      if(e.label){
+        const t=document.createElementNS(NS,'text');
+        t.setAttribute('x',(e.source.x+e.target.x)/2);
+        t.setAttribute('y',(e.source.y+e.target.y)/2);
+        t.setAttribute('class','link-label');
+        t.textContent=e.label;
+        svg.appendChild(t);
+      }
+    }
+    for(const n of nodes){
+      const g=document.createElementNS(NS,'g');
+      g.setAttribute('class','node');
+      g.setAttribute('transform','translate('+n.x+','+n.y+')');
+      const c=document.createElementNS(NS,'circle');
+      const r=Math.max(12,Math.min(22,8+edges.filter(e=>e.source===n||e.target===n).length*2));
+      c.setAttribute('r',r); c.setAttribute('fill',colorFor(n.role));
+      g.appendChild(c);
+      const t=document.createElementNS(NS,'text');
+      t.setAttribute('y',r+14); t.textContent=n.name;
+      g.appendChild(t);
+      g.addEventListener('click',()=>vscode.postMessage({cmd:'openCharacter',id:n.id}));
+      let dragging=false;
+      g.addEventListener('mousedown',(ev)=>{dragging=true;n.pinned=true;ev.preventDefault();});
+      window.addEventListener('mousemove',(ev)=>{ if(!dragging) return; const rect=svg.getBoundingClientRect(); n.x=ev.clientX-rect.left; n.y=ev.clientY-rect.top; redraw(); });
+      window.addEventListener('mouseup',()=>{ if(dragging){dragging=false;n.pinned=false;} });
+      svg.appendChild(g);
+    }
+  }
+  function redraw(){ const gs=svg.querySelectorAll('.node'); nodes.forEach((n,i)=>{ if(gs[i]) gs[i].setAttribute('transform','translate('+n.x+','+n.y+')'); }); const lines=svg.querySelectorAll('.link'); edges.forEach((e,i)=>{ if(lines[i]){ lines[i].setAttribute('x1',e.source.x);lines[i].setAttribute('y1',e.source.y);lines[i].setAttribute('x2',e.target.x);lines[i].setAttribute('y2',e.target.y);} }); }
+
+  window.addEventListener('message',(e)=>{ const m=e.data; if(m.cmd==='graph') render(m.graph); });
+</script>
+</body>
+</html>`;
+      }
+      dispose() {
+        this.panel?.dispose();
+        this.panel = void 0;
+      }
+    };
+  }
+});
+
+// src/presentation/commands/relationCommands.ts
+async function openRelationGraph(container) {
+  const provider = new RelationGraphProvider(container);
+  await provider.open();
+}
+var init_relationCommands = __esm({
+  "src/presentation/commands/relationCommands.ts"() {
+    "use strict";
+    init_relationGraphProvider();
+  }
+});
+
+// src/presentation/webview/timelineVizProvider.ts
+var vscode42, TimelineVizProvider;
+var init_timelineVizProvider = __esm({
+  "src/presentation/webview/timelineVizProvider.ts"() {
+    "use strict";
+    vscode42 = __toESM(require("vscode"));
+    init_timelineVizService();
+    TimelineVizProvider = class {
+      constructor(container) {
+        this.container = container;
+      }
+      panel;
+      async open() {
+        if (!this.container.has("fileSystem")) {
+          vscode42.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+          return;
+        }
+        if (!this.panel) {
+          this.panel = vscode42.window.createWebviewPanel(
+            "novelCompanion.timelineViz",
+            "\u65F6\u95F4\u7EBF\u53EF\u89C6\u5316",
+            vscode42.ViewColumn.Active,
+            { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [] }
+          );
+          this.panel.iconPath = new vscode42.ThemeIcon("timeline-view");
+          this.panel.webview.onDidReceiveMessage(
+            (msg) => {
+              this.handleMessage(msg).catch((e) => {
+                vscode42.window.showErrorMessage(`\u65F6\u95F4\u7EBF\u64CD\u4F5C\u5931\u8D25\uFF1A${e.message}`);
+              });
+            },
+            void 0,
+            this.container.context.subscriptions
+          );
+          this.panel.onDidDispose(
+            () => {
+              this.panel = void 0;
+            },
+            void 0,
+            this.container.context.subscriptions
+          );
+        } else {
+          this.panel.reveal(vscode42.ViewColumn.Active, true);
+        }
+        this.panel.webview.html = this.getHtml();
+        const data = await new TimelineVizService(this.container).build();
+        this.post({ cmd: "data", data });
+      }
+      async handleMessage(msg) {
+        if (msg.cmd === "openChapter" && typeof msg.id === "string" && /^ch\d{3}$/.test(msg.id)) {
+          const fs15 = this.container.get("fileSystem");
+          try {
+            const abs = fs15.resolvePath(`chapters/${msg.id}/draft.md`);
+            await vscode42.commands.executeCommand("vscode.open", vscode42.Uri.file(abs));
+          } catch (e) {
+            vscode42.window.showErrorMessage(`\u6253\u5F00\u7AE0\u8282\u5931\u8D25\uFF1A${e.message}`);
+          }
+        }
+      }
+      post(msg) {
+        this.panel?.webview.postMessage(msg);
+      }
+      getHtml() {
+        return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';" />
+<title>\u65F6\u95F4\u7EBF\u53EF\u89C6\u5316</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{font-family:var(--vscode-font-family,sans-serif);color:var(--vscode-foreground,#333);background:var(--vscode-editor-background,#fff)}
+  #toolbar{padding:8px 12px;border-bottom:1px solid var(--vscode-panel-border,#ddd);display:flex;gap:12px;align-items:center;font-size:12px}
+  .stat{opacity:.8}
+  .conflict{color:var(--vscode-editorWarning-foreground,#d4a017)}
+  #scroll{overflow:auto;padding:16px}
+  svg{display:block}
+  .axis{stroke:var(--vscode-panel-border,#888);stroke-width:1}
+  .tick{stroke:var(--vscode-panel-border,#888);stroke-width:1}
+  .tick-label{font-size:10px;fill:var(--vscode-descriptionForeground,#888);text-anchor:middle}
+  .lane-label{font-size:11px;fill:var(--vscode-foreground,#333);text-anchor:end}
+  .event{cursor:pointer}
+  .event circle{stroke:#fff;stroke-width:1.5}
+  .event text{font-size:9px;text-anchor:middle;pointer-events:none}
+  .event.conflict circle{stroke:var(--vscode-editorWarning-foreground,#d4a017);stroke-width:2.5}
+  .event.climax circle{r:10}
+  #tip{position:fixed;display:none;background:var(--vscode-editor-background,#2d2d2d);border:1px solid var(--vscode-panel-border,#ddd);border-radius:4px;padding:8px;font-size:12px;max-width:280px;box-shadow:0 2px 8px rgba(0,0,0,.3);z-index:20}
+  .empty{padding:60px;text-align:center;opacity:.6}
+  .legend-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle}
+</style>
+</head>
+<body>
+<div id="toolbar">
+  <span class="stat" id="statCount">\u4E8B\u4EF6\uFF1A0</span>
+  <span class="stat" id="statConflict">\u51B2\u7A81\uFF1A0</span>
+  <span><span class="legend-dot" style="background:#2a6f9e"></span>\u666E\u901A</span>
+  <span><span class="legend-dot" style="background:#c33"></span>\u9AD8\u6F6E</span>
+  <span><span class="legend-dot" style="background:#d4a017;outline:2px solid #d4a017"></span>\u51B2\u7A81</span>
+</div>
+<div id="scroll"><svg id="svg"></svg><div class="empty" id="empty" style="display:none">\u6682\u65E0 story_time \u6570\u636E\uFF0C\u8BF7\u5728\u5404\u7AE0\u8282 chapter.yaml \u586B\u5199 story_time \u5B57\u6BB5</div></div>
+<div id="tip"></div>
+<script>
+  const vscode=acquireVsCodeApi();
+  const svg=document.getElementById('svg');
+  const NS='http://www.w3.org/2000/svg';
+  const tip=document.getElementById('tip');
+  let data=null, laneSet=[], events=[];
+
+  function render(d){
+    data=d;
+    if(!d.hasStoryTime || d.events.length===0){ document.getElementById('empty').style.display='block'; svg.innerHTML=''; return; }
+    document.getElementById('empty').style.display='none';
+    document.getElementById('statCount').textContent='\u4E8B\u4EF6\uFF1A'+d.events.length;
+    document.getElementById('statConflict').textContent='\u51B2\u7A81\uFF1A'+d.conflictCount;
+    laneSet=[]; const laneMap=new Map();
+    for(const e of d.events){ for(const c of e.characters){ if(!laneMap.has(c)){ laneMap.set(c,laneSet.length); laneSet.push(c);} } }
+    events=d.events;
+    const padL=120, padR=40, padT=40, padB=40;
+    const laneH=Math.max(26, Math.min(48, 360/(laneSet.length||1)));
+    const xCount=Math.max(1,d.events.length);
+    const innerW=Math.max(800, xCount*90);
+    const innerH=laneSet.length*laneH;
+    const W=padL+innerW+padR, H=padT+innerH+padB;
+    svg.setAttribute('width',W); svg.setAttribute('height',H);
+    svg.innerHTML='';
+    const xOf=(i)=> padL + (innerW/(xCount+1))*(i+1);
+    const yOf=(lane)=> padT + lane*laneH + laneH/2;
+    const axis=mk('line'); axis.setAttribute('x1',padL);axis.setAttribute('y1',padT);axis.setAttribute('x2',padL+innerW);axis.setAttribute('y2',padT);axis.setAttribute('class','axis'); svg.appendChild(axis);
+    for(let i=0;i<d.events.length;i++){ const x=xOf(i); const t=mk('line'); t.setAttribute('x1',x);t.setAttribute('y1',padT-4);t.setAttribute('x2',x);t.setAttribute('y2',padT);t.setAttribute('class','tick'); svg.appendChild(t); const lbl=mk('text'); lbl.setAttribute('x',x);lbl.setAttribute('y',padT-8);lbl.setAttribute('class','tick-label');lbl.textContent='\u7B2C'+d.events[i].number+'\u7AE0'; svg.appendChild(lbl); }
+    for(let l=0;l<laneSet.length;l++){ const lbl=mk('text'); lbl.setAttribute('x',padL-10);lbl.setAttribute('y',yOf(l)+4);lbl.setAttribute('class','lane-label');lbl.textContent=laneSet[l]; svg.appendChild(lbl); }
+    for(let i=0;i<d.events.length;i++){
+      const e=d.events[i];
+      const x=xOf(i);
+      const chars=e.characters.length?e.characters:['\uFF08\u65E0\u4EBA\u7269\uFF09'];
+      for(const c of chars){ const lane=laneMap.get(c); if(lane===undefined) continue; const g=mk('g'); g.setAttribute('class','event'+(e.isConflict?' conflict':'')+(e.climax?' climax':'')); g.setAttribute('transform','translate('+x+','+yOf(lane)+')');
+        const circle=mk('circle'); circle.setAttribute('r',e.climax?9:6); circle.setAttribute('fill',e.climax?'#c33':'#2a6f9e'); g.appendChild(circle);
+        g.addEventListener('click',()=>vscode.postMessage({cmd:'openChapter',id:e.chapterId}));
+        g.addEventListener('mouseenter',(ev)=>showTip(ev,e)); g.addEventListener('mouseleave',hideTip); g.addEventListener('mousemove',moveTip);
+        svg.appendChild(g);
+      }
+    }
+    if(d.events.length>0){ for(let i=1;i<d.events.length;i++){ if(d.events[i].isConflict){ const x0=xOf(i-1),x1=xOf(i); const warn=mk('rect'); warn.setAttribute('x',x0);warn.setAttribute('y',padT);warn.setAttribute('width',x1-x0);warn.setAttribute('height',innerH);warn.setAttribute('fill','var(--vscode-editorWarning-background, rgba(212,160,23,.12))'); svg.insertBefore(warn, svg.firstChild); } } }
+  }
+  function mk(t){ return document.createElementNS(NS,t); }
+  function showTip(ev,e){ tip.style.display='block'; tip.innerHTML='<b>\u7B2C'+e.number+'\u7AE0 '+esc(e.title)+'</b><br>\u6545\u4E8B\u65F6\u95F4\uFF1A'+esc(e.storyTime)+(e.climax?'<br><span style="color:#c33">\u9AD8\u6F6E\uFF1A'+esc(e.climax)+'</span>':'')+(e.characters.length?'<br>\u4EBA\u7269\uFF1A'+esc(e.characters.join('\u3001'))':'')+(e.location.length?'<br>\u5730\u70B9\uFF1A'+esc(e.location.join('\u3001'))':'')+(e.isConflict?'<br><span style="color:var(--vscode-editorWarning-foreground,#d4a017)">\u51B2\u7A81\uFF08'+(e.conflictType||'')+'\uFF09</span>':''); moveTip(ev); }
+  function moveTip(ev){ tip.style.left=Math.min(ev.clientX+14, window.innerWidth-300)+'px'; tip.style.top=(ev.clientY+14)+'px'; }
+  function hideTip(){ tip.style.display='none'; }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  window.addEventListener('message',(e)=>{ const m=e.data; if(m.cmd==='data') render(m.data); });
+</script>
+</body>
+</html>`;
+      }
+      dispose() {
+        this.panel?.dispose();
+        this.panel = void 0;
+      }
+    };
+  }
+});
+
+// src/presentation/commands/timelineVizCommands.ts
+async function openTimelineViz(container) {
+  const provider = new TimelineVizProvider(container);
+  await provider.open();
+}
+var init_timelineVizCommands = __esm({
+  "src/presentation/commands/timelineVizCommands.ts"() {
+    "use strict";
+    init_timelineVizProvider();
+  }
+});
+
+// src/presentation/webview/immersiveWriteProvider.ts
+function esc4(text) {
+  return String(text ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function container_getIndexManager(container) {
+  return container.get("indexManager");
+}
+var vscode43, THEME_KEY, DEFAULT_THEME, PAPER_BG, PAPER_BG_NIGHT, ImmersiveWriteProvider;
+var init_immersiveWriteProvider = __esm({
+  "src/presentation/webview/immersiveWriteProvider.ts"() {
+    "use strict";
+    vscode43 = __toESM(require("vscode"));
+    init_frontMatterParser();
+    init_utils();
+    init_constants();
+    THEME_KEY = "novelCompanion.immersiveTheme";
+    DEFAULT_THEME = {
+      paper: "plain",
+      fontFamily: 'var(--vscode-editor-font-family, "PingFang SC", "Microsoft YaHei", sans-serif)',
+      fontSize: 17,
+      lineHeight: 2,
+      nightMode: false,
+      focusMode: false
+    };
+    PAPER_BG = {
+      plain: "var(--vscode-editor-background, #ffffff)",
+      parchment: "#f5ecd6",
+      bamboo: "#eef4e8",
+      mist: "#eef2f5"
+    };
+    PAPER_BG_NIGHT = {
+      plain: "#1e1e1e",
+      parchment: "#2b2718",
+      bamboo: "#1c241c",
+      mist: "#1c2024"
+    };
+    ImmersiveWriteProvider = class {
+      constructor(container) {
+        this.container = container;
+        this.theme = container.context.globalState.get(THEME_KEY) ?? { ...DEFAULT_THEME };
+      }
+      panel;
+      chapterId;
+      theme;
+      fmParser = new FrontMatterParser();
+      async open(arg) {
+        if (!this.container.has("fileSystem")) {
+          vscode43.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+          return;
+        }
+        let chapterId = this.resolveChapterId(arg);
+        if (!chapterId) {
+          const im = container_getIndexManager(this.container);
+          const chapters = await im.getAllChapters();
+          if (chapters.length === 0) {
+            vscode43.window.showWarningMessage("\u5F53\u524D\u6CA1\u6709\u7AE0\u8282");
+            return;
+          }
+          const picked = await vscode43.window.showQuickPick(
+            chapters.map((c) => ({ label: `\u7B2C${c.number}\u7AE0 ${c.title}`, id: c.id })),
+            { placeHolder: "\u9009\u62E9\u8981\u6C89\u6D78\u5199\u4F5C\u7684\u7AE0\u8282" }
+          );
+          if (!picked)
+            return;
+          chapterId = picked.id;
+        }
+        this.chapterId = chapterId;
+        if (!this.panel) {
+          this.panel = vscode43.window.createWebviewPanel(
+            "novelCompanion.immersiveWrite",
+            "\u6C89\u6D78\u5199\u4F5C",
+            vscode43.ViewColumn.Active,
+            { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [] }
+          );
+          this.panel.iconPath = new vscode43.ThemeIcon("edit");
+          this.panel.webview.onDidReceiveMessage(
+            (msg) => {
+              this.handleMessage(msg).catch((e) => {
+                vscode43.window.showErrorMessage(`\u6C89\u6D78\u5199\u4F5C\u5931\u8D25\uFF1A${e.message}`);
+              });
+            },
+            void 0,
+            this.container.context.subscriptions
+          );
+          this.panel.onDidDispose(
+            () => {
+              this.panel = void 0;
+            },
+            void 0,
+            this.container.context.subscriptions
+          );
+        } else {
+          this.panel.reveal(vscode43.ViewColumn.Active, true);
+        }
+        this.panel.webview.html = this.getHtml();
+        await this.loadChapter();
+      }
+      resolveChapterId(arg) {
+        if (typeof arg === "string" && /^ch\d{3}$/.test(arg))
+          return arg;
+        const editor = vscode43.window.activeTextEditor;
+        if (editor) {
+          const id = extractChapterId(editor.document.uri.fsPath);
+          if (id)
+            return id;
+        }
+        return void 0;
+      }
+      async loadChapter() {
+        if (!this.chapterId || !this.panel)
+          return;
+        const fs15 = this.container.get("fileSystem");
+        const rel = `${PROJECT_DIRS.CHAPTERS}/${this.chapterId}/${CHAPTER_FILES.DRAFT}`;
+        let raw = "";
+        try {
+          raw = await fs15.readFile(rel);
+        } catch {
+        }
+        const body = this.fmParser.extractBody(raw);
+        const fm = this.fmParser.extractFrontMatter(raw);
+        this.post({ cmd: "loaded", chapterId: this.chapterId, body, hasFrontMatter: Object.keys(fm).length > 0, theme: this.theme });
+      }
+      async handleMessage(msg) {
+        switch (msg.cmd) {
+          case "save": {
+            if (!this.chapterId)
+              return;
+            const fs15 = this.container.get("fileSystem");
+            const rel = `${PROJECT_DIRS.CHAPTERS}/${this.chapterId}/${CHAPTER_FILES.DRAFT}`;
+            const body = typeof msg.body === "string" ? msg.body : "";
+            let newContent = body;
+            try {
+              const existing = await fs15.readFile(rel);
+              const parsed = this.fmParser.parse(existing);
+              if (Object.keys(parsed.data).length > 0) {
+                newContent = this.fmParser.stringify(parsed.data, body);
+              }
+            } catch {
+            }
+            await fs15.writeFile(rel, newContent);
+            this.post({ cmd: "saved" });
+            vscode43.window.setStatusBarMessage(`\u5DF2\u4FDD\u5B58\uFF1A${this.chapterId} draft.md`, 3e3);
+            break;
+          }
+          case "updateTheme": {
+            this.theme = { ...this.theme, ...msg.theme };
+            await this.container.context.globalState.update(THEME_KEY, this.theme);
+            this.post({ cmd: "themeApplied", theme: this.theme });
+            break;
+          }
+          case "toggleFocus": {
+            this.theme.focusMode = !this.theme.focusMode;
+            await this.container.context.globalState.update(THEME_KEY, this.theme);
+            this.post({ cmd: "themeApplied", theme: this.theme });
+            break;
+          }
+        }
+      }
+      post(msg) {
+        this.panel?.webview.postMessage(msg);
+      }
+      getHtml() {
+        const t = this.theme;
+        const bg = t.nightMode ? PAPER_BG_NIGHT[t.paper] : PAPER_BG[t.paper];
+        const fg = t.nightMode ? "#d4d4d4" : "var(--vscode-editor-foreground, #333)";
+        return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';" />
+<title>\u6C89\u6D78\u5199\u4F5C</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{font-family:${esc4(t.fontFamily)};background:${bg};color:${fg};transition:background .2s}
+  #wrap{max-width:780px;margin:0 auto;padding:32px 24px 80px;height:100%;box-sizing:border-box;overflow-y:auto}
+  #title{font-size:22px;font-weight:bold;margin-bottom:16px;opacity:.8;text-align:center}
+  #editor{width:100%;min-height:60vh;background:transparent;border:none;outline:none;resize:none;font-family:inherit;color:inherit;font-size:${t.fontSize}px;line-height:${t.lineHeight};box-sizing:border-box}
+  #bar{position:fixed;top:8px;right:12px;display:flex;gap:6px;align-items:center;font-size:12px;background:${bg};padding:6px 8px;border:1px solid rgba(128,128,128,.3);border-radius:4px}
+  #bar select,#bar button{background:rgba(128,128,128,.2);color:${fg};border:1px solid rgba(128,128,128,.4);border-radius:3px;padding:2px 6px;font-size:12px}
+  #status{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);font-size:12px;opacity:.6}
+  body.focus #bar,body.focus #status{opacity:0;pointer-events:none}
+  body.focus #bar:hover,body.focus #status:hover{opacity:1;pointer-events:auto}
+</style>
+</head>
+<body class="${t.focusMode ? "focus" : ""}">
+<div id="bar">
+  <select id="paper" title="\u7EB8\u5F20">
+    <option value="plain">\u7D20\u767D</option><option value="parchment">\u7F8A\u76AE\u7EB8</option><option value="bamboo">\u7AF9\u53F6</option><option value="mist">\u8584\u96FE</option>
+  </select>
+  <label title="\u5B57\u53F7">Aa</label>
+  <input id="fontSize" type="range" min="14" max="26" step="1" />
+  <label title="\u884C\u8DDD">\u21D5</label>
+  <input id="lineHeight" type="range" min="1.4" max="3" step="0.1" />
+  <button id="night" title="\u591C\u95F4">\u591C</button>
+  <button id="focus" title="\u805A\u7126">\u805A\u7126</button>
+  <button id="save">\u4FDD\u5B58</button>
+</div>
+<div id="wrap">
+  <div id="title"></div>
+  <textarea id="editor" placeholder="\u5728\u6B64\u4E13\u6CE8\u5199\u4F5C\u2026\uFF08\u4FDD\u5B58\u5199\u56DE draft.md\uFF09"></textarea>
+</div>
+<div id="status"></div>
+<script>
+  const vscode=acquireVsCodeApi();
+  const editor=document.getElementById('editor');
+  const titleEl=document.getElementById('title');
+  const status=document.getElementById('status');
+  let theme=null, dirty=false;
+  function applyTheme(t){ theme=t;
+    const bg = t.nightMode ? ({plain:'#1e1e1e',parchment:'#2b2718',bamboo:'#1c241c',mist:'#1c2024'}[t.paper]) : ({plain:'#ffffff',parchment:'#f5ecd6',bamboo:'#eef4e8',mist:'#eef2f5'}[t.paper]);
+    document.body.style.background=bg; document.body.style.color = t.nightMode?'#d4d4d4':'#333';
+    const bar=document.getElementById('bar'); bar.style.background=bg;
+    editor.style.fontSize=t.fontSize+'px'; editor.style.lineHeight=t.lineHeight;
+    document.body.classList.toggle('focus', t.focusMode);
+    document.getElementById('paper').value=t.paper; document.getElementById('fontSize').value=t.fontSize; document.getElementById('lineHeight').value=t.lineHeight;
+  }
+  editor.addEventListener('input',()=>{ dirty=true; status.textContent='\u672A\u4FDD\u5B58'; countWords(); });
+  function countWords(){ const s=editor.value.replace(/\\s/g,''); status.textContent=(dirty?'\u672A\u4FDD\u5B58 \xB7 ':'')+s.length+' \u5B57'; }
+  let saveTimer=null;
+  function cancelPendingSave(){ if(saveTimer){ clearTimeout(saveTimer); saveTimer=null; } }
+  function doSaveBody(){ cancelPendingSave(); vscode.postMessage({cmd:'save',body:editor.value}); dirty=false; }
+  document.getElementById('save').onclick=()=>{ doSaveBody(); };
+  document.getElementById('night').onclick=()=>{ vscode.postMessage({cmd:'updateTheme',theme:{nightMode:!theme.nightMode}}); };
+  document.getElementById('focus').onclick=()=>{ vscode.postMessage({cmd:'toggleFocus'}); };
+  document.getElementById('paper').onchange=(e)=>vscode.postMessage({cmd:'updateTheme',theme:{paper:e.target.value}});
+  document.getElementById('fontSize').oninput=(e)=>vscode.postMessage({cmd:'updateTheme',theme:{fontSize:parseInt(e.target.value,10)}});
+  document.getElementById('lineHeight').oninput=(e)=>vscode.postMessage({cmd:'updateTheme',theme:{lineHeight:parseFloat(e.target.value)}});
+  window.addEventListener('beforeunload',()=>{ if(dirty) doSaveBody(); });
+  editor.addEventListener('input',()=>{ cancelPendingSave(); saveTimer=setTimeout(()=>{ doSaveBody(); }, 4000); });
+  window.addEventListener('message',(e)=>{ const m=e.data;
+    if(m.cmd==='loaded'){ titleEl.textContent='\u7B2C '+m.chapterId.slice(1)+' \u7AE0'; editor.value=m.body||''; applyTheme(m.theme); countWords(); }
+    if(m.cmd==='themeApplied') applyTheme(m.theme);
+    if(m.cmd==='saved') status.textContent='\u5DF2\u4FDD\u5B58';
+  });
+</script>
+</body>
+</html>`;
+      }
+      dispose() {
+        this.panel?.dispose();
+        this.panel = void 0;
+      }
+    };
+  }
+});
+
+// src/presentation/commands/immersiveCommands.ts
+async function openImmersiveWrite(container, arg) {
+  const provider = new ImmersiveWriteProvider(container);
+  await provider.open(arg);
+}
+var init_immersiveCommands = __esm({
+  "src/presentation/commands/immersiveCommands.ts"() {
+    "use strict";
+    init_immersiveWriteProvider();
+  }
+});
+
+// src/presentation/commands/mcpCommands.ts
+async function installMcpServer(container) {
+  if (!container.has("fileSystem")) {
+    vscode44.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE\uFF0C\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A\u7B14\u642D\u5C0F\u8BF4\u9879\u76EE");
+    return;
+  }
+  try {
+    const installer = new McpInstaller(container);
+    const result = await installer.install();
+    const abs = await container.get("fileSystem").resolvePath(result.configDir);
+    const open = await vscode44.window.showInformationMessage(
+      `MCP Server \u5DF2\u5B89\u88C5\u5230 ${result.scriptPath}\uFF0C\u542B Kilo/Cline/Continue \u914D\u7F6E\u4E0E\u63A5\u5165\u6307\u5F15`,
+      "\u6253\u5F00\u6307\u5F15",
+      "\u6253\u5F00\u76EE\u5F55"
+    );
+    if (open === "\u6253\u5F00\u6307\u5F15") {
+      await vscode44.commands.executeCommand(
+        "markdown.showPreview",
+        vscode44.Uri.file(`${abs}/README.md`)
+      );
+    } else if (open === "\u6253\u5F00\u76EE\u5F55") {
+      await vscode44.commands.executeCommand("revealFileInOS", vscode44.Uri.file(abs));
+    }
+  } catch (e) {
+    vscode44.window.showErrorMessage(`MCP Server \u5B89\u88C5\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+var vscode44;
+var init_mcpCommands = __esm({
+  "src/presentation/commands/mcpCommands.ts"() {
+    "use strict";
+    vscode44 = __toESM(require("vscode"));
+    init_mcpInstaller();
+  }
+});
+
+// src/presentation/commands/vaultCommands.ts
+function getActiveRelativePath(container) {
+  const editor = vscode45.window.activeTextEditor;
+  if (!editor)
+    return void 0;
+  if (!container.has("fileSystem"))
+    return void 0;
+  const fs15 = container.get("fileSystem");
+  const abs = editor.document.uri.fsPath;
+  return fs15.toRelative(abs);
+}
+async function askPassphrase(confirm) {
+  const pass = await vscode45.window.showInputBox({
+    prompt: "\u8BF7\u8F93\u5165\u4FDD\u9669\u7BB1\u53E3\u4EE4",
+    password: true,
+    placeHolder: "\u7528\u4E8E\u52A0\u5BC6/\u89E3\u5BC6\u7684\u53E3\u4EE4\uFF08\u4E0D\u5B58\u50A8\uFF0C\u8BF7\u7262\u8BB0\uFF09"
+  });
+  if (pass === void 0)
+    return void 0;
+  if (!pass) {
+    vscode45.window.showWarningMessage("\u53E3\u4EE4\u4E0D\u80FD\u4E3A\u7A7A");
+    return void 0;
+  }
+  if (confirm) {
+    const pass2 = await vscode45.window.showInputBox({
+      prompt: "\u518D\u6B21\u8F93\u5165\u53E3\u4EE4\u4EE5\u786E\u8BA4",
+      password: true
+    });
+    if (pass2 !== pass) {
+      vscode45.window.showErrorMessage("\u4E24\u6B21\u53E3\u4EE4\u4E0D\u4E00\u81F4");
+      return void 0;
+    }
+  }
+  return pass;
+}
+async function lockFile(container) {
+  const rel = getActiveRelativePath(container);
+  if (!rel) {
+    vscode45.window.showWarningMessage("\u8BF7\u5148\u6253\u5F00\u9879\u76EE\u5185\u7684\u4E00\u4E2A\u6587\u4EF6\u518D\u52A0\u5BC6");
+    return;
+  }
+  const pass = await askPassphrase(true);
+  if (!pass)
+    return;
+  try {
+    const vault = new VaultService(container);
+    const entry = await vscode45.window.withProgress(
+      { location: vscode45.ProgressLocation.Notification, title: "\u52A0\u5BC6\u5165\u7BB1\u4E2D", cancellable: false },
+      () => vault.lock(rel, pass)
+    );
+    vscode45.window.showInformationMessage(
+      `\u5DF2\u52A0\u5BC6\u5165\u7BB1\uFF1A${entry.originalPath}\uFF08\u539F\u6587\u5DF2\u79FB\u5165\u56DE\u6536\u7AD9\uFF09`
+    );
+  } catch (e) {
+    vscode45.window.showErrorMessage(`\u52A0\u5BC6\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function unlockFile(container) {
+  const vault = new VaultService(container);
+  let entries;
+  try {
+    entries = await vault.list();
+  } catch (e) {
+    vscode45.window.showErrorMessage(`\u8BFB\u53D6\u4FDD\u9669\u7BB1\u6E05\u5355\u5931\u8D25\uFF1A${e.message}`);
+    return;
+  }
+  if (!entries.length) {
+    vscode45.window.showInformationMessage("\u4FDD\u9669\u7BB1\u4E3A\u7A7A");
+    return;
+  }
+  const pick2 = await vscode45.window.showQuickPick(
+    entries.map((e) => ({ label: e.originalPath, description: e.lockedAt })),
+    { placeHolder: "\u9009\u62E9\u8981\u89E3\u5BC6\u8FD8\u539F\u7684\u6587\u4EF6" }
+  );
+  if (!pick2)
+    return;
+  const pass = await askPassphrase(false);
+  if (!pass)
+    return;
+  try {
+    await vscode45.window.withProgress(
+      { location: vscode45.ProgressLocation.Notification, title: "\u89E3\u5BC6\u8FD8\u539F\u4E2D", cancellable: false },
+      () => vault.unlock(pick2.label, pass)
+    );
+    vscode45.window.showInformationMessage(`\u5DF2\u89E3\u5BC6\u8FD8\u539F\uFF1A${pick2.label}`);
+  } catch (e) {
+    vscode45.window.showErrorMessage(`\u89E3\u5BC6\u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+async function listVault(container) {
+  const vault = new VaultService(container);
+  let entries;
+  try {
+    entries = await vault.list();
+  } catch (e) {
+    vscode45.window.showErrorMessage(`\u8BFB\u53D6\u4FDD\u9669\u7BB1\u6E05\u5355\u5931\u8D25\uFF1A${e.message}`);
+    return;
+  }
+  if (!entries.length) {
+    vscode45.window.showInformationMessage("\u4FDD\u9669\u7BB1\u4E3A\u7A7A");
+    return;
+  }
+  const items = entries.map((e) => ({
+    label: e.originalPath,
+    description: `\u52A0\u5BC6\u4E8E ${e.lockedAt}`
+  }));
+  const picked = await vscode45.window.showQuickPick(items, {
+    placeHolder: `\u4FDD\u9669\u7BB1\u5171 ${entries.length} \u9879`
+  });
+  if (picked) {
+    vscode45.window.showInformationMessage(`\u4FDD\u9669\u7BB1\u9879\uFF1A${picked.label}`);
+  }
+}
+var vscode45;
+var init_vaultCommands = __esm({
+  "src/presentation/commands/vaultCommands.ts"() {
+    "use strict";
+    vscode45 = __toESM(require("vscode"));
+    init_vaultService();
+  }
+});
+
+// src/presentation/commands/aiDirectCommands.ts
+function currentChapterId(container) {
+  const editor = vscode46.window.activeTextEditor;
+  if (!editor || !container.has("fileSystem"))
+    return void 0;
+  const fs15 = container.get("fileSystem");
+  const rel = fs15.toRelative(editor.document.uri.fsPath);
+  if (!rel)
+    return void 0;
+  const m = rel.match(/chapters[\\/](ch\d{3})[\\/]/i);
+  return m ? m[1].toLowerCase() : void 0;
+}
+async function proofreadCurrentChapter(container) {
+  const chapterId = currentChapterId(container);
+  if (!chapterId) {
+    const pick2 = await pickChapter(container);
+    if (!pick2)
+      return;
+    return runProofread(container, pick2);
+  }
+  return runProofread(container, chapterId);
+}
+async function pickChapter(container) {
+  if (!container.has("indexManager")) {
+    vscode46.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    return void 0;
+  }
+  const im = container.get("indexManager");
+  const chapters = await im.getAllChapters();
+  if (!chapters.length) {
+    vscode46.window.showWarningMessage("\u5F53\u524D\u6CA1\u6709\u7AE0\u8282");
+    return void 0;
+  }
+  const picked = await vscode46.window.showQuickPick(
+    chapters.map((c) => ({ label: `${c.id} ${c.title}`, id: c.id })),
+    { placeHolder: "\u9009\u62E9\u8981 AI \u76F4\u8FDE\u6821\u5BF9\u7684\u7AE0\u8282" }
+  );
+  return picked?.id;
+}
+async function runProofread(container, chapterId) {
+  await vscode46.window.withProgress(
+    {
+      location: vscode46.ProgressLocation.Notification,
+      title: `AI \u76F4\u8FDE\u6821\u5BF9\u4E2D\uFF1A${chapterId}`,
+      cancellable: false
+    },
+    async () => {
+      try {
+        const svc = new DirectAiService(container);
+        const result = await svc.proofreadChapter(chapterId);
+        vscode46.window.showInformationMessage(
+          `AI \u76F4\u8FDE\u6821\u5BF9\u5B8C\u6210\uFF0C\u751F\u6210 ${result.count} \u6761\u5EFA\u8BAE\uFF0C\u5DF2\u5BFC\u5165\u5BA1\u9605\u9762\u677F`
+        );
+      } catch (e) {
+        vscode46.window.showErrorMessage(`AI \u76F4\u8FDE\u6821\u5BF9\u5931\u8D25\uFF1A${e.message}`);
+      }
+    }
+  );
+}
+async function setApiKey(container) {
+  const key = await vscode46.window.showInputBox({
+    prompt: "\u8F93\u5165 AI \u76F4\u8FDE API Key\uFF08\u4EC5\u5B58\u50A8\u4E8E\u672C\u673A SecretStorage\uFF0C\u4E0D\u5199\u5165\u914D\u7F6E\u6587\u4EF6\uFF09",
+    password: true,
+    placeHolder: "sk-..."
+  });
+  if (key === void 0)
+    return;
+  try {
+    const svc = new DirectAiService(container);
+    await svc.setApiKey(key);
+    vscode46.window.showInformationMessage("API Key \u5DF2\u4FDD\u5B58\u5230 SecretStorage");
+  } catch (e) {
+    vscode46.window.showErrorMessage(`\u4FDD\u5B58 API Key \u5931\u8D25\uFF1A${e.message}`);
+  }
+}
+var vscode46;
+var init_aiDirectCommands = __esm({
+  "src/presentation/commands/aiDirectCommands.ts"() {
+    "use strict";
+    vscode46 = __toESM(require("vscode"));
+    init_directAiService();
+  }
+});
+
+// src/presentation/webview/namingPanelProvider.ts
+var namingPanelProvider_exports = {};
+__export(namingPanelProvider_exports, {
+  NamingPanelProvider: () => NamingPanelProvider
+});
+var vscode47, NamingPanelProvider;
+var init_namingPanelProvider = __esm({
+  "src/presentation/webview/namingPanelProvider.ts"() {
+    "use strict";
+    vscode47 = __toESM(require("vscode"));
+    init_namingEngine();
+    init_constants();
+    NamingPanelProvider = class {
+      constructor(container) {
+        this.container = container;
+      }
+      panel;
+      async open() {
+        if (!this.container.has("fileSystem")) {
+          vscode47.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+          return;
+        }
+        if (!this.panel) {
+          this.panel = vscode47.window.createWebviewPanel(
+            "novelCompanion.namingPanel",
+            "\u8D77\u540D\u5668",
+            vscode47.ViewColumn.Active,
+            { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [] }
+          );
+          this.panel.iconPath = new vscode47.ThemeIcon("symbol-enum");
+          this.panel.webview.html = this.getHtml();
+          this.panel.webview.onDidReceiveMessage(
+            (msg) => {
+              this.handleMessage(msg).catch((e) => {
+                vscode47.window.showErrorMessage(`\u8D77\u540D\u5931\u8D25\uFF1A${e.message}`);
+              });
+            },
+            void 0,
+            this.container.context.subscriptions
+          );
+          this.panel.onDidDispose(
+            () => {
+              this.panel = void 0;
+            },
+            void 0,
+            this.container.context.subscriptions
+          );
+        } else {
+          this.panel.reveal(vscode47.ViewColumn.Active, true);
+        }
+      }
+      async handleMessage(msg) {
+        const engine = new NamingEngine(this.container);
+        switch (msg.type) {
+          case "generate": {
+            const options2 = {
+              gender: msg.gender ?? "any",
+              style: msg.style ?? "\u6587\u96C5",
+              count: msg.count || DEFAULT_NAMING_COUNT,
+              surname: msg.surname,
+              charCount: msg.charCount
+            };
+            const candidates = engine.generate(options2);
+            this.post({ type: "candidates", candidates, styles: engine.listStyles() });
+            break;
+          }
+          case "insertName": {
+            const name = String(msg.name ?? "");
+            const editor = vscode47.window.activeTextEditor;
+            if (editor) {
+              await editor.edit((b) => b.insert(editor.selection.active, name));
+              vscode47.window.showInformationMessage(`\u5DF2\u63D2\u5165\uFF1A${name}`);
+            }
+            break;
+          }
+          case "copyName": {
+            const name = String(msg.name ?? "");
+            await vscode47.env.clipboard.writeText(name);
+            vscode47.window.showInformationMessage(`\u5DF2\u590D\u5236\uFF1A${name}`);
+            break;
+          }
+          case "generateAi": {
+            const characterId = msg.characterId || void 0;
+            const options2 = {
+              gender: msg.gender ?? "any",
+              style: msg.style ?? "\u6587\u96C5",
+              count: msg.count || DEFAULT_NAMING_COUNT
+            };
+            try {
+              const result = await engine.generateAiTask({ characterId, options: options2 });
+              const open = await vscode47.window.showInformationMessage(
+                "\u5DF2\u751F\u6210 AI \u8D77\u540D\u4EFB\u52A1\uFF0C\u53EF\u4EA4\u7ED9 AI \u63D2\u4EF6\u6267\u884C",
+                "\u6253\u5F00\u4EFB\u52A1"
+              );
+              if (open === "\u6253\u5F00\u4EFB\u52A1") {
+                const fs15 = this.container.get("fileSystem");
+                await vscode47.commands.executeCommand(
+                  "vscode.open",
+                  vscode47.Uri.file(fs15.resolvePath(result.path))
+                );
+              }
+            } catch (e) {
+              vscode47.window.showErrorMessage(`\u751F\u6210 AI \u4EFB\u52A1\u5931\u8D25\uFF1A${e.message}`);
+            }
+            break;
+          }
+          case "writeToCharacter": {
+            const characterId = String(msg.characterId ?? "");
+            const name = String(msg.name ?? "");
+            if (!characterId || !name)
+              return;
+            try {
+              await engine.writeNameToCharacter(characterId, name);
+              vscode47.window.showInformationMessage(`\u5DF2\u5199\u5165\u4EBA\u7269\u5361 ${characterId}\uFF1A${name}`);
+            } catch (e) {
+              vscode47.window.showErrorMessage(`\u5199\u5165\u5931\u8D25\uFF1A${e.message}`);
+            }
+            break;
+          }
+          case "loadCharacters": {
+            const im = this.container.get("indexManager");
+            const chars = await im.getAllCharacters();
+            this.post({ type: "characters", characters: chars });
+            break;
+          }
+        }
+      }
+      post(msg) {
+        this.panel?.webview.postMessage(msg);
+      }
+      getHtml() {
+        return (
+          /* html */
+          `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';" />
+<title>\u8D77\u540D\u5668</title>
+<style>
+  body{font-family:var(--vscode-font-family);color:var(--vscode-foreground);padding:12px;margin:0}
+  .row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+  select,input[type=text],input[type=number]{padding:4px 6px;background:var(--vscode-input-background);color:var(--vscode-input-foreground);border:1px solid var(--vscode-input-border)}
+  button{padding:4px 12px;background:var(--vscode-button-background);color:var(--vscode-button-foreground);border:none;cursor:pointer}
+  button.secondary{background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground)}
+  .opts label{display:flex;align-items:center;gap:4px;margin-right:10px}
+  .cand{display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid var(--vscode-input-border)}
+  .cand .nm{font-size:16px;font-weight:bold}
+  .cand .src{color:var(--vscode-descriptionForeground);font-size:12px;flex:1}
+  .actions button{font-size:12px;padding:2px 8px}
+  .hint{color:var(--vscode-descriptionForeground);font-size:12px;margin-top:6px}
+</style>
+</head>
+<body>
+<h3>\u8D77\u540D\u5668</h3>
+<div class="row">
+  <label>\u6027\u522B
+    <select id="gender"><option value="any">\u4E0D\u9650</option><option value="male">\u7537</option><option value="female">\u5973</option></select>
+  </label>
+  <label>\u98CE\u683C
+    <select id="style"><option>\u6587\u96C5</option><option>\u6E05\u51B7</option><option>\u8C6A\u8FC8</option><option>\u6E29\u6DA6</option><option>\u7075\u52A8</option><option>\u53E4\u98CE</option><option>\u73B0\u4EE3</option><option>\u8BD7\u610F</option></select>
+  </label>
+  <label>\u5B57\u6570
+    <select id="charCount"><option value="">\u4E0D\u9650</option><option value="2">\u53CC\u5B57</option><option value="3">\u4E09\u5B57</option></select>
+  </label>
+  <label>\u6570\u91CF<input id="count" type="number" value="12" min="1" max="50" style="width:60px" /></label>
+</div>
+<div class="row">
+  <input id="surname" type="text" placeholder="\u6307\u5B9A\u59D3\u6C0F\uFF08\u53EF\u7559\u7A7A\u968F\u673A\uFF09" style="flex:1" />
+  <button id="btnGen">\u751F\u6210</button>
+</div>
+<div class="row">
+  <select id="characterId"><option value="">\u5199\u5165\u4EBA\u7269\u5361\uFF08\u53EF\u9009\uFF09</option></select>
+  <button id="btnAi" class="secondary">\u751F\u6210 AI \u8D77\u540D\u4EFB\u52A1</button>
+</div>
+<div id="results"></div>
+<div class="hint" id="hint"></div>
+<script>
+  const vscode = acquireVsCodeApi();
+  const $ = (id) => document.getElementById(id);
+  $('btnGen').onclick = () => post({type:'generate', gender:$('gender').value, style:$('style').value, charCount:$('charCount').value, count:parseInt($('count').value,10), surname:$('surname').value});
+  $('btnAi').onclick = () => post({type:'generateAi', characterId:$('characterId').value, gender:$('gender').value, style:$('style').value, count:parseInt($('count').value,10)});
+  function post(m){ vscode.postMessage(m); }
+  window.addEventListener('message', (e) => {
+    const m = e.data;
+    if(m.type==='candidates'){ render(m.candidates); }
+    if(m.type==='characters'){ fillChars(m.characters); }
+  });
+  function fillChars(chars){
+    const sel = $('characterId');
+    sel.innerHTML = '<option value="">\u5199\u5165\u4EBA\u7269\u5361\uFF08\u53EF\u9009\uFF09</option>' + chars.map(c => '<option value="'+esc(c.id)+'">'+esc(c.name)+' ('+esc(c.id)+')</option>').join('');
+  }
+  function render(cands){
+    let html = '';
+    for(const c of cands){
+      html += '<div class="cand"><span class="nm">'+esc(c.name)+'</span><span class="src">'+esc(c.source)+'</span><span class="actions"><button data-act="copy" data-name="'+esc(c.name)+'">\u590D\u5236</button> <button data-act="insert" data-name="'+esc(c.name)+'">\u63D2\u5165</button> <button data-act="write" data-name="'+esc(c.name)+'">\u5199\u5165\u4EBA\u7269\u5361</button></span></div>';
+    }
+    $('results').innerHTML = html || '<div class="hint">\u672A\u751F\u6210\u5019\u9009</div>';
+  }
+  $('results').addEventListener('click', (e)=>{
+    const t = e.target.closest('button'); if(!t) return;
+    const act = t.getAttribute('data-act'); const name = t.getAttribute('data-name');
+    if(act==='copy') post({type:'copyName', name});
+    if(act==='insert') post({type:'insertName', name});
+    if(act==='write') post({type:'writeToCharacter', characterId:$('characterId').value, name});
+  });
+  post({type:'loadCharacters'});
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+</script>
+</body>
+</html>`
+        );
+      }
+    };
+  }
+});
+
+// src/presentation/webview/calendarPanelProvider.ts
+var calendarPanelProvider_exports = {};
+__export(calendarPanelProvider_exports, {
+  CalendarPanelProvider: () => CalendarPanelProvider
+});
+var vscode48, CalendarPanelProvider;
+var init_calendarPanelProvider = __esm({
+  "src/presentation/webview/calendarPanelProvider.ts"() {
+    "use strict";
+    vscode48 = __toESM(require("vscode"));
+    init_calendarService();
+    CalendarPanelProvider = class {
+      constructor(container) {
+        this.container = container;
+      }
+      panel;
+      async open() {
+        if (!this.container.has("fileSystem")) {
+          vscode48.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+          return;
+        }
+        if (!this.panel) {
+          this.panel = vscode48.window.createWebviewPanel(
+            "novelCompanion.calendarPanel",
+            "\u5199\u4F5C\u65E5\u5386",
+            vscode48.ViewColumn.Active,
+            { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [] }
+          );
+          this.panel.iconPath = new vscode48.ThemeIcon("calendar");
+          this.panel.webview.html = this.getHtml();
+          this.panel.webview.onDidReceiveMessage(
+            (msg) => {
+              this.handleMessage(msg).catch((e) => {
+                vscode48.window.showErrorMessage(`\u65E5\u5386\u5237\u65B0\u5931\u8D25\uFF1A${e.message}`);
+              });
+            },
+            void 0,
+            this.container.context.subscriptions
+          );
+          this.panel.onDidDispose(
+            () => {
+              this.panel = void 0;
+            },
+            void 0,
+            this.container.context.subscriptions
+          );
+        } else {
+          this.panel.reveal(vscode48.ViewColumn.Active, true);
+        }
+        await this.refresh();
+        this.container.context.subscriptions.push(
+          this.container.eventBus.on("calendar.refresh", () => {
+            this.refresh().catch(() => {
+            });
+          })
+        );
+      }
+      async handleMessage(msg) {
+        if (msg.type === "refresh") {
+          await this.refresh();
+        }
+      }
+      async refresh() {
+        if (!this.panel)
+          return;
+        const svc = new CalendarService(this.container);
+        const summary = await svc.getSummary(120);
+        if (!summary)
+          return;
+        this.panel.webview.postMessage({ type: "summary", summary });
+      }
+      getHtml() {
+        return (
+          /* html */
+          `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';" />
+<title>\u5199\u4F5C\u65E5\u5386</title>
+<style>
+  body{font-family:var(--vscode-font-family);color:var(--vscode-foreground);padding:12px;margin:0}
+  .stats{display:flex;gap:18px;margin:8px 0 14px;flex-wrap:wrap}
+  .stat{padding:8px 12px;background:var(--vscode-list-hoverBackground);border-radius:4px;text-align:center}
+  .stat .v{font-size:20px;font-weight:bold}
+  .stat .l{font-size:12px;color:var(--vscode-descriptionForeground)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(14px,1fr));gap:3px;max-width:760px}
+  .cell{width:14px;height:14px;border-radius:2px;background:var(--vscode-input-border)}
+  .tooltip{position:relative}
+  .tooltip:hover::after{content:attr(data-tip);position:absolute;bottom:18px;left:0;background:var(--vscode-editor-background);border:1px solid var(--vscode-input-border);padding:3px 6px;font-size:11px;white-space:nowrap;z-index:10;color:var(--vscode-foreground)}
+  .legend{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--vscode-descriptionForeground);margin-top:8px}
+  .legend .sw{width:12px;height:12px;border-radius:2px}
+  .progress{height:10px;background:var(--vscode-input-border);border-radius:5px;overflow:hidden;margin-top:6px}
+  .progress > div{height:100%;background:var(--vscode-textLink-foreground)}
+  button{padding:4px 12px;background:var(--vscode-button-background);color:var(--vscode-button-foreground);border:none;cursor:pointer;margin-bottom:8px}
+</style>
+</head>
+<body>
+<h3>\u5199\u4F5C\u65E5\u5386</h3>
+<button id="btnRefresh">\u5237\u65B0</button>
+<div id="content">\u52A0\u8F7D\u4E2D\u2026</div>
+<script>
+  const vscode = acquireVsCodeApi();
+  document.getElementById('btnRefresh').onclick = () => vscode.postMessage({type:'refresh'});
+  window.addEventListener('message', (e) => {
+    if(e.data.type==='summary') render(e.data.summary);
+  });
+  function colorFor(level){
+    if(level<=0) return 'var(--vscode-input-border)';
+    if(level===1) return '#0e4429';
+    if(level===2) return '#006d32';
+    if(level===3) return '#26a641';
+    return '#39d353';
+  }
+  function levelOf(delta, goal){
+    if(delta<=0) return 0;
+    if(goal<=0) return delta>=800?4:delta>=400?3:delta>=200?2:1;
+    if(delta>=goal) return 4;
+    if(delta>=goal*0.75) return 3;
+    if(delta>=goal*0.5) return 2;
+    if(delta>=goal*0.25) return 1;
+    return 1;
+  }
+  function render(s){
+    const pct = Math.round(s.goalProgress*100);
+    let html = '<div class="stats">';
+    html += stat(s.streakDays,'\u8FDE\u7EED\u65E5\u66F4');
+    html += stat(s.longestStreak,'\u6700\u957F\u8FDE\u66F4');
+    html += stat(s.activeDays,'\u6D3B\u8DC3\u5929\u6570');
+    html += stat(s.totalWords,'\u8FD1120\u5929\u5B57\u6570');
+    html += stat(s.totalWordsNow,'\u5168\u4E66\u5B57\u6570');
+    if(s.targetWords) html += stat(pct+'%','\u76EE\u6807\u8FBE\u6210');
+    html += '</div>';
+    if(s.targetWords){
+      html += '<div>\u76EE\u6807\u8FDB\u5EA6\uFF1A'+s.totalWordsNow+' / '+s.targetWords+' \u5B57</div><div class="progress"><div style="width:'+pct+'%"></div></div>';
+    }
+    html += '<div class="grid">';
+    for(const d of s.days){
+      const lv = levelOf(d.delta, s.dailyGoal);
+      html += '<div class="cell tooltip" style="background:'+colorFor(lv)+'" data-tip="'+d.date+': '+(d.delta||0)+' \u5B57"></div>';
+    }
+    html += '</div>';
+    html += '<div class="legend">\u5C11 <span class="sw" style="background:var(--vscode-input-border)"></span><span class="sw" style="background:#0e4429"></span><span class="sw" style="background:#006d32"></span><span class="sw" style="background:#26a641"></span><span class="sw" style="background:#39d353"></span> \u591A</div>';
+    document.getElementById('content').innerHTML = html;
+  }
+  function stat(v,l){ return '<div class="stat"><div class="v">'+v+'</div><div class="l">'+l+'</div></div>'; }
+  vscode.postMessage({type:'refresh'});
+</script>
+</body>
+</html>`
+        );
+      }
+    };
   }
 });
 
@@ -22077,22 +29099,34 @@ __export(commandRegistry_exports, {
 });
 async function openNovelFile(container, relPath) {
   if (!container.has("fileSystem")) {
-    vscode21.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
+    vscode49.window.showWarningMessage("\u5C1A\u672A\u52A0\u8F7D\u5C0F\u8BF4\u9879\u76EE");
     return;
   }
-  const fs10 = container.get("fileSystem");
+  const fs15 = container.get("fileSystem");
   try {
-    const abs = fs10.resolvePath(relPath);
-    await vscode21.commands.executeCommand("vscode.open", vscode21.Uri.file(abs));
+    const abs = fs15.resolvePath(relPath);
+    await vscode49.commands.executeCommand("vscode.open", vscode49.Uri.file(abs));
   } catch (e) {
-    vscode21.window.showErrorMessage(`\u6253\u5F00\u5931\u8D25\uFF1A${e.message}`);
+    vscode49.window.showErrorMessage(`\u6253\u5F00\u5931\u8D25\uFF1A${e.message}`);
   }
 }
-var vscode21, CommandRegistry;
+function openHelp(container) {
+  const helpPath = container.context.asAbsolutePath("docs/\u4F7F\u7528\u8BF4\u660E.md");
+  vscode49.commands.executeCommand("markdown.showPreview", vscode49.Uri.file(helpPath));
+}
+async function openNamingPanel(container) {
+  const { NamingPanelProvider: NamingPanelProvider2 } = await Promise.resolve().then(() => (init_namingPanelProvider(), namingPanelProvider_exports));
+  new NamingPanelProvider2(container).open();
+}
+async function openCalendarPanel(container) {
+  const { CalendarPanelProvider: CalendarPanelProvider2 } = await Promise.resolve().then(() => (init_calendarPanelProvider(), calendarPanelProvider_exports));
+  new CalendarPanelProvider2(container).open();
+}
+var vscode49, CommandRegistry;
 var init_commandRegistry = __esm({
   "src/presentation/commands/commandRegistry.ts"() {
     "use strict";
-    vscode21 = __toESM(require("vscode"));
+    vscode49 = __toESM(require("vscode"));
     init_projectCommands();
     init_novelCommands();
     init_chapterCommands();
@@ -22103,6 +29137,23 @@ var init_commandRegistry = __esm({
     init_aiCommands();
     init_reviewCommands();
     init_statsCommands();
+    init_bookshelfCommands();
+    init_volumeCommands();
+    init_exportCommands();
+    init_searchCommands();
+    init_snippetCommands();
+    init_continuationCommands();
+    init_snapshotCommands();
+    init_trashCommands();
+    init_gitCommands();
+    init_consistencyCommands();
+    init_readthroughCommands();
+    init_relationCommands();
+    init_timelineVizCommands();
+    init_immersiveCommands();
+    init_mcpCommands();
+    init_vaultCommands();
+    init_aiDirectCommands();
     CommandRegistry = class {
       constructor(container) {
         this.container = container;
@@ -22110,7 +29161,7 @@ var init_commandRegistry = __esm({
       registerAll(context) {
         const c = this.container;
         const reg = (id, fn) => {
-          context.subscriptions.push(vscode21.commands.registerCommand(id, fn));
+          context.subscriptions.push(vscode49.commands.registerCommand(id, fn));
         };
         reg("novelCompanion.project.create", () => createProject(c));
         reg(
@@ -22128,6 +29179,8 @@ var init_commandRegistry = __esm({
         reg("novelCompanion.chapter.archive", (arg) => archive(c, arg));
         reg("novelCompanion.chapter.rename", (arg) => rename(c, arg));
         reg("novelCompanion.chapter.delete", (arg) => deleteChapter(c, arg));
+        reg("novelCompanion.chapter.moveUp", (arg) => moveChapterUp(c, arg));
+        reg("novelCompanion.chapter.moveDown", (arg) => moveChapterDown(c, arg));
         reg("novelCompanion.character.create", () => createCharacter(c));
         reg("novelCompanion.character.open", (arg) => openCharacter(c, arg));
         reg("novelCompanion.setting.create", () => createSetting(c));
@@ -22135,8 +29188,11 @@ var init_commandRegistry = __esm({
         reg("novelCompanion.foreshadowing.create", () => createForeshadowing(c));
         reg("novelCompanion.foreshadowing.openFile", (arg) => openForeshadowingFile(c, arg));
         reg("novelCompanion.foreshadowing.resolve", (arg) => resolveForeshadowing(c, arg));
+        reg("novelCompanion.foreshadowing.openChapterForeshadowings", (arg) => openChapterForeshadowings(c, arg));
+        reg("novelCompanion.foreshadowing.showReferences", (arg) => showForeshadowingReferences(c, arg));
         reg("novelCompanion.timeline.create", () => createTimelineEvent(c));
         reg("novelCompanion.timeline.openFile", (arg) => openTimelineFile(c, arg));
+        reg("novelCompanion.timeline.regenerate", () => regenerateAggregatedTimeline(c));
         reg("novelCompanion.ai.generateTask", () => generateTask(c));
         reg("novelCompanion.ai.copyTaskPath", (arg) => copyTaskPath(c, arg));
         reg("novelCompanion.ai.openTask", (arg) => openTask(c, arg));
@@ -22165,11 +29221,49 @@ var init_commandRegistry = __esm({
           (taskId) => rejectAll(c, taskId)
         );
         reg("novelCompanion.stats.refresh", () => refresh(c));
+        reg("novelCompanion.bookshelf.open", (arg) => openBook(c, arg));
+        reg("novelCompanion.bookshelf.refresh", () => refreshBookshelf(c));
+        reg("novelCompanion.volume.create", () => createVolume(c));
+        reg("novelCompanion.volume.rename", (arg) => renameVolume(c, arg));
+        reg("novelCompanion.volume.delete", (arg) => deleteVolume(c, arg));
+        reg("novelCompanion.novel.export", () => exportNovel(c));
+        reg("novelCompanion.novel.searchReplace", () => openSearchPanel(c));
+        reg("novelCompanion.naming.openPanel", () => openNamingPanel(c));
+        reg("novelCompanion.snippet.create", () => createSnippet(c));
+        reg("novelCompanion.snippet.open", (arg) => openSnippet(c, arg));
+        reg("novelCompanion.snippet.insert", (arg) => insertSnippet(c, arg));
+        reg("novelCompanion.snippet.delete", (arg) => deleteSnippet(c, arg));
+        reg("novelCompanion.snippet.search", () => searchSnippets(c));
+        reg("novelCompanion.continuation.generate", () => generateContinuation(c));
+        reg("novelCompanion.continuation.openPanel", (arg) => openContinuationPanel(c, arg));
+        reg("novelCompanion.continuation.adoptAll", () => insertContinuationAll(c));
+        reg("novelCompanion.continuation.clear", () => clearContinuation(c));
+        reg("novelCompanion.snapshot.openPanel", (arg) => openSnapshotPanel(c, arg));
+        reg("novelCompanion.snapshot.create", () => createSnapshotNow(c));
+        reg("novelCompanion.trash.restore", (arg) => restoreTrash(c, arg));
+        reg("novelCompanion.trash.purge", (arg) => purgeTrash(c, arg));
+        reg("novelCompanion.trash.purgeAll", () => purgeAllTrash(c));
+        reg("novelCompanion.trash.cleanup", () => cleanupTrash(c));
+        reg("novelCompanion.git.wizard", () => openGitWizard(c));
+        reg("novelCompanion.calendar.open", () => openCalendarPanel(c));
+        reg("novelCompanion.consistency.run", () => runConsistencyCheck(c));
+        reg("novelCompanion.consistency.openReport", () => openConsistencyReport(c));
+        reg("novelCompanion.readthrough.open", (arg) => openReadThrough(c, arg));
+        reg("novelCompanion.relationGraph.open", () => openRelationGraph(c));
+        reg("novelCompanion.timelineViz.open", () => openTimelineViz(c));
+        reg("novelCompanion.immersive.open", (arg) => openImmersiveWrite(c, arg));
+        reg("novelCompanion.mcp.install", () => installMcpServer(c));
+        reg("novelCompanion.vault.lock", () => lockFile(c));
+        reg("novelCompanion.vault.unlock", () => unlockFile(c));
+        reg("novelCompanion.vault.list", () => listVault(c));
+        reg("novelCompanion.aiDirect.proofread", () => proofreadCurrentChapter(c));
+        reg("novelCompanion.aiDirect.setApiKey", () => setApiKey(c));
         reg(
           "novelCompanion.openSettings",
-          () => vscode21.commands.executeCommand("workbench.action.openSettings", "novelCompanion")
+          () => vscode49.commands.executeCommand("workbench.action.openSettings", "novelCompanion")
         );
         reg("novelCompanion.showOutput", () => c.logger.show());
+        reg("novelCompanion.novel.openHelp", () => openHelp(c));
       }
     };
   }
@@ -22187,18 +29281,18 @@ function buildVolumeChildren(nodes) {
   const volumes = Array.from(new Set(Array.from(nodes.values()).map((c) => c.volume || "\u9ED8\u8BA4\u5377")));
   return volumes.map((v) => ({ type: "volume", volume: v }));
 }
-var vscode22, ChapterTreeProvider, ChapterTreeItem, DraftTreeProvider, DraftTreeItem;
+var vscode50, ChapterTreeProvider, ChapterTreeItem, DraftTreeProvider, DraftTreeItem;
 var init_chapterTreeProvider = __esm({
   "src/presentation/treeView/chapterTreeProvider.ts"() {
     "use strict";
-    vscode22 = __toESM(require("vscode"));
+    vscode50 = __toESM(require("vscode"));
     init_constants();
     init_utils();
     ChapterTreeProvider = class {
       constructor(container) {
         this.container = container;
       }
-      _onDidChangeTreeData = new vscode22.EventEmitter();
+      _onDidChangeTreeData = new vscode50.EventEmitter();
       onDidChangeTreeData = this._onDidChangeTreeData.event;
       nodes = /* @__PURE__ */ new Map();
       get indexManager() {
@@ -22223,7 +29317,7 @@ var init_chapterTreeProvider = __esm({
       getTreeItem(node) {
         if (node.type === "volume") {
           const count = Array.from(this.nodes.values()).filter((c) => (c.volume || "\u9ED8\u8BA4\u5377") === node.volume).length;
-          const item = new vscode22.TreeItem(node.volume, vscode22.TreeItemCollapsibleState.Expanded);
+          const item = new vscode50.TreeItem(node.volume, vscode50.TreeItemCollapsibleState.Expanded);
           item.description = `${count} \u7AE0`;
           item.contextValue = "volumeGroup";
           item.id = `volume:${node.volume}`;
@@ -22244,16 +29338,16 @@ var init_chapterTreeProvider = __esm({
         }
       }
     };
-    ChapterTreeItem = class extends vscode22.TreeItem {
+    ChapterTreeItem = class extends vscode50.TreeItem {
       constructor(chapter) {
         const icon = CHAPTER_STATUS_ICONS[chapter.status] ?? "";
-        super(`${icon} ${chapter.title}`, vscode22.TreeItemCollapsibleState.None);
+        super(`${icon} ${chapter.title}`, vscode50.TreeItemCollapsibleState.None);
         this.chapter = chapter;
         this.description = formatWordCount(chapter.wordCount);
-        this.tooltip = new vscode22.MarkdownString(
+        this.tooltip = new vscode50.MarkdownString(
           [
             `**${chapter.title}**`,
-            ``,
+            "",
             `ID: \`${chapter.id}\``,
             `\u5377: ${chapter.volume || "\u2014"}`,
             `\u72B6\u6001: ${chapter.status}`,
@@ -22274,7 +29368,7 @@ var init_chapterTreeProvider = __esm({
       constructor(container) {
         this.container = container;
       }
-      _onDidChangeTreeData = new vscode22.EventEmitter();
+      _onDidChangeTreeData = new vscode50.EventEmitter();
       onDidChangeTreeData = this._onDidChangeTreeData.event;
       nodes = /* @__PURE__ */ new Map();
       get indexManager() {
@@ -22299,7 +29393,7 @@ var init_chapterTreeProvider = __esm({
       getTreeItem(node) {
         if (node.type === "volume") {
           const count = Array.from(this.nodes.values()).filter((c) => (c.volume || "\u9ED8\u8BA4\u5377") === node.volume).length;
-          const item = new vscode22.TreeItem(node.volume, vscode22.TreeItemCollapsibleState.Expanded);
+          const item = new vscode50.TreeItem(node.volume, vscode50.TreeItemCollapsibleState.Expanded);
           item.description = `${count} \u7AE0`;
           item.contextValue = "volumeGroup";
           item.id = `volume:${node.volume}`;
@@ -22320,16 +29414,16 @@ var init_chapterTreeProvider = __esm({
         }
       }
     };
-    DraftTreeItem = class extends vscode22.TreeItem {
+    DraftTreeItem = class extends vscode50.TreeItem {
       constructor(chapter) {
         const icon = CHAPTER_STATUS_ICONS[chapter.status] ?? "";
-        super(`${icon} ${chapter.title}`, vscode22.TreeItemCollapsibleState.None);
+        super(`${icon} ${chapter.title}`, vscode50.TreeItemCollapsibleState.None);
         this.chapter = chapter;
         this.description = formatWordCount(chapter.wordCount);
-        this.tooltip = new vscode22.MarkdownString(
+        this.tooltip = new vscode50.MarkdownString(
           [
             `**${chapter.title}**`,
-            ``,
+            "",
             `ID: \`${chapter.id}\``,
             `\u72B6\u6001: ${chapter.status}`,
             `\u5B57\u6570: ${chapter.wordCount}`
@@ -22353,11 +29447,11 @@ __export(characterTreeProvider_exports, {
   CHARACTER_ROLE_LABELS: () => CHARACTER_ROLE_LABELS,
   CharacterTreeProvider: () => CharacterTreeProvider
 });
-var vscode23, CHARACTER_ROLE_LABELS, CHARACTER_STATUS_LABELS, CharacterTreeProvider;
+var vscode51, CHARACTER_ROLE_LABELS, CHARACTER_STATUS_LABELS, CharacterTreeProvider;
 var init_characterTreeProvider = __esm({
   "src/presentation/treeView/characterTreeProvider.ts"() {
     "use strict";
-    vscode23 = __toESM(require("vscode"));
+    vscode51 = __toESM(require("vscode"));
     init_types();
     CHARACTER_ROLE_LABELS = {
       ["protagonist" /* Protagonist */]: "\u4E3B\u89D2",
@@ -22377,7 +29471,7 @@ var init_characterTreeProvider = __esm({
       constructor(container) {
         this.container = container;
       }
-      _onDidChangeTreeData = new vscode23.EventEmitter();
+      _onDidChangeTreeData = new vscode51.EventEmitter();
       onDidChangeTreeData = this._onDidChangeTreeData.event;
       cache = [];
       get indexManager() {
@@ -22401,9 +29495,9 @@ var init_characterTreeProvider = __esm({
       getTreeItem(node) {
         if (node.type === "role") {
           const count = this.cache.filter((c) => c.role === node.role).length;
-          const item2 = new vscode23.TreeItem(
+          const item2 = new vscode51.TreeItem(
             CHARACTER_ROLE_LABELS[node.role],
-            vscode23.TreeItemCollapsibleState.Collapsed
+            vscode51.TreeItemCollapsibleState.Collapsed
           );
           item2.description = `${count}`;
           item2.contextValue = "roleGroup";
@@ -22412,7 +29506,7 @@ var init_characterTreeProvider = __esm({
         }
         const entry = node.entry;
         const statusLabel = entry.status ? `\uFF08${CHARACTER_STATUS_LABELS[entry.status]}\uFF09` : "";
-        const item = new vscode23.TreeItem(entry.name, vscode23.TreeItemCollapsibleState.None);
+        const item = new vscode51.TreeItem(entry.name, vscode51.TreeItemCollapsibleState.None);
         item.description = CHARACTER_ROLE_LABELS[entry.role];
         item.tooltip = `${entry.name}${statusLabel}
 \u89D2\u8272\uFF1A${CHARACTER_ROLE_LABELS[entry.role]}
@@ -22439,11 +29533,11 @@ __export(settingTreeProvider_exports, {
   SETTING_CATEGORY_LABELS: () => SETTING_CATEGORY_LABELS,
   SettingTreeProvider: () => SettingTreeProvider
 });
-var vscode24, SETTING_CATEGORY_LABELS, SETTING_IMPORTANCE_LABELS, SettingTreeProvider;
+var vscode52, SETTING_CATEGORY_LABELS, SETTING_IMPORTANCE_LABELS, SettingTreeProvider;
 var init_settingTreeProvider = __esm({
   "src/presentation/treeView/settingTreeProvider.ts"() {
     "use strict";
-    vscode24 = __toESM(require("vscode"));
+    vscode52 = __toESM(require("vscode"));
     init_types();
     SETTING_CATEGORY_LABELS = {
       ["rule" /* Rule */]: "\u89C4\u5219",
@@ -22464,7 +29558,7 @@ var init_settingTreeProvider = __esm({
       constructor(container) {
         this.container = container;
       }
-      _onDidChangeTreeData = new vscode24.EventEmitter();
+      _onDidChangeTreeData = new vscode52.EventEmitter();
       onDidChangeTreeData = this._onDidChangeTreeData.event;
       cache = [];
       get indexManager() {
@@ -22488,9 +29582,9 @@ var init_settingTreeProvider = __esm({
       getTreeItem(node) {
         if (node.type === "category") {
           const count = this.cache.filter((s) => s.category === node.category).length;
-          const item2 = new vscode24.TreeItem(
+          const item2 = new vscode52.TreeItem(
             SETTING_CATEGORY_LABELS[node.category],
-            vscode24.TreeItemCollapsibleState.Collapsed
+            vscode52.TreeItemCollapsibleState.Collapsed
           );
           item2.description = `${count}`;
           item2.contextValue = "categoryGroup";
@@ -22499,7 +29593,7 @@ var init_settingTreeProvider = __esm({
         }
         const entry = node.entry;
         const importanceLabel = entry.importance ? ` \xB7 ${SETTING_IMPORTANCE_LABELS[entry.importance]}` : "";
-        const item = new vscode24.TreeItem(entry.name, vscode24.TreeItemCollapsibleState.None);
+        const item = new vscode52.TreeItem(entry.name, vscode52.TreeItemCollapsibleState.None);
         item.description = SETTING_CATEGORY_LABELS[entry.category];
         item.tooltip = `${entry.name}
 \u5206\u7C7B\uFF1A${SETTING_CATEGORY_LABELS[entry.category]}${importanceLabel}
@@ -22525,12 +29619,13 @@ var novelInfoTreeProvider_exports = {};
 __export(novelInfoTreeProvider_exports, {
   NovelInfoTreeProvider: () => NovelInfoTreeProvider
 });
-var vscode25, NovelInfoTreeProvider;
+var vscode53, NovelInfoTreeProvider;
 var init_novelInfoTreeProvider = __esm({
   "src/presentation/treeView/novelInfoTreeProvider.ts"() {
     "use strict";
-    vscode25 = __toESM(require("vscode"));
+    vscode53 = __toESM(require("vscode"));
     init_utils();
+    init_frontMatterParser();
     init_constants();
     NovelInfoTreeProvider = class {
       constructor(container) {
@@ -22541,7 +29636,7 @@ var init_novelInfoTreeProvider = __esm({
         container.eventBus.on("chapter.wordsChanged", () => this.refresh());
         container.eventBus.on("chapter.deleted", () => this.refresh());
       }
-      _onDidChangeTreeData = new vscode25.EventEmitter();
+      _onDidChangeTreeData = new vscode53.EventEmitter();
       onDidChangeTreeData = this._onDidChangeTreeData.event;
       novel;
       volumeCount = 0;
@@ -22556,9 +29651,9 @@ var init_novelInfoTreeProvider = __esm({
           this.novel = void 0;
           return;
         }
-        const fs10 = this.container.get("fileSystem");
+        const fs15 = this.container.get("fileSystem");
         try {
-          this.novel = await fs10.readYaml(PROJECT_FILES.NOVEL_YAML);
+          this.novel = await fs15.readYaml(PROJECT_FILES.NOVEL_YAML);
         } catch {
           this.novel = void 0;
           return;
@@ -22580,7 +29675,8 @@ var init_novelInfoTreeProvider = __esm({
       async getChildren() {
         if (!this.novel) {
           return [
-            { type: "action", label: "\u65B0\u5EFA\u5C0F\u8BF4\u9879\u76EE", command: "novelCompanion.project.create", icon: "$(add)" }
+            { type: "action", label: "\u6B22\u8FCE\u4F7F\u7528\u7B14\u642D \xB7 \u65B0\u5EFA\u5C0F\u8BF4\u9879\u76EE", command: "novelCompanion.project.create", icon: "$(add)" },
+            { type: "action", label: "\u67E5\u770B\u4F7F\u7528\u8BF4\u660E", command: "novelCompanion.novel.openHelp", icon: "$(question)" }
           ];
         }
         const nodes = [
@@ -22612,10 +29708,10 @@ var init_novelInfoTreeProvider = __esm({
       async readSynopsis() {
         if (!this.container.has("fileSystem"))
           return void 0;
-        const fs10 = this.container.get("fileSystem");
+        const fs15 = this.container.get("fileSystem");
         try {
-          const content = await fs10.readFile(`${PROJECT_DIRS.BIBLE}/premise.md`);
-          const fm = new (init_frontMatterParser(), __toCommonJS(frontMatterParser_exports)).FrontMatterParser();
+          const content = await fs15.readFile(`${PROJECT_DIRS.BIBLE}/premise.md`);
+          const fm = new FrontMatterParser();
           const parsed = fm.parse(content);
           const body = parsed.content;
           const match = body.match(/## 故事简介\s*\n([\s\S]*?)(\n##|$)/);
@@ -22629,23 +29725,23 @@ var init_novelInfoTreeProvider = __esm({
       }
       getTreeItem(node) {
         if (node.type === "action") {
-          const item2 = new vscode25.TreeItem(node.label, vscode25.TreeItemCollapsibleState.None);
-          item2.iconPath = new vscode25.ThemeIcon(node.icon.replace("$(", "").replace(")", ""));
+          const item2 = new vscode53.TreeItem(node.label, vscode53.TreeItemCollapsibleState.None);
+          item2.iconPath = new vscode53.ThemeIcon(node.icon.replace("$(", "").replace(")", ""));
           item2.command = { command: node.command, title: node.label };
           item2.contextValue = "action";
           return item2;
         }
         if (node.type === "synopsis") {
-          const item2 = new vscode25.TreeItem(node.label, vscode25.TreeItemCollapsibleState.None);
+          const item2 = new vscode53.TreeItem(node.label, vscode53.TreeItemCollapsibleState.None);
           item2.description = node.value;
           item2.tooltip = node.value;
-          item2.iconPath = new vscode25.ThemeIcon("comment-discussion");
+          item2.iconPath = new vscode53.ThemeIcon("comment-discussion");
           item2.contextValue = "info";
           return item2;
         }
-        const item = new vscode25.TreeItem(node.label, vscode25.TreeItemCollapsibleState.None);
+        const item = new vscode53.TreeItem(node.label, vscode53.TreeItemCollapsibleState.None);
         item.description = node.value;
-        item.iconPath = new vscode25.ThemeIcon(node.icon.replace("$(", "").replace(")", ""));
+        item.iconPath = new vscode53.ThemeIcon(node.icon.replace("$(", "").replace(")", ""));
         item.contextValue = "info";
         return item;
       }
@@ -22658,11 +29754,11 @@ var foreshadowingTreeProvider_exports = {};
 __export(foreshadowingTreeProvider_exports, {
   ForeshadowingTreeProvider: () => ForeshadowingTreeProvider
 });
-var vscode26, FM3, ForeshadowingTreeProvider;
+var vscode54, FM3, ForeshadowingTreeProvider;
 var init_foreshadowingTreeProvider = __esm({
   "src/presentation/treeView/foreshadowingTreeProvider.ts"() {
     "use strict";
-    vscode26 = __toESM(require("vscode"));
+    vscode54 = __toESM(require("vscode"));
     init_frontMatterParser();
     init_constants();
     FM3 = new FrontMatterParser();
@@ -22672,7 +29768,7 @@ var init_foreshadowingTreeProvider = __esm({
         container.eventBus.on("project.opened", () => this.refresh());
         container.eventBus.on("foreshadowing.changed", () => this.refresh());
       }
-      _onDidChange = new vscode26.EventEmitter();
+      _onDidChange = new vscode54.EventEmitter();
       onDidChangeTreeData = this._onDidChange.event;
       cache = [];
       async getChildren(element) {
@@ -22712,17 +29808,17 @@ var init_foreshadowingTreeProvider = __esm({
       }
       getTreeItem(node) {
         if (node.type === "group") {
-          const item2 = new vscode26.TreeItem(node.label, vscode26.TreeItemCollapsibleState.Expanded);
+          const item2 = new vscode54.TreeItem(node.label, vscode54.TreeItemCollapsibleState.Expanded);
           item2.contextValue = "foreshadowGroup";
           item2.id = `group:${node.status}`;
           return item2;
         }
         if (node.id === "") {
-          const item2 = new vscode26.TreeItem(node.label, vscode26.TreeItemCollapsibleState.None);
+          const item2 = new vscode54.TreeItem(node.label, vscode54.TreeItemCollapsibleState.None);
           item2.contextValue = "empty";
           return item2;
         }
-        const item = new vscode26.TreeItem(node.label, vscode26.TreeItemCollapsibleState.None);
+        const item = new vscode54.TreeItem(node.label, vscode54.TreeItemCollapsibleState.None);
         item.description = node.description;
         item.tooltip = `\u7F16\u53F7\uFF1A${node.id}
 \u72B6\u6001\uFF1A${node.status}`;
@@ -22739,7 +29835,7 @@ var init_foreshadowingTreeProvider = __esm({
         this.cache = [];
         if (!this.container.has("fileSystem"))
           return;
-        const fs10 = this.container.get("fileSystem");
+        const fs15 = this.container.get("fileSystem");
         const dirs = [
           { dir: `${PROJECT_DIRS.FORESHADOWING}/unresolved`, defaultStatus: "pending" },
           { dir: `${PROJECT_DIRS.FORESHADOWING}/resolved`, defaultStatus: "resolved" }
@@ -22747,16 +29843,16 @@ var init_foreshadowingTreeProvider = __esm({
         for (const { dir, defaultStatus } of dirs) {
           let files;
           try {
-            files = await fs10.listFiles(dir, "**/*.md");
+            files = await fs15.listFiles(dir, "**/*.md");
           } catch {
             continue;
           }
           for (const file of files) {
             try {
-              const rel = fs10.toRelative(file);
+              const rel = fs15.toRelative(file);
               if (!rel)
                 continue;
-              const content = await fs10.readFile(rel);
+              const content = await fs15.readFile(rel);
               const parsed = FM3.parse(content);
               const id = parsed.data["\u7F16\u53F7"] || parsed.data["id"] || "";
               if (!id)
@@ -22785,11 +29881,11 @@ var timelineTreeProvider_exports = {};
 __export(timelineTreeProvider_exports, {
   TimelineTreeProvider: () => TimelineTreeProvider
 });
-var vscode27, FM4, TimelineTreeProvider;
+var vscode55, FM4, TimelineTreeProvider;
 var init_timelineTreeProvider = __esm({
   "src/presentation/treeView/timelineTreeProvider.ts"() {
     "use strict";
-    vscode27 = __toESM(require("vscode"));
+    vscode55 = __toESM(require("vscode"));
     init_frontMatterParser();
     init_constants();
     FM4 = new FrontMatterParser();
@@ -22799,7 +29895,7 @@ var init_timelineTreeProvider = __esm({
         container.eventBus.on("project.opened", () => this.refresh());
         container.eventBus.on("timeline.changed", () => this.refresh());
       }
-      _onDidChange = new vscode27.EventEmitter();
+      _onDidChange = new vscode55.EventEmitter();
       onDidChangeTreeData = this._onDidChange.event;
       cache = [];
       async getChildren() {
@@ -22816,11 +29912,11 @@ var init_timelineTreeProvider = __esm({
       }
       getTreeItem(node) {
         if (node.id === "") {
-          const item2 = new vscode27.TreeItem(node.label, vscode27.TreeItemCollapsibleState.None);
+          const item2 = new vscode55.TreeItem(node.label, vscode55.TreeItemCollapsibleState.None);
           item2.contextValue = "empty";
           return item2;
         }
-        const item = new vscode27.TreeItem(node.label, vscode27.TreeItemCollapsibleState.None);
+        const item = new vscode55.TreeItem(node.label, vscode55.TreeItemCollapsibleState.None);
         item.description = node.description;
         item.tooltip = `\u7F16\u53F7\uFF1A${node.id}`;
         item.contextValue = "timelineItem";
@@ -22836,24 +29932,24 @@ var init_timelineTreeProvider = __esm({
         this.cache = [];
         if (!this.container.has("fileSystem"))
           return;
-        const fs10 = this.container.get("fileSystem");
+        const fs15 = this.container.get("fileSystem");
         let files;
         try {
-          files = await fs10.listFiles(PROJECT_DIRS.TIMELINE, "**/*.md");
+          files = await fs15.listFiles(PROJECT_DIRS.TIMELINE, "**/*.md");
         } catch {
           return;
         }
         for (const file of files) {
-          const basename = file.replace(/\\/g, "/").split("/").pop() || "";
-          if (basename === "_summary.md")
+          const basename7 = file.replace(/\\/g, "/").split("/").pop() || "";
+          if (basename7 === "_summary.md")
             continue;
           try {
-            const rel = fs10.toRelative(file);
+            const rel = fs15.toRelative(file);
             if (!rel)
               continue;
-            const content = await fs10.readFile(rel);
+            const content = await fs15.readFile(rel);
             const parsed = FM4.parse(content);
-            const id = parsed.data["\u7F16\u53F7"] || basename.replace(/\.md$/, "");
+            const id = parsed.data["\u7F16\u53F7"] || basename7.replace(/\.md$/, "");
             const name = parsed.data["\u540D\u79F0"] || id;
             const nodeCount = (parsed.content.match(/### /g) || []).length;
             this.cache.push({ id, name, nodeCount });
@@ -22869,26 +29965,272 @@ var init_timelineTreeProvider = __esm({
   }
 });
 
+// src/presentation/treeView/bookshelfTreeProvider.ts
+var bookshelfTreeProvider_exports = {};
+__export(bookshelfTreeProvider_exports, {
+  BookshelfTreeProvider: () => BookshelfTreeProvider
+});
+var vscode56, path16, BookshelfTreeProvider;
+var init_bookshelfTreeProvider = __esm({
+  "src/presentation/treeView/bookshelfTreeProvider.ts"() {
+    "use strict";
+    vscode56 = __toESM(require("vscode"));
+    path16 = __toESM(require("path"));
+    init_utils();
+    BookshelfTreeProvider = class {
+      constructor(container) {
+        this.container = container;
+        container.eventBus.on("bookshelf.changed", (p) => {
+          this.projects = p.projects ?? [];
+          this._onDidChangeTreeData.fire(void 0);
+        });
+        container.eventBus.on("project.opened", () => this.refresh());
+        container.eventBus.on("chapter.created", () => this.refresh());
+        container.eventBus.on("chapter.archived", () => this.refresh());
+        container.eventBus.on("chapter.deleted", () => this.refresh());
+      }
+      _onDidChangeTreeData = new vscode56.EventEmitter();
+      onDidChangeTreeData = this._onDidChangeTreeData.event;
+      projects = [];
+      async refresh() {
+        const detector = this.container.get("projectDetector");
+        this.projects = await detector.scanAllProjects();
+        this._onDidChangeTreeData.fire(void 0);
+      }
+      async getChildren() {
+        if (this.projects.length === 0) {
+          return [
+            {
+              type: "hint",
+              label: "\u8FD8\u6CA1\u6709\u4E66\u7C4D",
+              description: "\u5148\u6253\u5F00\u4E00\u4E2A\u6587\u4EF6\u5939\uFF0C\u518D\u65B0\u5EFA\u4F60\u7684\u7B2C\u4E00\u672C\u4E66"
+            },
+            {
+              type: "action",
+              label: "\u65B0\u5EFA\u5C0F\u8BF4\u9879\u76EE",
+              command: "novelCompanion.project.create",
+              icon: "$(add)"
+            },
+            {
+              type: "action",
+              label: "\u5237\u65B0\u4F5C\u54C1\u67B6",
+              command: "novelCompanion.bookshelf.refresh",
+              icon: "$(refresh)"
+            },
+            {
+              type: "action",
+              label: "\u67E5\u770B\u4F7F\u7528\u8BF4\u660E",
+              command: "novelCompanion.novel.openHelp",
+              icon: "$(question)"
+            }
+          ];
+        }
+        return [
+          { type: "action", label: "\u65B0\u5EFA\u5C0F\u8BF4\u9879\u76EE", command: "novelCompanion.project.create", icon: "$(add)" },
+          ...this.projects.map((info) => ({ type: "book", info }))
+        ];
+      }
+      getTreeItem(node) {
+        if (node.type === "action") {
+          const item2 = new vscode56.TreeItem(node.label, vscode56.TreeItemCollapsibleState.None);
+          item2.iconPath = new vscode56.ThemeIcon(node.icon.replace("$(", "").replace(")", ""));
+          item2.command = { command: node.command, title: node.label };
+          item2.contextValue = "action";
+          return item2;
+        }
+        if (node.type === "hint") {
+          const item2 = new vscode56.TreeItem(node.label, vscode56.TreeItemCollapsibleState.None);
+          item2.description = node.description;
+          item2.iconPath = new vscode56.ThemeIcon("info");
+          item2.contextValue = "hint";
+          return item2;
+        }
+        const info = node.info;
+        const label = info.title || path16.basename(info.root);
+        const item = new vscode56.TreeItem(label, vscode56.TreeItemCollapsibleState.None);
+        const parts = [];
+        parts.push(`${info.chapterCount} \u7AE0`);
+        if (info.volumeCount > 0)
+          parts.push(`${info.volumeCount} \u5377`);
+        parts.push(formatWordCount(info.totalWords));
+        item.description = parts.join(" \xB7 ");
+        item.tooltip = this.buildTooltip(info);
+        item.iconPath = new vscode56.ThemeIcon(info.active ? "book-open" : "book");
+        item.contextValue = info.active ? "bookActive" : "book";
+        if (!info.active) {
+          item.command = {
+            command: "novelCompanion.bookshelf.open",
+            title: "\u5207\u6362\u5230\u6B64\u4E66\u7C4D",
+            arguments: [info.root]
+          };
+        }
+        return item;
+      }
+      buildTooltip(info) {
+        const md = new vscode56.MarkdownString();
+        md.isTrusted = true;
+        const lines = [`**${info.title}**`];
+        if (info.author)
+          lines.push(`\u4F5C\u8005\uFF1A${info.author}`);
+        if (info.genre)
+          lines.push(`\u9898\u6750\uFF1A${info.genre}`);
+        if (info.length)
+          lines.push(`\u7BC7\u5E45\uFF1A${info.length}`);
+        lines.push(`\u7AE0\u8282\uFF1A${info.chapterCount}\uFF08${info.volumeCount} \u5377\uFF09`);
+        lines.push(`\u603B\u5B57\u6570\uFF1A${formatWordCount(info.totalWords)}`);
+        if (info.targetWords)
+          lines.push(`\u76EE\u6807\uFF1A${formatWordCount(info.targetWords)}`);
+        lines.push(`\u8DEF\u5F84\uFF1A${info.root}`);
+        if (info.active)
+          lines.push("_\u5F53\u524D\u6D3B\u8DC3\u4E66\u7C4D_");
+        md.appendMarkdown(lines.join("  \n"));
+        return md;
+      }
+    };
+  }
+});
+
+// src/presentation/treeView/snippetTreeProvider.ts
+var snippetTreeProvider_exports = {};
+__export(snippetTreeProvider_exports, {
+  SnippetTreeProvider: () => SnippetTreeProvider
+});
+var vscode57, SnippetTreeProvider;
+var init_snippetTreeProvider = __esm({
+  "src/presentation/treeView/snippetTreeProvider.ts"() {
+    "use strict";
+    vscode57 = __toESM(require("vscode"));
+    init_snippetService();
+    SnippetTreeProvider = class {
+      constructor(container) {
+        this.container = container;
+        container.context.subscriptions.push(
+          container.eventBus.on("snippet.changed", () => this.refresh()),
+          container.eventBus.on("project.opened", () => this.refresh())
+        );
+      }
+      _onDidChangeTreeData = new vscode57.EventEmitter();
+      onDidChangeTreeData = this._onDidChangeTreeData.event;
+      cache = [];
+      async getChildren(element) {
+        if (!this.container.has("fileSystem"))
+          return [];
+        const svc = new SnippetService(this.container);
+        if (!element) {
+          this.cache = await svc.listAll();
+          const cats = new Set(this.cache.map((s) => s.category));
+          return Array.from(cats).sort().map((name) => ({ type: "category", name }));
+        }
+        if (element.type === "category") {
+          return this.cache.filter((s) => s.category === element.name).map((s) => ({ type: "snippet", snippet: s }));
+        }
+        return [];
+      }
+      getTreeItem(node) {
+        if (node.type === "category") {
+          const count = this.cache.filter((s2) => s2.category === node.name).length;
+          const item2 = new vscode57.TreeItem(node.name, vscode57.TreeItemCollapsibleState.Collapsed);
+          item2.description = `${count}`;
+          item2.contextValue = "snippetCategory";
+          item2.iconPath = new vscode57.ThemeIcon("folder");
+          item2.id = `cat:${node.name}`;
+          return item2;
+        }
+        const s = node.snippet;
+        const item = new vscode57.TreeItem(s.title, vscode57.TreeItemCollapsibleState.None);
+        item.description = (s.tags ?? []).join(" ");
+        item.tooltip = `${s.title}
+\u5206\u7C7B\uFF1A${s.category}
+\u8DEF\u5F84\uFF1A${s.path}`;
+        item.contextValue = "snippet";
+        item.id = s.path;
+        item.iconPath = new vscode57.ThemeIcon("note");
+        item.command = {
+          command: "novelCompanion.snippet.open",
+          title: "\u6253\u5F00\u7247\u6BB5",
+          arguments: [s.path]
+        };
+        return item;
+      }
+      refresh() {
+        this._onDidChangeTreeData.fire(void 0);
+      }
+    };
+  }
+});
+
+// src/presentation/treeView/trashTreeProvider.ts
+var trashTreeProvider_exports = {};
+__export(trashTreeProvider_exports, {
+  TrashTreeProvider: () => TrashTreeProvider
+});
+var vscode58, TrashTreeProvider;
+var init_trashTreeProvider = __esm({
+  "src/presentation/treeView/trashTreeProvider.ts"() {
+    "use strict";
+    vscode58 = __toESM(require("vscode"));
+    init_trashService();
+    TrashTreeProvider = class {
+      constructor(container) {
+        this.container = container;
+        container.context.subscriptions.push(
+          container.eventBus.on("trash.changed", () => this.refresh()),
+          container.eventBus.on("project.opened", () => this.refresh())
+        );
+      }
+      _onDidChangeTreeData = new vscode58.EventEmitter();
+      onDidChangeTreeData = this._onDidChangeTreeData.event;
+      async getChildren() {
+        if (!this.container.has("fileSystem"))
+          return [];
+        const svc = new TrashService(this.container);
+        return svc.list();
+      }
+      getTreeItem(entry) {
+        const typeLabel = entry.type === "chapter" ? "\u7AE0\u8282" : entry.type === "character" ? "\u4EBA\u7269" : entry.type === "setting" ? "\u8BBE\u5B9A" : "\u5176\u4ED6";
+        const title = entry.meta?.title || entry.originalPath;
+        const item = new vscode58.TreeItem(String(title), vscode58.TreeItemCollapsibleState.None);
+        item.description = `${typeLabel} \xB7 ${entry.deletedAt.slice(0, 16).replace("T", " ")}`;
+        item.tooltip = `\u7C7B\u578B\uFF1A${typeLabel}
+\u539F\u8DEF\u5F84\uFF1A${entry.originalPath}
+\u5220\u9664\u65F6\u95F4\uFF1A${entry.deletedAt}`;
+        item.contextValue = "trash";
+        item.id = entry.id;
+        item.iconPath = new vscode58.ThemeIcon("trash");
+        return item;
+      }
+      refresh() {
+        this._onDidChangeTreeData.fire(void 0);
+      }
+    };
+  }
+});
+
 // src/presentation/statusBar/statusBarController.ts
 var statusBarController_exports = {};
 __export(statusBarController_exports, {
   StatusBarController: () => StatusBarController
 });
-var vscode28, StatusBarController;
+var vscode59, path17, StatusBarController;
 var init_statusBarController = __esm({
   "src/presentation/statusBar/statusBarController.ts"() {
     "use strict";
-    vscode28 = __toESM(require("vscode"));
+    vscode59 = __toESM(require("vscode"));
+    path17 = __toESM(require("path"));
     init_utils();
     StatusBarController = class {
       constructor(container) {
         this.container = container;
-        this.item = vscode28.window.createStatusBarItem(vscode28.StatusBarAlignment.Left, 100);
+        this.item = vscode59.window.createStatusBarItem(vscode59.StatusBarAlignment.Left, 100);
         this.item.command = "novelCompanion.stats.refresh";
         this.item.tooltip = "\u7B14\u642D \u5B57\u6570\u7EDF\u8BA1\uFF08\u70B9\u51FB\u5237\u65B0\uFF09";
-        this.reminderItem = vscode28.window.createStatusBarItem(vscode28.StatusBarAlignment.Left, 99);
+        this.bookItem = vscode59.window.createStatusBarItem(vscode59.StatusBarAlignment.Left, 101);
+        this.bookItem.command = "novelCompanion.bookshelf.refresh";
+        this.bookItem.tooltip = "\u5F53\u524D\u4E66\u7C4D\uFF08\u70B9\u51FB\u5237\u65B0\u4F5C\u54C1\u67B6\uFF09";
+        this.reminderItem = vscode59.window.createStatusBarItem(vscode59.StatusBarAlignment.Left, 99);
       }
       item;
+      bookItem;
       reminderItem;
       current;
       simpleMode = false;
@@ -22897,7 +30239,7 @@ var init_statusBarController = __esm({
       }
       activate(context) {
         this.simpleMode = this.readSimpleMode();
-        context.subscriptions.push(this.item, this.reminderItem);
+        context.subscriptions.push(this.item, this.bookItem, this.reminderItem);
         context.subscriptions.push(
           this.container.eventBus.on("chapter.wordsChanged", (p) => {
             const cm = this.configManager;
@@ -22911,7 +30253,13 @@ var init_statusBarController = __esm({
           })
         );
         context.subscriptions.push(
-          vscode28.workspace.onDidChangeConfiguration((e) => {
+          this.container.eventBus.on("project.opened", () => this.updateBookItem())
+        );
+        context.subscriptions.push(
+          this.container.eventBus.on("project.closed", () => this.updateBookItem())
+        );
+        context.subscriptions.push(
+          vscode59.workspace.onDidChangeConfiguration((e) => {
             if (e.affectsConfiguration("novelCompanion.statusBar.simpleMode")) {
               this.simpleMode = this.readSimpleMode();
               this.render();
@@ -22920,6 +30268,22 @@ var init_statusBarController = __esm({
         );
         this.item.text = "$(book) \u7B14\u642D";
         this.item.show();
+        this.updateBookItem();
+      }
+      updateBookItem() {
+        if (!this.container.has("projectDetector")) {
+          this.bookItem.hide();
+          return;
+        }
+        const detector = this.container.get("projectDetector");
+        const root = detector.getActiveRoot();
+        if (!root) {
+          this.bookItem.hide();
+          return;
+        }
+        this.bookItem.text = `$(library) ${path17.basename(root)}`;
+        this.bookItem.tooltip = `\u5F53\u524D\u4E66\u7C4D\u76EE\u5F55\uFF1A${root}`;
+        this.bookItem.show();
       }
       readSimpleMode() {
         return this.configManager?.get("statusBar.simpleMode") === true;
@@ -22973,6 +30337,7 @@ var init_statusBarController = __esm({
       }
       dispose() {
         this.item.dispose();
+        this.bookItem.dispose();
         this.reminderItem.dispose();
       }
     };
@@ -22984,15 +30349,15 @@ var diagnosticProvider_exports = {};
 __export(diagnosticProvider_exports, {
   DiagnosticProvider: () => DiagnosticProvider
 });
-var vscode29, DiagnosticProvider;
+var vscode60, DiagnosticProvider;
 var init_diagnosticProvider = __esm({
   "src/presentation/diagnostics/diagnosticProvider.ts"() {
     "use strict";
-    vscode29 = __toESM(require("vscode"));
+    vscode60 = __toESM(require("vscode"));
     DiagnosticProvider = class {
       collection;
       constructor() {
-        this.collection = vscode29.languages.createDiagnosticCollection("novel-companion");
+        this.collection = vscode60.languages.createDiagnosticCollection("novel-companion");
       }
       set(uri, diagnostics) {
         this.collection.set(uri, diagnostics);
@@ -23026,7 +30391,7 @@ function escapeAttr(text) {
 }
 function renderCard(sug, taskId) {
   const typeLabel = TYPE_LABELS[sug.type] ?? sug.type;
-  const sevLabel = SEVERITY_LABELS[sug.severity] ?? sug.severity;
+  const sevLabel = SEVERITY_LABELS2[sug.severity] ?? sug.severity;
   const statusBadge = renderStatusBadge(sug.status);
   const canMerge = sug.replacement ? "" : "disabled";
   const isPending = sug.status === "pending";
@@ -23035,7 +30400,7 @@ function renderCard(sug, taskId) {
         <button class="btn accept" data-cmd="accept" data-task="${escapeAttr(taskId)}" data-sug="${escapeAttr(sug.id)}">\u63A5\u53D7</button>
         <button class="btn merge" data-cmd="merge" data-task="${escapeAttr(taskId)}" data-sug="${escapeAttr(sug.id)}" ${canMerge}>\u5408\u5E76\u7F16\u8F91</button>
         <button class="btn reject" data-cmd="reject" data-task="${escapeAttr(taskId)}" data-sug="${escapeAttr(sug.id)}">\u62D2\u7EDD</button>
-      </div>` : `<div class="actions"><span class="done">\u5DF2\u5904\u7406</span></div>`;
+      </div>` : '<div class="actions"><span class="done">\u5DF2\u5904\u7406</span></div>';
   return `
     <div class="card severity-${sug.severity} status-${sug.status}" id="card-${escapeAttr(sug.id)}">
       <div class="card-head">
@@ -23223,7 +30588,7 @@ function generateReviewPanelHtml(suggestions, taskId, cspNonce) {
 </body>
 </html>`;
 }
-var TYPE_LABELS, SEVERITY_LABELS;
+var TYPE_LABELS, SEVERITY_LABELS2;
 var init_reviewPanelHtml = __esm({
   "src/presentation/webview/reviewPanelHtml.ts"() {
     "use strict";
@@ -23240,7 +30605,7 @@ var init_reviewPanelHtml = __esm({
       emotion: "\u60C5\u611F",
       suggestion: "\u5EFA\u8BAE"
     };
-    SEVERITY_LABELS = {
+    SEVERITY_LABELS2 = {
       critical: "\u4E25\u91CD",
       high: "\u9AD8",
       medium: "\u4E2D",
@@ -23262,11 +30627,11 @@ function getNonce() {
   }
   return result;
 }
-var vscode30, ReviewPanelProvider;
+var vscode61, ReviewPanelProvider;
 var init_reviewPanelProvider = __esm({
   "src/presentation/webview/reviewPanelProvider.ts"() {
     "use strict";
-    vscode30 = __toESM(require("vscode"));
+    vscode61 = __toESM(require("vscode"));
     init_reviewPanelHtml();
     ReviewPanelProvider = class {
       constructor(container) {
@@ -23292,22 +30657,22 @@ var init_reviewPanelProvider = __esm({
       async open(taskId) {
         const tid = taskId ?? await this.pickTaskId();
         if (!tid) {
-          vscode30.window.showInformationMessage("\u5F53\u524D\u6CA1\u6709\u5F85\u5BA1\u9605\u7684\u4EFB\u52A1");
+          vscode61.window.showInformationMessage("\u5F53\u524D\u6CA1\u6709\u5F85\u5BA1\u9605\u7684\u4EFB\u52A1");
           return;
         }
         this.currentTaskId = tid;
         if (!this.panel) {
-          this.panel = vscode30.window.createWebviewPanel(
+          this.panel = vscode61.window.createWebviewPanel(
             "novelCompanion.reviewPanel",
             "\u5BA1\u9605\u9762\u677F",
-            vscode30.ViewColumn.Two,
+            vscode61.ViewColumn.Two,
             {
               enableScripts: true,
               retainContextWhenHidden: true,
               localResourceRoots: []
             }
           );
-          this.panel.iconPath = new vscode30.ThemeIcon("comment-discussion");
+          this.panel.iconPath = new vscode61.ThemeIcon("comment-discussion");
           this.panel.webview.onDidReceiveMessage(
             (msg) => {
               this.handleMessage(msg).catch((e) => {
@@ -23326,7 +30691,7 @@ var init_reviewPanelProvider = __esm({
             this.container.context.subscriptions
           );
         } else {
-          this.panel.reveal(vscode30.ViewColumn.Two, true);
+          this.panel.reveal(vscode61.ViewColumn.Two, true);
         }
         await this.refresh();
       }
@@ -23345,7 +30710,7 @@ var init_reviewPanelProvider = __esm({
           picked: r.taskId === this.currentTaskId,
           taskId: r.taskId
         }));
-        const picked = await vscode30.window.showQuickPick(items, {
+        const picked = await vscode61.window.showQuickPick(items, {
           placeHolder: "\u9009\u62E9\u8981\u5BA1\u9605\u7684\u4EFB\u52A1"
         });
         return picked?.taskId;
@@ -23370,7 +30735,7 @@ var init_reviewPanelProvider = __esm({
               return;
             const res = await this.merger.accept(taskId, suggestionId);
             if (!res.success) {
-              vscode30.window.showWarningMessage(`\u63A5\u53D7\u5931\u8D25\uFF1A${res.reason ?? "\u672A\u77E5\u539F\u56E0"}`);
+              vscode61.window.showWarningMessage(`\u63A5\u53D7\u5931\u8D25\uFF1A${res.reason ?? "\u672A\u77E5\u539F\u56E0"}`);
             }
             await this.refresh();
             break;
@@ -23395,9 +30760,9 @@ var init_reviewPanelProvider = __esm({
               return;
             try {
               const abs = this.fs.resolvePath(file);
-              await vscode30.commands.executeCommand("vscode.open", vscode30.Uri.file(abs));
+              await vscode61.commands.executeCommand("vscode.open", vscode61.Uri.file(abs));
             } catch (e) {
-              vscode30.window.showWarningMessage(`\u65E0\u6CD5\u6253\u5F00\u6587\u4EF6\uFF1A${e.message}`);
+              vscode61.window.showWarningMessage(`\u65E0\u6CD5\u6253\u5F00\u6587\u4EF6\uFF1A${e.message}`);
             }
             break;
           }
@@ -23405,7 +30770,7 @@ var init_reviewPanelProvider = __esm({
             if (!taskId)
               return;
             const res = await this.merger.acceptAll(taskId);
-            vscode30.window.showInformationMessage(
+            vscode61.window.showInformationMessage(
               `\u6279\u91CF\u63A5\u53D7\u5B8C\u6210\uFF1A\u6210\u529F ${res.accepted} \u6761\uFF0C\u5931\u8D25 ${res.failed} \u6761`
             );
             await this.refresh();
@@ -23437,11 +30802,11 @@ var reminderManager_exports = {};
 __export(reminderManager_exports, {
   ReminderManager: () => ReminderManager
 });
-var vscode31, ReminderManager;
+var vscode62, ReminderManager;
 var init_reminderManager = __esm({
   "src/presentation/reminder/reminderManager.ts"() {
     "use strict";
-    vscode31 = __toESM(require("vscode"));
+    vscode62 = __toESM(require("vscode"));
     init_utils();
     ReminderManager = class {
       constructor(container) {
@@ -23453,7 +30818,7 @@ var init_reminderManager = __esm({
         return this.container.has("configManager") ? this.container.get("configManager") : void 0;
       }
       activate(context) {
-        const sub = vscode31.window.onDidChangeActiveTextEditor((editor) => {
+        const sub = vscode62.window.onDidChangeActiveTextEditor((editor) => {
           if (!editor) {
             return;
           }
@@ -23502,7 +30867,7 @@ var init_reminderManager = __esm({
         const stats = this.container.get("stats");
         const delta = stats.getTodayDeltaFromCache();
         if (delta >= wordThreshold) {
-          const activeEditor = vscode31.window.activeTextEditor;
+          const activeEditor = vscode62.window.activeTextEditor;
           const chapterId = activeEditor ? extractChapterId(activeEditor.document.uri.fsPath) : void 0;
           this.showReminder(chapterId ?? "", delta);
         }
@@ -23524,14 +30889,14 @@ var init_reminderManager = __esm({
         }
       }
       showNotificationReminder(chapterId, minutes, delta) {
-        vscode31.window.showInformationMessage(
+        vscode62.window.showInformationMessage(
           `\u5DF2\u8FDE\u7EED\u5199\u4F5C ${minutes} \u5206\u949F\uFF08\u4ECA\u65E5 ${delta >= 0 ? "+" : ""}${delta} \u5B57\uFF09\uFF0C\u662F\u5426\u751F\u6210 AI \u5BA1\u7A3F\u4EFB\u52A1\uFF1F`,
           "\u751F\u6210\u4EFB\u52A1",
           "\u7A0D\u540E\u63D0\u9192",
           "\u672C\u7AE0\u5173\u95ED"
         ).then((action) => {
           if (action === "\u751F\u6210\u4EFB\u52A1") {
-            vscode31.commands.executeCommand("novelCompanion.ai.generateTask");
+            vscode62.commands.executeCommand("novelCompanion.ai.generateTask");
           } else if (action === "\u7A0D\u540E\u63D0\u9192") {
             this.snooze(chapterId);
           } else if (action === "\u672C\u7AE0\u5173\u95ED") {
@@ -23564,7 +30929,7 @@ var init_reminderManager = __esm({
         if (this.container.has("statusBar")) {
           this.container.get("statusBar").hideReminder();
         }
-        vscode31.window.showInformationMessage(`\u5C06\u5728 ${snoozeMinutes} \u5206\u949F\u540E\u518D\u6B21\u63D0\u9192`);
+        vscode62.window.showInformationMessage(`\u5C06\u5728 ${snoozeMinutes} \u5206\u949F\u540E\u518D\u6B21\u63D0\u9192`);
       }
       disable(chapterId) {
         const existing = this.sessions.get(chapterId);
@@ -23580,6 +30945,15 @@ var init_reminderManager = __esm({
             disabled: true
           });
         }
+        if (this.container.has("statusBar")) {
+          this.container.get("statusBar").hideReminder();
+        }
+      }
+      resetAllSessions() {
+        for (const session of this.sessions.values()) {
+          clearTimeout(session.timer);
+        }
+        this.sessions.clear();
         if (this.container.has("statusBar")) {
           this.container.get("statusBar").hideReminder();
         }
@@ -23602,11 +30976,11 @@ var workflowViewProvider_exports = {};
 __export(workflowViewProvider_exports, {
   WorkflowViewProvider: () => WorkflowViewProvider
 });
-var vscode32, STAGES, WorkflowViewProvider;
+var vscode63, STAGES, WorkflowViewProvider;
 var init_workflowViewProvider = __esm({
   "src/presentation/workflow/workflowViewProvider.ts"() {
     "use strict";
-    vscode32 = __toESM(require("vscode"));
+    vscode63 = __toESM(require("vscode"));
     init_types();
     STAGES = [
       { status: "planning" /* Planning */, label: "\u8BA1\u5212", icon: "\u{1F4DD}" },
@@ -23625,7 +30999,7 @@ var init_workflowViewProvider = __esm({
         container.eventBus.on("result.imported", () => this.refresh());
         container.eventBus.on("project.opened", () => this.refresh());
         container.context.subscriptions.push(
-          vscode32.window.onDidChangeActiveTextEditor(() => {
+          vscode63.window.onDidChangeActiveTextEditor(() => {
             if (this.view?.visible) {
               this.refresh();
             }
@@ -23646,19 +31020,19 @@ var init_workflowViewProvider = __esm({
           return;
         switch (cmd) {
           case "openDraft":
-            await vscode32.commands.executeCommand("novelCompanion.chapter.openDraft", chapterId);
+            await vscode63.commands.executeCommand("novelCompanion.chapter.openDraft", chapterId);
             break;
           case "openOutline":
-            await vscode32.commands.executeCommand("novelCompanion.chapter.openOutline", chapterId);
+            await vscode63.commands.executeCommand("novelCompanion.chapter.openOutline", chapterId);
             break;
           case "generateTask":
-            await vscode32.commands.executeCommand("novelCompanion.ai.generateTask");
+            await vscode63.commands.executeCommand("novelCompanion.ai.generateTask");
             break;
           case "archive":
-            await vscode32.commands.executeCommand("novelCompanion.chapter.archive", chapterId);
+            await vscode63.commands.executeCommand("novelCompanion.chapter.archive", chapterId);
             break;
           case "createChapter":
-            await vscode32.commands.executeCommand("novelCompanion.chapter.create");
+            await vscode63.commands.executeCommand("novelCompanion.chapter.create");
             break;
         }
       }
@@ -23675,8 +31049,8 @@ var init_workflowViewProvider = __esm({
           } catch {
           }
         }
-        const currentChapterId = this.getActiveChapterId();
-        const current = chapters.find((c) => c.id === currentChapterId) ?? chapters.find((c) => c.status !== "archived" /* Archived */) ?? chapters[chapters.length - 1];
+        const currentChapterId2 = this.getActiveChapterId();
+        const current = chapters.find((c) => c.id === currentChapterId2) ?? chapters.find((c) => c.status !== "archived" /* Archived */) ?? chapters[chapters.length - 1];
         if (!current) {
           return this.emptyHtml();
         }
@@ -23797,15 +31171,70 @@ var init_workflowViewProvider = __esm({
 </html>`;
       }
       getActiveChapterId() {
-        const editor = vscode32.window.activeTextEditor;
+        const editor = vscode63.window.activeTextEditor;
         if (!editor)
           return void 0;
-        const path8 = editor.document.uri.fsPath.replace(/\\/g, "/");
-        const match = path8.match(/\/chapters\/(ch\d{3})\//);
+        const path18 = editor.document.uri.fsPath.replace(/\\/g, "/");
+        const match = path18.match(/\/chapters\/(ch\d{3})\//);
         return match?.[1];
       }
       escape(text) {
         return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+    };
+  }
+});
+
+// src/presentation/codeLens/foreshadowingCodeLensProvider.ts
+var foreshadowingCodeLensProvider_exports = {};
+__export(foreshadowingCodeLensProvider_exports, {
+  ForeshadowingCodeLensProvider: () => ForeshadowingCodeLensProvider
+});
+var vscode64, CHAPTER_RE, ForeshadowingCodeLensProvider;
+var init_foreshadowingCodeLensProvider = __esm({
+  "src/presentation/codeLens/foreshadowingCodeLensProvider.ts"() {
+    "use strict";
+    vscode64 = __toESM(require("vscode"));
+    init_foreshadowingService();
+    init_constants();
+    CHAPTER_RE = /[/\\]chapters[/\\](ch\d{3})[/\\]draft\.md$/i;
+    ForeshadowingCodeLensProvider = class {
+      constructor(container) {
+        this.container = container;
+        container.eventBus.on("project.opened", () => this._onDidChange.fire());
+        container.eventBus.on("foreshadowing.changed", () => this._onDidChange.fire());
+        container.eventBus.on("file.saved", () => this._onDidChange.fire());
+      }
+      _onDidChange = new vscode64.EventEmitter();
+      onDidChangeCodeLenses = this._onDidChange.event;
+      async provideCodeLenses(document) {
+        if (!this.container.has("fileSystem"))
+          return [];
+        const fs15 = this.container.get("fileSystem");
+        const rel = fs15.toRelative(document.uri.fsPath);
+        if (!rel)
+          return [];
+        if (!rel.startsWith(`${PROJECT_DIRS.CHAPTERS}/`))
+          return [];
+        const m = document.uri.fsPath.replace(/\\/g, "/").match(CHAPTER_RE);
+        if (!m)
+          return [];
+        const chapterId = m[1];
+        try {
+          const service2 = new ForeshadowingService(this.container);
+          const pending = await service2.findByChapter(chapterId);
+          if (!pending.length)
+            return [];
+          const range = new vscode64.Range(0, 0, 0, 0);
+          const lens = new vscode64.CodeLens(range, {
+            command: "novelCompanion.foreshadowing.openChapterForeshadowings",
+            title: `\u{1F4CC} \u672C\u7AE0\u672A\u56DE\u6536\u4F0F\u7B14 ${pending.length} \u4E2A\uFF1A${pending.map((f) => f.name).join("\u3001")}`,
+            arguments: [chapterId]
+          });
+          return [lens];
+        } catch {
+          return [];
+        }
       }
     };
   }
@@ -23829,7 +31258,9 @@ var init_indexManager = __esm({
       }
       chapters = /* @__PURE__ */ new Map();
       characters = /* @__PURE__ */ new Map();
+      characterMetas = /* @__PURE__ */ new Map();
       settings = /* @__PURE__ */ new Map();
+      settingMetas = /* @__PURE__ */ new Map();
       loaded = false;
       get fs() {
         return this.container.has("fileSystem") ? this.container.get("fileSystem") : void 0;
@@ -23890,6 +31321,7 @@ var init_indexManager = __esm({
         if (!fsSvc)
           return;
         this.characters.clear();
+        this.characterMetas.clear();
         let files;
         try {
           files = await fsSvc.listFiles(PROJECT_DIRS.CHARACTERS, "**/*.md");
@@ -23908,6 +31340,7 @@ var init_indexManager = __esm({
             if (!meta?.id) {
               continue;
             }
+            this.characterMetas.set(meta.id, meta);
             this.characters.set(meta.id, {
               id: meta.id,
               name: meta.name,
@@ -23924,6 +31357,7 @@ var init_indexManager = __esm({
         if (!fsSvc)
           return;
         this.settings.clear();
+        this.settingMetas.clear();
         let files;
         try {
           files = await fsSvc.listFiles(PROJECT_DIRS.WORLD, "**/*.md");
@@ -23942,6 +31376,7 @@ var init_indexManager = __esm({
             if (!meta?.id) {
               continue;
             }
+            this.settingMetas.set(meta.id, meta);
             this.settings.set(meta.id, {
               id: meta.id,
               name: meta.name,
@@ -23978,9 +31413,17 @@ var init_indexManager = __esm({
         await this.ensureLoaded();
         return Array.from(this.characters.values());
       }
+      async getAllCharacterMetas() {
+        await this.ensureLoaded();
+        return Array.from(this.characterMetas.values());
+      }
       async getAllSettings() {
         await this.ensureLoaded();
         return Array.from(this.settings.values());
+      }
+      async getAllSettingMetas() {
+        await this.ensureLoaded();
+        return Array.from(this.settingMetas.values());
       }
     };
   }
@@ -24096,15 +31539,15 @@ var ServiceContainer = class {
     this.context = context;
   }
   services = /* @__PURE__ */ new Map();
-  register(key, service) {
-    this.services.set(key, service);
+  register(key, service2) {
+    this.services.set(key, service2);
   }
   get(key) {
-    const service = this.services.get(key);
-    if (!service) {
+    const service2 = this.services.get(key);
+    if (!service2) {
       throw new Error(`Service not registered: ${key}`);
     }
-    return service;
+    return service2;
   }
   has(key) {
     return this.services.has(key);
@@ -24121,8 +31564,8 @@ var ServiceContainer = class {
     this.register("configManager", new ConfigManager(this));
   }
   dispose() {
-    for (const service of this.services.values()) {
-      const d = service;
+    for (const service2 of this.services.values()) {
+      const d = service2;
       if (typeof d.dispose === "function") {
         try {
           d.dispose();
@@ -24135,7 +31578,7 @@ var ServiceContainer = class {
 };
 
 // src/activation.ts
-var vscode33 = __toESM(require("vscode"));
+var vscode65 = __toESM(require("vscode"));
 function activateModules(container) {
   const context = container.context;
   const { CommandRegistry: CommandRegistry2 } = (init_commandRegistry(), __toCommonJS(commandRegistry_exports));
@@ -24145,23 +31588,29 @@ function activateModules(container) {
   const { NovelInfoTreeProvider: NovelInfoTreeProvider2 } = (init_novelInfoTreeProvider(), __toCommonJS(novelInfoTreeProvider_exports));
   const { ForeshadowingTreeProvider: ForeshadowingTreeProvider2 } = (init_foreshadowingTreeProvider(), __toCommonJS(foreshadowingTreeProvider_exports));
   const { TimelineTreeProvider: TimelineTreeProvider2 } = (init_timelineTreeProvider(), __toCommonJS(timelineTreeProvider_exports));
+  const { BookshelfTreeProvider: BookshelfTreeProvider2 } = (init_bookshelfTreeProvider(), __toCommonJS(bookshelfTreeProvider_exports));
+  const { SnippetTreeProvider: SnippetTreeProvider2 } = (init_snippetTreeProvider(), __toCommonJS(snippetTreeProvider_exports));
+  const { TrashTreeProvider: TrashTreeProvider2 } = (init_trashTreeProvider(), __toCommonJS(trashTreeProvider_exports));
   const { StatusBarController: StatusBarController2 } = (init_statusBarController(), __toCommonJS(statusBarController_exports));
   const { DiagnosticProvider: DiagnosticProvider2 } = (init_diagnosticProvider(), __toCommonJS(diagnosticProvider_exports));
   const { ReviewPanelProvider: ReviewPanelProvider2 } = (init_reviewPanelProvider(), __toCommonJS(reviewPanelProvider_exports));
   const { ReminderManager: ReminderManager2 } = (init_reminderManager(), __toCommonJS(reminderManager_exports));
   const { WorkflowViewProvider: WorkflowViewProvider2 } = (init_workflowViewProvider(), __toCommonJS(workflowViewProvider_exports));
+  const { ForeshadowingCodeLensProvider: ForeshadowingCodeLensProvider2 } = (init_foreshadowingCodeLensProvider(), __toCommonJS(foreshadowingCodeLensProvider_exports));
   const { ProjectDetector: ProjectDetector2 } = (init_projectDetector(), __toCommonJS(projectDetector_exports));
   const { StatsEngine: StatsEngine2 } = (init_statsEngine(), __toCommonJS(statsEngine_exports));
   const { LocalChecker: LocalChecker2 } = (init_localChecker(), __toCommonJS(localChecker_exports));
   const { AiTaskEngine: AiTaskEngine3 } = (init_aiTaskEngine(), __toCommonJS(aiTaskEngine_exports));
   const { SuggestionMerger: SuggestionMerger2 } = (init_suggestionMerger(), __toCommonJS(suggestionMerger_exports));
-  const { ChapterWorkflowEngine: ChapterWorkflowEngine2 } = (init_chapterWorkflowEngine(), __toCommonJS(chapterWorkflowEngine_exports));
+  const { ChapterWorkflowEngine: ChapterWorkflowEngine3 } = (init_chapterWorkflowEngine(), __toCommonJS(chapterWorkflowEngine_exports));
+  const { SnapshotService: SnapshotService2 } = (init_snapshotService(), __toCommonJS(snapshotService_exports));
+  const { TrashService: TrashService2 } = (init_trashService(), __toCommonJS(trashService_exports));
   const { IndexManager: IndexManager2 } = (init_indexManager(), __toCommonJS(indexManager_exports));
   if (!container.has("indexManager")) {
     container.register("indexManager", new IndexManager2(container));
   }
   if (!container.has("workflow")) {
-    container.register("workflow", new ChapterWorkflowEngine2(container));
+    container.register("workflow", new ChapterWorkflowEngine3(container));
   }
   if (!container.has("stats")) {
     container.register("stats", new StatsEngine2(container));
@@ -24175,6 +31624,16 @@ function activateModules(container) {
   if (!container.has("merger")) {
     container.register("merger", new SuggestionMerger2(container));
   }
+  if (!container.has("snapshot")) {
+    container.register("snapshot", new SnapshotService2(container));
+  }
+  if (!container.has("trash")) {
+    container.register("trash", new TrashService2(container));
+  }
+  if (!container.has("consistency")) {
+    const { ConsistencyService: ConsistencyService2 } = (init_consistencyService(), __toCommonJS(consistencyService_exports));
+    container.register("consistency", new ConsistencyService2(container));
+  }
   const chapterTree = new ChapterTreeProvider2(container);
   const draftTree = new DraftTreeProvider2(container);
   const characterTree = new CharacterTreeProvider2(container);
@@ -24182,6 +31641,9 @@ function activateModules(container) {
   const novelInfoTree = new NovelInfoTreeProvider2(container);
   const foreshadowingTree = new ForeshadowingTreeProvider2(container);
   const timelineTree = new TimelineTreeProvider2(container);
+  const bookshelfTree = new BookshelfTreeProvider2(container);
+  const snippetTree = new SnippetTreeProvider2(container);
+  const trashTree = new TrashTreeProvider2(container);
   const statusBar = new StatusBarController2(container);
   const diagnostics = new DiagnosticProvider2();
   const reviewPanel = new ReviewPanelProvider2(container);
@@ -24194,30 +31656,58 @@ function activateModules(container) {
   container.register("novelInfoTree", novelInfoTree);
   container.register("foreshadowingTree", foreshadowingTree);
   container.register("timelineTree", timelineTree);
+  container.register("bookshelfTree", bookshelfTree);
+  container.register("snippetTree", snippetTree);
+  container.register("trashTree", trashTree);
   container.register("statusBar", statusBar);
   container.register("diagnostics", diagnostics);
   container.register("reviewPanel", reviewPanel);
   container.register("reminder", reminder);
   container.register("projectDetector", projectDetector);
   context.subscriptions.push(
-    vscode33.window.registerTreeDataProvider("novel-companion.novel-info", novelInfoTree),
-    vscode33.window.registerTreeDataProvider("novel-companion.outlines", chapterTree),
-    vscode33.window.registerTreeDataProvider("novel-companion.drafts", draftTree),
-    vscode33.window.registerTreeDataProvider("novel-companion.characters", characterTree),
-    vscode33.window.registerTreeDataProvider("novel-companion.settings", settingTree),
-    vscode33.window.registerTreeDataProvider("novel-companion.foreshadowing", foreshadowingTree),
-    vscode33.window.registerTreeDataProvider("novel-companion.timeline", timelineTree)
+    vscode65.window.registerTreeDataProvider("novel-companion.bookshelf", bookshelfTree),
+    vscode65.window.registerTreeDataProvider("novel-companion.novel-info", novelInfoTree),
+    vscode65.window.registerTreeDataProvider("novel-companion.outlines", chapterTree),
+    vscode65.window.registerTreeDataProvider("novel-companion.drafts", draftTree),
+    vscode65.window.registerTreeDataProvider("novel-companion.characters", characterTree),
+    vscode65.window.registerTreeDataProvider("novel-companion.settings", settingTree),
+    vscode65.window.registerTreeDataProvider("novel-companion.foreshadowing", foreshadowingTree),
+    vscode65.window.registerTreeDataProvider("novel-companion.timeline", timelineTree),
+    vscode65.window.registerTreeDataProvider("novel-companion.snippets", snippetTree),
+    vscode65.window.registerTreeDataProvider("novel-companion.trash", trashTree)
   );
   const workflowProvider = new WorkflowViewProvider2(container);
   context.subscriptions.push(
-    vscode33.window.registerWebviewViewProvider("novel-companion.workflow", workflowProvider)
+    vscode65.window.registerWebviewViewProvider("novel-companion.workflow", workflowProvider)
   );
   container.register("workflowView", workflowProvider);
   statusBar.activate(context);
   container.get("checker").activate(context);
   container.get("stats").activate(context);
+  container.get("snapshot").activate(context);
+  context.subscriptions.push(
+    container.eventBus.on("project.opened", () => {
+      try {
+        container.get("trash").autoCleanup().catch(() => {
+        });
+      } catch {
+      }
+    })
+  );
+  context.subscriptions.push(
+    container.eventBus.on("chapter.wordsChanged", () => {
+      container.eventBus.publish("calendar.refresh", {});
+    })
+  );
   container.get("aiTask").startWatching(context);
   reminder.activate(context);
+  const foreshadowingCodeLens = new ForeshadowingCodeLensProvider2(container);
+  context.subscriptions.push(
+    vscode65.languages.registerCodeLensProvider(
+      { scheme: "file", pattern: "**/chapters/ch*/draft.md" },
+      foreshadowingCodeLens
+    )
+  );
   const eventBus = container.eventBus;
   context.subscriptions.push(
     eventBus.on("project.opened", () => {
@@ -24226,7 +31716,12 @@ function activateModules(container) {
       draftTree.refresh();
       characterTree.refresh();
       settingTree.refresh();
-      vscode33.commands.executeCommand("setContext", "novelCompanion.projectLoaded", true);
+      vscode65.commands.executeCommand("setContext", "novelCompanion.projectLoaded", true);
+      const merger = container.get("merger");
+      merger.clearAllPendingReviews();
+      const reminder2 = container.get("reminder");
+      reminder2.resetAllSessions();
+      vscode65.commands.executeCommand("setContext", "novelCompanion.hasPendingReview", false);
     }),
     eventBus.on("chapter.created", () => {
       novelInfoTree.refresh();
@@ -24236,7 +31731,7 @@ function activateModules(container) {
     eventBus.on("chapter.statusChanged", () => {
       chapterTree.refresh();
       draftTree.refresh();
-      vscode33.commands.executeCommand("setContext", "novelCompanion.projectLoaded", true);
+      vscode65.commands.executeCommand("setContext", "novelCompanion.projectLoaded", true);
     }),
     eventBus.on("chapter.wordsChanged", (p) => {
       chapterTree.updateBadge(p.chapterId, p.chapterWords);
@@ -24259,14 +31754,14 @@ function activateModules(container) {
     }),
     eventBus.on("result.imported", (p) => {
       if (p.validCount > 0) {
-        vscode33.commands.executeCommand("setContext", "novelCompanion.hasPendingReview", true);
+        vscode65.commands.executeCommand("setContext", "novelCompanion.hasPendingReview", true);
       }
       chapterTree.refresh();
     }),
     eventBus.on("review.updated", () => {
       const merger = container.get("merger");
       if (merger.getPendingCount() === 0) {
-        vscode33.commands.executeCommand("setContext", "novelCompanion.hasPendingReview", false);
+        vscode65.commands.executeCommand("setContext", "novelCompanion.hasPendingReview", false);
       }
       reviewPanel.refresh();
     }),
@@ -24279,7 +31774,7 @@ function activateModules(container) {
       draftTree.refresh();
     })
   );
-  const fileWatcher = vscode33.workspace.createFileSystemWatcher(
+  const fileWatcher = vscode65.workspace.createFileSystemWatcher(
     "**/{chapters,characters,world,foreshadowing,timeline}/**/*.{md,yaml}"
   );
   let refreshTimer;
@@ -24301,6 +31796,8 @@ function activateModules(container) {
       foreshadowingTree.refresh();
       timelineTree.refresh();
       novelInfoTree.refresh();
+      snippetTree.refresh();
+      trashTree.refresh();
       workflowProvider.refresh();
     }, 300);
   };
@@ -24312,7 +31809,26 @@ function activateModules(container) {
   );
   const commandRegistry = new CommandRegistry2(container);
   commandRegistry.registerAll(context);
-  vscode33.commands.executeCommand("setContext", "novelCompanion.projectLoaded", false);
+  vscode65.commands.executeCommand("setContext", "novelCompanion.projectLoaded", false);
+  const ONBOARDED_KEY = "novelCompanion.onboarded";
+  context.subscriptions.push(
+    eventBus.on("project.opened", () => {
+      if (!context.globalState.get(ONBOARDED_KEY)) {
+        context.globalState.update(ONBOARDED_KEY, true);
+        vscode65.window.showInformationMessage(
+          "\u6B22\u8FCE\u4F7F\u7528\u7B14\u642D\uFF01\u4E0B\u4E00\u6B65\uFF1A\u5728\u300C\u7AE0\u8282\u5927\u7EB2\u300D\u70B9 + \u65B0\u5EFA\u7B2C\u4E00\u7AE0\uFF0C\u5728 draft.md \u5199\u6B63\u6587\u3002",
+          "\u65B0\u5EFA\u7B2C\u4E00\u7AE0",
+          "\u67E5\u770B\u4F7F\u7528\u8BF4\u660E"
+        ).then((action) => {
+          if (action === "\u65B0\u5EFA\u7B2C\u4E00\u7AE0") {
+            vscode65.commands.executeCommand("novelCompanion.chapter.create");
+          } else if (action === "\u67E5\u770B\u4F7F\u7528\u8BF4\u660E") {
+            vscode65.commands.executeCommand("novelCompanion.novel.openHelp");
+          }
+        });
+      }
+    })
+  );
   projectDetector.detect();
 }
 
